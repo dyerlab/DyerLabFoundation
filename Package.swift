@@ -1,32 +1,104 @@
-// swift-tools-version: 6.4
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version: 6.1
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
+//
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 
 import PackageDescription
 
 let package = Package(
-    name: "DyerlabFoundation",
+    name: "DyerLabFoundation",
+    platforms: [
+        .iOS(.v17),
+        .macOS(.v14),
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "DyerlabFoundation",
-            targets: ["DyerlabFoundation"]
-        ),
+        .library(name: "Matrix",          targets: ["Matrix"]),
+        .library(name: "Graph",           targets: ["Graph"]),
+        .library(name: "PresentationZen", targets: ["PresentationZen"]),
+        .library(name: "DyerLabFoundation", targets: ["DyerlabFoundation"]),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        // MARK: - Library targets
+
         .target(
-            name: "DyerlabFoundation",
+            name: "Matrix",
+            cxxSettings: [
+                .define("ACCELERATE_NEW_LAPACK", to: "1"),
+            ],
             swiftSettings: [
+                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
+            linkerSettings: [
+                .linkedFramework("Accelerate"),
+            ]
         ),
+
+        .target(
+            name: "Graph",
+            dependencies: ["Matrix"],
+            swiftSettings: [
+                .define("SPM_BUILD"),
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .target(
+            name: "PresentationZen",
+            dependencies: ["Matrix", "Graph"],
+            swiftSettings: [
+                .define("SPM_BUILD"),
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .target(
+            name: "DyerlabFoundation",
+            dependencies: ["Matrix", "Graph", "PresentationZen"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        // MARK: - Test targets
+
+        .testTarget(
+            name: "MatrixTests",
+            dependencies: ["Matrix"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .testTarget(
+            name: "GraphTests",
+            dependencies: ["Graph"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .testTarget(
+            name: "PresentationZenTests",
+            dependencies: ["PresentationZen"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
         .testTarget(
             name: "DyerlabFoundationTests",
             dependencies: ["DyerlabFoundation"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
-            ],
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
