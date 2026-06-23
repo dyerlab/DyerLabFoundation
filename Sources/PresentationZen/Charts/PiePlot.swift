@@ -11,15 +11,16 @@
 //
 //  PiePlot.swift
 //
-//
 //  Created by Rodney Dyer on 2/17/24.
 //
 
 import SwiftUI
 import Charts
 
+/// A pie/donut chart. The `y` role is each slice's magnitude; the `label` role
+/// names the slice (and drives the color scale).
 public struct PiePlot: View {
-    public var data: [DataPoint]
+    public var table: DataTable
     public var title: String
     public var innerRadius: Double
     public var showLegend: Bool
@@ -27,13 +28,14 @@ public struct PiePlot: View {
     public var valueFormat: String
     public var colors: [String: Color]?
 
-    public init(data: [DataPoint], title: String = "",
+    public init(_ table: DataTable,
+                title: String = "",
                 innerRadius: Double = 0.25,
                 showLegend: Bool = false,
                 showValues: Bool = false,
                 valueFormat: String = "%.1f",
                 colors: [String: Color]? = nil) {
-        self.data = data
+        self.table = table
         self.title = title
         self.innerRadius = innerRadius
         self.showLegend = showLegend
@@ -52,24 +54,19 @@ public struct PiePlot: View {
 
     @ViewBuilder
     private var chartView: some View {
-        let chart = Chart(data) { datum in
-            SectorMark(angle: .value(
-                Text(verbatim: datum.label), datum.xValue),
+        let chart = Chart(table.plotRows) { row in
+            SectorMark(angle: .value(Text(verbatim: row.label ?? ""), row.y),
                        innerRadius: .ratio(innerRadius),
-                       angularInset: 1.5
-            )
+                       angularInset: 1.5)
             .cornerRadius(3)
-            .foregroundStyle(by: .value(
-                Text(verbatim: datum.label),
-                datum.label
-            ))
+            .foregroundStyle(by: .value(Text(verbatim: row.label ?? ""), row.label ?? ""))
             .annotation(position: .overlay) {
-                if datum.xValue != 0.0 {
+                if row.y != 0.0 {
                     if showValues {
-                        Text(String(format: valueFormat, datum.xValue))
+                        Text(String(format: valueFormat, row.y))
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(verbatim: datum.label)
+                        Text(verbatim: row.label ?? "")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -88,18 +85,13 @@ public struct PiePlot: View {
 #if !SPM_BUILD
 
 #Preview {
-    VStack(spacing: 20) {
-        PiePlot(data: DataPoint.defaultDataPoints,
-                title: "Default")
-        .padding()
-
-        PiePlot(data: DataPoint.defaultDataPoints,
-                title: "Values Shown",
-                innerRadius: 0.3,
-                showLegend: true,
-                showValues: true,
-                valueFormat: "%.0f")
-        .padding()
-    }
+    PiePlot(DataTable(numbers: ["count": [30, 20, 15, 35]],
+                      strings: ["name": ["Alpha", "Beta", "Gamma", "Delta"]],
+                      roles: [.y: "count", .label: "name"]),
+            title: "Shares",
+            showLegend: true,
+            showValues: true,
+            valueFormat: "%.0f")
+    .padding()
 }
 #endif

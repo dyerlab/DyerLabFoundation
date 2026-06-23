@@ -11,110 +11,71 @@
 //
 //  ScatterPlot.swift
 //
-//
 //  Created by Rodney Dyer on 2/10/24.
 //
 
 import Charts
 import SwiftUI
 
+/// A quantitative x/y scatter plot.
+///
+/// Bind the `x` and `y` roles on the ``DataTable``. Binding a `series` role
+/// colors points by group and shows a legend; binding a `label` role and
+/// setting `showLabel` annotates each point.
 public struct ScatterPlot: View {
-    public var data: [DataPoint]
+    public var table: DataTable
     public var xLabel: String
     public var yLabel: String
     public var showLabel: Bool
-    public var showGroups: Bool
-    
-    public init(data: [DataPoint], xLabel: String, yLabel: String, showLabel: Bool = false , showGroups: Bool = false ) {
-        self.data = data
+    public var pointColor: Color
+
+    public init(_ table: DataTable,
+                xLabel: String,
+                yLabel: String,
+                showLabel: Bool = false,
+                pointColor: Color = .blue) {
+        self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.showLabel = showLabel
-        self.showGroups = showGroups
+        self.pointColor = pointColor
     }
-    
+
     public var body: some View {
-        Chart {
-            ForEach( data, id: \.self) { item in
-                if showLabel {
-                    if showGroups {
-                        PointMark(
-                            x: .value("X Value", item.xValue  ),
-                            y: .value("Y Value", item.yValue ) )
-                        .foregroundStyle(by: .value( "Group",
-                                                     item.grouping ) )
-                        .annotation {
-                            Text("\(item.label )")
-                                .font( .footnote )
-                               // .rotationEffect( Angle(degrees: -30), anchor: .bottomLeading)
-                        }
-                    } else {
-                        PointMark(
-                            x: .value("X Value", item.xValue  ),
-                            y: .value("Y Value", item.yValue ) )
-                        .annotation {
-                            Text("\(item.label )")
-                                .font( .footnote )
-                        }
-                    }
-                } else {
-                    if showGroups {
-                        PointMark(
-                            x: .value("X Value", item.xValue  ),
-                            y: .value("Y Value", item.yValue ) )
-                        .foregroundStyle(by: .value("Group", showGroups ? item.grouping : "" ) )
-                    } else {
-                        PointMark(
-                            x: .value("X Value", item.xValue  ),
-                            y: .value("Y Value", item.yValue ) )
-                    }
+        Chart(table.plotRows) { row in
+            PointMark(x: .value("X Value", row.xDouble),
+                      y: .value("Y Value", row.y))
+            .foregroundStyle(by: .value("Group", row.series ?? ""))
+            .annotation {
+                if showLabel, let label = row.label, !label.isEmpty {
+                    Text(label).font(.footnote)
                 }
             }
         }
-        .chartXAxisLabel(position: .bottom,
-                         alignment: .center,
-                         content: {
-            Text(xLabel)
-                .font(.title3)
-        } )
-        .chartYAxisLabel(position: .trailing,
-                         alignment: .center,
-                         content: {
-            Text(yLabel)
-                .font(.title3)
-        } )
-        .chartLegend(position: .top)
+        .seriesStyle(hasSeries: table.column(for: .series) != nil, soloColor: pointColor)
+        .chartXAxisLabel(position: .bottom, alignment: .center) {
+            Text(xLabel).font(.title3)
+        }
+        .chartYAxisLabel(position: .trailing, alignment: .center) {
+            Text(yLabel).font(.title3)
+        }
     }
 }
 #if !SPM_BUILD
 
 #Preview {
     ScrollView {
-        
-        
         VStack(spacing: 25) {
-            ScatterPlot( data: DataPoint.defaultDataPoints,
-                         xLabel: "Default X-Axis Label",
-                         yLabel: "Default Y-Axis Label" )
-            
-            ScatterPlot( data: DataPoint.defaultDataPoints,
-                         xLabel: "Default X-Axis Label",
-                         yLabel: "Default Y-Axis Label",
-                         showLabel: true )
-            
-            ScatterPlot( data: DataPoint.defaultDataPoints,
-                         xLabel: "Default X-Axis Label",
-                         yLabel: "Default Y-Axis Label",
-                         showGroups: true )
-            
-            ScatterPlot( data: DataPoint.defaultDataPoints,
-                         xLabel: "Default X-Axis Label",
-                         yLabel: "Default Y-Axis Label",
-                         showLabel: true,
-                         showGroups: true  )
+            ScatterPlot(.sampleScatter, xLabel: "X-Axis", yLabel: "Y-Axis")
+
+            ScatterPlot(.sampleScatter.label("label"),
+                        xLabel: "X-Axis", yLabel: "Y-Axis", showLabel: true)
+
+            ScatterPlot(.sampleScatter.series("group"),
+                        xLabel: "X-Axis", yLabel: "Y-Axis")
         }
-        .frame( minHeight: 800 )
+        .frame(minHeight: 700)
+        .padding()
     }
-    .padding()
 }
 #endif

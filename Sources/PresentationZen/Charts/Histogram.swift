@@ -10,77 +10,55 @@
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 //  Histogram.swift
-//  
 //
 //  Created by Rodney Dyer on 3/29/24.
 //
 
 import Charts
 import SwiftUI
-import SwiftData
 
-/// This adds a public init on the sturctur.
+/// An area-style histogram.
+///
+/// Pass a table whose `x` role is a bin center and `y` role is a count — e.g.
+/// `Histogram(raw.histogram(of: "value", bins: 12))`.
 public struct Histogram: View {
-    public var xLabel: String = "Values"
-    public var yLabel: String = "Count"
-    public var data: [DataPoint]
-    
-    let curGradient = LinearGradient(
-            gradient: Gradient (
-                colors: [
-                    Color(.blue).opacity(0.9),
-                    Color(.blue).opacity(0.5)
-                ]
-            ),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    
-    public init(xLabel: String, yLabel: String, data: [DataPoint]) {
+    public var table: DataTable
+    public var xLabel: String
+    public var yLabel: String
+
+    private let curGradient = LinearGradient(
+        gradient: Gradient(colors: [Color(.blue).opacity(0.9), Color(.blue).opacity(0.5)]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    public init(_ table: DataTable, xLabel: String = "Values", yLabel: String = "Count") {
+        self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
-        self.data = data
     }
-    
-    public var body: some View {
-        Chart {
-            ForEach( data ) { item in
-                AreaMark(
-                    x: .value("X-value", item.xValue ),
-                    y: .value("Y-value", item.yValue)
-                )
-                .interpolationMethod(.catmullRom)
-                .foregroundStyle(curGradient)
-            }
-        }
-        .chartXAxisLabel(position: .bottom,
-                         alignment: .center,
-                         content: {
-            Text(xLabel)
-                .font(.title3)
-        } )
-        .chartYAxisLabel(position: .trailing,
-                         alignment: .center,
-                         content: {
-            Text(yLabel)
-                .font(.title3)
-        } )
-        .chartForegroundStyleScale(
-                    range: Gradient (
-                        colors: [
-                            .purple,
-                            .blue.opacity(0.3)
-                        ]
-                    )
-                )
 
+    public var body: some View {
+        Chart(table.plotRows) { row in
+            AreaMark(x: .value("X-value", row.xDouble),
+                     y: .value("Y-value", row.y))
+            .interpolationMethod(.catmullRom)
+            .foregroundStyle(curGradient)
+        }
+        .chartXAxisLabel(position: .bottom, alignment: .center) {
+            Text(xLabel).font(.title3)
+        }
+        .chartYAxisLabel(position: .trailing, alignment: .center) {
+            Text(yLabel).font(.title3)
+        }
     }
 }
 #if !SPM_BUILD
 
 #Preview {
-    Histogram( xLabel: "Raw Data",
-               yLabel: "Counts",
-               data: DataPoint.DefaultHistogramDataPoints )
+    Histogram(DataTable.sampleValues.histogram(of: "value", bins: 8),
+              xLabel: "Raw Data",
+              yLabel: "Counts")
+    .padding()
 }
 #endif

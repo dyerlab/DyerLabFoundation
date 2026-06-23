@@ -18,12 +18,13 @@
 import Charts
 import SwiftUI
 
-/// A scatter plot with a temporal (Date) X-axis and optional auto-computed linear regression trendline.
+/// A scatter plot with a temporal (Date) x-axis and an optional auto-computed
+/// linear regression trendline.
 ///
-/// Generalizes patterns like enrollment-over-time and evaluation-score-over-time charts.
-/// Supply ``DataPoint`` values with `date` set; the chart plots `date` × `yValue`.
+/// Bind a date `x` role and a quantitative `y` role; bind a `label` role to
+/// annotate points.
 public struct TemporalScatterPlot: View {
-    public var data: [DataPoint]
+    public var table: DataTable
     public var xLabel: String
     public var yLabel: String
     public var pointColor: Color
@@ -32,7 +33,7 @@ public struct TemporalScatterPlot: View {
     public var showStats: Bool
     public var showAnnotations: Bool
 
-    public init(data: [DataPoint],
+    public init(_ table: DataTable,
                 xLabel: String = "Date",
                 yLabel: String,
                 pointColor: Color = .green,
@@ -40,7 +41,7 @@ public struct TemporalScatterPlot: View {
                 showRegression: Bool = true,
                 showStats: Bool = true,
                 showAnnotations: Bool = true) {
-        self.data = data
+        self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.pointColor = pointColor
@@ -51,40 +52,29 @@ public struct TemporalScatterPlot: View {
     }
 
     private var regression: RegressionResult? {
-        showRegression ? dateRegression(data: data) : nil
+        showRegression ? dateRegression(table) : nil
     }
 
     @ChartContentBuilder
     private var chartContent: some ChartContent {
-        ForEach(data) { item in
-            if let date = item.date {
-                if showAnnotations && !item.label.isEmpty {
-                    PointMark(
-                        x: .value(xLabel, date),
-                        y: .value(yLabel, item.yValue)
-                    )
-                    .foregroundStyle(pointColor)
-                    .annotation(position: .topTrailing) {
-                        Text(item.label)
-                            .font(.caption2)
+        ForEach(table.plotRows) { row in
+            if let date = row.x.dateValue {
+                PointMark(x: .value(xLabel, date),
+                          y: .value(yLabel, row.y))
+                .foregroundStyle(pointColor)
+                .annotation(position: .topTrailing) {
+                    if showAnnotations, let label = row.label, !label.isEmpty {
+                        Text(label).font(.caption2)
                     }
-                } else {
-                    PointMark(
-                        x: .value(xLabel, date),
-                        y: .value(yLabel, item.yValue)
-                    )
-                    .foregroundStyle(pointColor)
                 }
             }
         }
 
         if let regression, !regression.isEmpty {
-            ForEach(regression.fitted) { item in
-                if let date = item.date {
-                    LineMark(
-                        x: .value(xLabel, date),
-                        y: .value(yLabel, item.yValue)
-                    )
+            ForEach(regression.fitted) { row in
+                if let date = row.x.dateValue {
+                    LineMark(x: .value(xLabel, date),
+                             y: .value(yLabel, row.y))
                     .foregroundStyle(lineColor)
                     .lineStyle(.init(dash: [5.0, 3.0]))
                 }
@@ -119,11 +109,8 @@ public struct TemporalScatterPlot: View {
 #if !SPM_BUILD
 
 #Preview {
-    TemporalScatterPlot(
-        data: DataPoint.defaultDataPoints,
-        yLabel: "Score"
-    )
-    .frame(height: 300)
-    .padding()
+    TemporalScatterPlot(.sampleTemporal, yLabel: "Score")
+        .frame(height: 300)
+        .padding()
 }
 #endif

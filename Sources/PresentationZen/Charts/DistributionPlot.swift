@@ -18,12 +18,12 @@
 import Charts
 import SwiftUI
 
-/// An area chart showing a frequency distribution with optional vertical reference line.
+/// An area chart of a frequency distribution with an optional reference line.
 ///
-/// Generalizes patterns like Likert-comparison charts. Supply ``DataPoint`` values where
-/// `xValue` is the domain value and `yValue` is the frequency count.
+/// Pass a table whose `x` role is the (quantitative) domain value and `y` role
+/// is the frequency/count.
 public struct DistributionPlot: View {
-    public var data: [DataPoint]
+    public var table: DataTable
     public var xLabel: String
     public var yLabel: String
     public var fillColor: Color
@@ -32,7 +32,7 @@ public struct DistributionPlot: View {
     public var referenceColor: Color
     public var xDomain: ClosedRange<Double>?
 
-    public init(data: [DataPoint],
+    public init(_ table: DataTable,
                 xLabel: String = "Value",
                 yLabel: String = "Frequency",
                 fillColor: Color = .blue.opacity(0.3),
@@ -40,7 +40,7 @@ public struct DistributionPlot: View {
                 referenceLabel: String? = nil,
                 referenceColor: Color = .red,
                 xDomain: ClosedRange<Double>? = nil) {
-        self.data = data
+        self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.fillColor = fillColor
@@ -50,22 +50,22 @@ public struct DistributionPlot: View {
         self.xDomain = xDomain
     }
 
-    private var paddedData: [DataPoint] {
-        guard let first = data.first, let last = data.last else { return data }
-        var result = [DataPoint]()
-        result.append(DataPoint(x: first.xValue - 0.5, y: 0))
-        result.append(contentsOf: data)
-        result.append(DataPoint(x: last.xValue + 0.5, y: 0))
+    /// The resolved rows padded with zero endpoints so the area meets the axis.
+    private var paddedRows: [PlotRow] {
+        let rows = table.plotRows
+        guard let first = rows.first, let last = rows.last else { return rows }
+        var result = [PlotRow]()
+        result.append(PlotRow(id: -1, x: .number(first.xDouble - 0.5), y: 0))
+        result.append(contentsOf: rows)
+        result.append(PlotRow(id: -2, x: .number(last.xDouble + 0.5), y: 0))
         return result
     }
 
     @ChartContentBuilder
     private var chartContent: some ChartContent {
-        ForEach(paddedData) { item in
-            AreaMark(
-                x: .value(xLabel, item.xValue),
-                y: .value(yLabel, item.yValue)
-            )
+        ForEach(paddedRows) { row in
+            AreaMark(x: .value(xLabel, row.xDouble),
+                     y: .value(yLabel, row.y))
             .foregroundStyle(fillColor)
             .interpolationMethod(.catmullRom)
         }
@@ -108,23 +108,17 @@ public struct DistributionPlot: View {
 #if !SPM_BUILD
 
 #Preview {
-    VStack(spacing: 20) {
-        DistributionPlot(
-            data: [
-                DataPoint(x: 1, y: 2),
-                DataPoint(x: 2, y: 5),
-                DataPoint(x: 3, y: 12),
-                DataPoint(x: 4, y: 8),
-                DataPoint(x: 5, y: 3)
-            ],
-            xLabel: "Score",
-            yLabel: "Count",
-            referenceLine: 3.2,
-            referenceLabel: "Mean: 3.2",
-            xDomain: 0.5...5.5
-        )
-        .frame(height: 250)
-        .padding()
-    }
+    DistributionPlot(
+        DataTable(numbers: ["score": [1, 2, 3, 4, 5],
+                            "count": [2, 5, 12, 8, 3]],
+                  roles: [.x: "score", .y: "count"]),
+        xLabel: "Score",
+        yLabel: "Count",
+        referenceLine: 3.2,
+        referenceLabel: "Mean: 3.2",
+        xDomain: 0.5...5.5
+    )
+    .frame(height: 250)
+    .padding()
 }
 #endif

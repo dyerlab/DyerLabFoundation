@@ -9,16 +9,17 @@
 //
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Test.swift
-// PopulationGenetics
+//  CentralityTests.swift
+//  Graph
 //
 //  Created by Rodney Dyer on 5/21/25.
 //
 
 import Testing
-@testable import Matrix
+import Matrix
+@testable import Graph
 
-struct Test {
+struct CentralityTests {
 
     @Test func AdjacencyTests() async throws {
         let g = Graph.smallGraph

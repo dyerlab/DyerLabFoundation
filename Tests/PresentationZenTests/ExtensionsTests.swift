@@ -20,52 +20,6 @@ import SwiftUI
 import Testing
 @testable import PresentationZen
 
-@Suite("Array<DataPoint>.collapseByYear")
-struct CollapseByYearTests {
-
-    @Test("sums yValues within the same year and produces one entry per year")
-    func sameYearSum() {
-        var c = DateComponents()
-        c.month = 7; c.day = 1
-        c.year = 2024
-        let jul2024 = Calendar.current.date(from: c)!
-        c.month = 10
-        let oct2024 = Calendar.current.date(from: c)!
-        c.year = 2025; c.month = 3
-        let mar2025 = Calendar.current.date(from: c)!
-
-        let pts = [
-            DataPoint(time: jul2024, value: 10.0),
-            DataPoint(time: oct2024, value: 5.0),
-            DataPoint(time: mar2025, value: 7.0),
-        ]
-        let result = pts.collapseByYear.sorted()
-        #expect(result.count == 2)
-        #expect(result[0].xValue == 2024)
-        #expect(result[0].yValue == 15.0)
-        #expect(result[1].xValue == 2025)
-        #expect(result[1].yValue == 7.0)
-    }
-
-    @Test("silently drops points that have no date")
-    func dropsUndatedPoints() {
-        var c = DateComponents()
-        c.year = 2024; c.month = 6; c.day = 1
-        let jun2024 = Calendar.current.date(from: c)!
-
-        let pts = [
-            DataPoint(time: jun2024, value: 3.0),
-            DataPoint(x: 100, y: 99),           // no date — must be dropped
-        ]
-        #expect(pts.collapseByYear.count == 1)
-    }
-
-    @Test("returns empty for empty input")
-    func emptyInput() {
-        #expect([DataPoint]().collapseByYear.isEmpty)
-    }
-}
-
 @Suite("Date.mdy")
 struct DateMdyTests {
 
@@ -96,7 +50,6 @@ struct DLColorTests {
     func hueWrapAround() {
         let c = DLColor(hue: 0.9, saturation: 0.8, brightness: 0.7, alpha: 1.0)
         let shifted = c.shiftHue(by: 0.2)
-        // abs((0.9 + 0.2) % 1) = abs(0.1) = 0.1
         #expect(abs(shifted.hue - 0.1) < 0.001)
         #expect(shifted.saturation == c.saturation)
         #expect(shifted.brightness == c.brightness)
@@ -138,16 +91,14 @@ struct DLColorTests {
 
     @Test("Color.components handles grayscale (2-component) colors")
     func grayscaleComponents() {
-        // System palette colors like .black/.white use a grayscale color space.
-        // Before the fix they returned (0,0,0,0); now they should reflect the gray value.
         let white = Color.white
         let comps = white.components
         let luma = 0.299 * comps.red + 0.587 * comps.green + 0.114 * comps.blue
-        #expect(luma > 0.5)   // white → luma near 1.0, should pick black text
+        #expect(luma > 0.5)
 
         let black = Color.black
         let blackComps = black.components
         let blackLuma = 0.299 * blackComps.red + 0.587 * blackComps.green + 0.114 * blackComps.blue
-        #expect(blackLuma < 0.5)   // black → luma near 0.0, should pick white text
+        #expect(blackLuma < 0.5)
     }
 }

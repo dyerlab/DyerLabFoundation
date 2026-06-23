@@ -8,106 +8,100 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//  ExtensionsTests.swift
+//  FiguresTablesTests.swift
 //
 //
 //  Created by Rodney Dyer on 2026-02-24.
-
 
 import Foundation
 import Testing
 @testable import PresentationZen
 
-@Suite("BoxPlotPoint")
-struct BoxPlotPointTests {
+@Suite("BoxSummary")
+struct BoxSummaryTests {
 
-    @Test("computes median and sd from DataPoints grouped by category")
+    @Test("computes median and sd per category")
     func basicStats() {
-        let pts = [
-            DataPoint(category: "A", value: 10.0),
-            DataPoint(category: "A", value: 20.0),
-            DataPoint(category: "A", value: 30.0),
-        ]
-        let box = BoxPlotPoint(points: pts)
-        #expect(box.category == "A")
-        #expect(box.median == 20.0)
-        #expect(abs(box.sd - 10.0) < 0.0001)
+        let t = DataTable(numbers: ["v": [10, 20, 30]],
+                          strings: ["c": ["A", "A", "A"]],
+                          roles: [.x: "c", .y: "v"])
+        let boxes = t.boxSummary()
+        #expect(boxes.count == 1)
+        #expect(boxes[0].category == "A")
+        #expect(boxes[0].median == 20.0)
+        #expect(abs(boxes[0].sd - 10.0) < 0.0001)
     }
 
-    @Test("uses 'undefined' category and nan stats for empty input")
+    @Test("empty table yields no summaries")
     func emptyInput() {
-        let box = BoxPlotPoint(points: [])
-        #expect(box.category == "undefined")
-        #expect(box.median.isNaN)
-        #expect(box.sd.isNaN)
+        let t = DataTable(numbers: ["v": []], strings: ["c": []], roles: [.x: "c", .y: "v"])
+        #expect(t.boxSummary().isEmpty)
     }
 
-    @Test("single-point input has nan sd")
+    @Test("single-value category has nan sd")
     func singlePoint() {
-        let box = BoxPlotPoint(points: [DataPoint(category: "X", value: 42.0)])
-        #expect(box.category == "X")
-        #expect(box.median == 42.0)
-        #expect(box.sd.isNaN)
+        let t = DataTable(numbers: ["v": [42]],
+                          strings: ["c": ["X"]],
+                          roles: [.x: "c", .y: "v"])
+        let boxes = t.boxSummary()
+        #expect(boxes.count == 1)
+        #expect(boxes[0].median == 42.0)
+        #expect(boxes[0].sd.isNaN)
     }
 }
 
 @Suite("dateRegression")
 struct DateRegressionTests {
 
+    private func table(_ pairs: [(Date, Double)]) -> DataTable {
+        DataTable(numbers: ["v": pairs.map(\.1)],
+                  dates: ["d": pairs.map(\.0)],
+                  roles: [.x: "d", .y: "v"])
+    }
+
     @Test("returns nil for fewer than 2 dated points")
     func tooFewPoints() {
-        let pt = DataPoint(time: .now, value: 1.0)
-        #expect(dateRegression(data: [pt]) == nil)
+        #expect(dateRegression(table([(.now, 1.0)])) == nil)
     }
 
-    @Test("returns nil when no points have a date")
-    func noDatePoints() {
-        let pts = [DataPoint(x: 1, y: 1), DataPoint(x: 2, y: 2)]
-        #expect(dateRegression(data: pts) == nil)
+    @Test("returns nil when the x role is not a date column")
+    func noDateRole() {
+        let t = DataTable(numbers: ["x": [1, 2], "y": [1, 2]], roles: [.x: "x", .y: "y"])
+        #expect(dateRegression(t) == nil)
     }
 
-    @Test("fits positive slope to linearly ascending series")
+    @Test("fits positive slope to a linearly ascending series")
     func positiveTrend() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
-        let pts = (0..<5).map { i in
-            DataPoint(time: base.addingTimeInterval(Double(i) * 86400), value: Double(i) * 2.0)
-        }
-        let result = try #require(dateRegression(data: pts))
+        let t = table((0..<5).map { (base.addingTimeInterval(Double($0) * 86_400), Double($0) * 2.0) })
+        let result = try #require(dateRegression(t))
         #expect(result.slope > 0)
         #expect(result.r2 > 0.99)
         #expect(result.fitted.count == 5)
     }
 
-    @Test("slope is negative for descending series")
+    @Test("slope is negative for a descending series")
     func negativeTrend() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
-        let pts = (0..<5).map { i in
-            DataPoint(time: base.addingTimeInterval(Double(i) * 86400), value: Double(4 - i) * 3.0)
-        }
-        let result = try #require(dateRegression(data: pts))
+        let t = table((0..<5).map { (base.addingTimeInterval(Double($0) * 86_400), Double(4 - $0) * 3.0) })
+        let result = try #require(dateRegression(t))
         #expect(result.slope < 0)
     }
 
     @Test("averages multiple points sharing the same date")
     func duplicateDates() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
-        let pts = [
-            DataPoint(time: base, value: 10.0),
-            DataPoint(time: base, value: 20.0),           // same date → averaged to 15
-            DataPoint(time: base.addingTimeInterval(86400), value: 30.0),
-        ]
-        let result = try #require(dateRegression(data: pts))
+        let t = table([(base, 10.0), (base, 20.0), (base.addingTimeInterval(86_400), 30.0)])
+        let result = try #require(dateRegression(t))
         #expect(result.fitted.count == 2)   // two unique dates
-        #expect(abs(result.fitted[0].yValue - 15.0) < 0.0001)
+        #expect(abs(result.fitted[0].y - 15.0) < 0.0001)
     }
 
     @Test("flat y-series produces zero slope and NaN r2")
     func flatSeries() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
-        let pts = (0..<4).map { i in
-            DataPoint(time: base.addingTimeInterval(Double(i) * 86400), value: 5.0)
-        }
-        let result = try #require(dateRegression(data: pts))
+        let t = table((0..<4).map { (base.addingTimeInterval(Double($0) * 86_400), 5.0) })
+        let result = try #require(dateRegression(t))
         #expect(abs(result.slope) < 0.0001)
         #expect(result.r2.isNaN)
     }
@@ -127,7 +121,8 @@ struct RegressionResultTests {
 
     @Test("isEmpty is false when fitted points are provided")
     func nonEmpty() {
-        let fitted = [DataPoint(x: 0, y: 0), DataPoint(x: 1, y: 1)]
+        let fitted = [PlotRow(id: 0, x: .number(0), y: 0),
+                      PlotRow(id: 1, x: .number(1), y: 1)]
         let r = RegressionResult(slope: 1.0, intercept: 0.0, r2: 1.0, fitted: fitted)
         #expect(!r.isEmpty)
     }

@@ -11,15 +11,18 @@
 //
 //  ScatterWithTrendline.swift
 //
-//
 //  Created by Rodney Dyer on 2/10/24.
 //
 
 import Charts
 import SwiftUI
 
+/// A quantitative scatter plot overlaid with a fitted trendline.
+///
+/// The line endpoints are derived from the `x` role's range via
+/// ``DataTable/trendline(intercept:slope:)``.
 public struct ScatterPlotWithTrendline: View {
-    public var data: [DataPoint]
+    public var table: DataTable
     public var xLabel: String
     public var yLabel: String
     public var lineSlope: Double
@@ -29,22 +32,18 @@ public struct ScatterPlotWithTrendline: View {
     public var showStats: Bool
     public var pointColor: Color
     public var r2: Double?
-    public var colors: [String: Color]?
 
-    var trendlinePoints: [DataPoint] {
-        return data.trendlinePoints(intercept: lineIntercept,
-                                    slope: lineSlope)
-    }
-
-    public init(data: [DataPoint], xLabel: String, yLabel: String,
-                lineSlope: Double, lineIntercept: Double,
+    public init(_ table: DataTable,
+                xLabel: String,
+                yLabel: String,
+                lineSlope: Double,
+                lineIntercept: Double,
                 lineColor: Color = .red,
                 showAnnotations: Bool = false,
                 showStats: Bool = false,
                 pointColor: Color = .primary,
-                r2: Double? = nil,
-                colors: [String: Color]? = nil) {
-        self.data = data
+                r2: Double? = nil) {
+        self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.lineSlope = lineSlope
@@ -54,43 +53,41 @@ public struct ScatterPlotWithTrendline: View {
         self.showStats = showStats
         self.pointColor = pointColor
         self.r2 = r2
-        self.colors = colors
+    }
+
+    private var trendRows: [PlotRow] {
+        table.trendline(intercept: lineIntercept, slope: lineSlope).plotRows
     }
 
     @ChartContentBuilder
     private var chartContent: some ChartContent {
-        ForEach(trendlinePoints) {
-            LineMark(
-                x: .value("X Axis", $0.xValue),
-                y: .value("Y Axis", $0.yValue)
-            )
+        ForEach(trendRows) { row in
+            LineMark(x: .value("X Axis", row.xDouble),
+                     y: .value("Y Axis", row.y))
             .foregroundStyle(lineColor)
             .lineStyle(.init(dash: [5.0, 3.0]))
         }
-        ForEach(data) { item in
-            if showAnnotations && !item.label.isEmpty {
-                PointMark(
-                    x: .value("X Axis", item.xValue),
-                    y: .value("Y Axis", item.yValue)
-                )
-                .foregroundStyle(pointColor)
-                .annotation(position: .topTrailing) {
-                    Text(item.label)
-                        .font(.caption2)
+        ForEach(table.plotRows) { row in
+            PointMark(x: .value("X Axis", row.xDouble),
+                      y: .value("Y Axis", row.y))
+            .foregroundStyle(pointColor)
+            .annotation(position: .topTrailing) {
+                if showAnnotations, let label = row.label, !label.isEmpty {
+                    Text(label).font(.caption2)
                 }
-            } else {
-                PointMark(
-                    x: .value("X Axis", item.xValue),
-                    y: .value("Y Axis", item.yValue)
-                )
-                .foregroundStyle(pointColor)
             }
         }
     }
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            chartView
+            Chart { chartContent }
+                .chartXAxisLabel(position: .bottom, alignment: .center) {
+                    Text(xLabel).font(.title3)
+                }
+                .chartYAxisLabel(position: .trailing, alignment: .center) {
+                    Text(yLabel).font(.title3)
+                }
 
             if showStats {
                 VStack(alignment: .leading, spacing: 2) {
@@ -107,33 +104,17 @@ public struct ScatterPlotWithTrendline: View {
             }
         }
     }
-
-    @ViewBuilder
-    private var chartView: some View {
-        let chart = Chart { chartContent }
-            .chartXAxisLabel(position: .bottom, alignment: .center) {
-                Text(xLabel).font(.title3)
-            }
-            .chartYAxisLabel(position: .trailing, alignment: .center) {
-                Text(yLabel).font(.title3)
-            }
-
-        if let colors {
-            let sorted = colors.sorted(by: { $0.key < $1.key })
-            chart.chartForegroundStyleScale(domain: sorted.map(\.key), range: sorted.map(\.value))
-        } else {
-            chart
-        }
-    }
 }
 #if !SPM_BUILD
 
 #Preview {
-    ScatterPlotWithTrendline(data: DataPoint.defaultDataPoints,
-                             xLabel: "Default X-Axis Label",
-                             yLabel: "Default Y-Axis Label",
-                             lineSlope: 0.75,
-                             lineIntercept: 12.5)
+    ScatterPlotWithTrendline(.sampleScatter,
+                             xLabel: "X-Axis",
+                             yLabel: "Y-Axis",
+                             lineSlope: 5.0,
+                             lineIntercept: 12.5,
+                             showStats: true,
+                             r2: 0.78)
     .padding()
 }
 #endif
