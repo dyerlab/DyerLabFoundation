@@ -1,6 +1,6 @@
 //
 //  LayoutSimulation.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Physics simulation engine for force-directed graph layout.
 //
@@ -9,10 +9,8 @@ import Matrix
 import Foundation
 
 #if os(iOS)
-import Matrix
 import UIKit
 #else
-import Matrix
 import AppKit
 #endif
 

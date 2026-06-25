@@ -222,7 +222,7 @@ extension Vector {
     }
     
     /// Self as a SCNVector3
-    public var asSNCVector3: SCNVector3 {
+    public var asSCNVector3: SCNVector3 {
         switch self.count {
         case 0:
             return SCNVector3Make(0, 0, 0)

@@ -103,16 +103,16 @@ public func GeneralizedInverse(_ X: Matrix ) -> Matrix {
 ///
 /// - Note: The returned eigenvalues are in descending order (PC1, PC2, ...).
 public func PCRotation(_ X: Matrix ) -> (d: Vector, V: Matrix, X: Matrix)? {
-    let A = X
+    let A = Matrix(X.rows, X.cols, X.values)
     A.center()
-    
+
     guard let s = SingularValueDecomposition( A ) else { return nil }
-    
+
     let d = s.d / ( sqrt( max(1.0, Double( A.rows )-1.0)))
     let V = s.V
-    let X = X .* V
-    
-    return (d,V,X)
+    let scores = X .* V
+
+    return (d, V, scores)
 }
 
 

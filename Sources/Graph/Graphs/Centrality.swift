@@ -1,6 +1,6 @@
 //
 //  Centrality.swift
-// PopulationGenetics
+//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \

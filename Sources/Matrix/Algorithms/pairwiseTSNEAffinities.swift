@@ -1,6 +1,3 @@
-//
-//  pairwiseTSNEAffinities.swift
-//  MatrixStuff
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -8,7 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//         Making Population Genetic Software That Doesn't Suck
+//                     Making Software That Doesn't Suck
+//
+//  pairwiseTSNEAffinities.swift
+//  DyerLabFoundation
 //
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
@@ -20,10 +20,9 @@ import Foundation
 /// Compute pairwise affinity matrix for all points
 ///
 /// - Parameters:
-///   - dataMatrix: N × D matrix of data points (flattened row-major)
-///   - dimensions: Number of dimensions (D)
-///   - targetPerplexity: Desired perplexity value
-/// - Returns: Symmetric N × N affinity matrix (flattened row-major)
+///   - dataMatrix: N × D matrix of data points.
+///   - targetPerplexity: Desired perplexity value.
+/// - Returns: Symmetric N × N affinity matrix.
 public func pairwiseTSNEAffinities( dataMatrix: Matrix, targetPerplexity: Double) -> Matrix {
         
         let n = dataMatrix.rows

@@ -1,19 +1,16 @@
 //
 //  Camera2D.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  2D camera for graph layout rendering with pan and zoom.
 //
 
 import Matrix
 import Foundation
-import Matrix
 import simd
 #if os(iOS)
-import Matrix
 import UIKit
 #elseif os(macOS)
-import Matrix
 import AppKit
 #endif
 

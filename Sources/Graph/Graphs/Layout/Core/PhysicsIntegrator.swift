@@ -1,13 +1,12 @@
 //
 //  PhysicsIntegrator.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Physics integration for force-directed layout using semi-implicit Euler method.
 //
 
 import Matrix
 import Foundation
-import Matrix
 import simd
 
 /// Performs one simulation step using semi-implicit Euler integration.

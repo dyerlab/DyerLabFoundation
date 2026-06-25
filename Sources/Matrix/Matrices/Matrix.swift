@@ -129,14 +129,15 @@ public final class Matrix {
         }
     }
     
-    /// Returns matrix of rowsums, for colsums take transpose first
+    /// Each row of the returned matrix is filled with that row's sum.
+    /// Transposing swaps roles: rowMatrix.transpose[i,j] = rowSum[i].
     public var rowMatrix: Matrix {
         get {
             let v = self.rowSum
             let X = Matrix( self.rows, self.cols )
             for i in 0 ..< self.rows {
                 for j in 0 ..< self.cols {
-                    X[i,j] = v[j]
+                    X[i,j] = v[i]
                 }
             }
             return X

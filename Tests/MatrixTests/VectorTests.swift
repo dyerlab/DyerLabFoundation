@@ -39,7 +39,7 @@ struct VectorTests {
 
         #expect(v1.asCGPoint == CGPoint( x: 1.0, y: 2.0) )
         
-        let v1svn = v1.asSNCVector3
+        let v1svn = v1.asSCNVector3
         #expect(v1svn.x == 1.0)
         #expect(v1svn.y == 2.0)
         #expect(v1svn.z == 3.0)

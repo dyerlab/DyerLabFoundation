@@ -1,19 +1,16 @@
 //
 //  LayoutOrchestrator.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Primary simulation controller for force-directed graph layout.
 //
 
 import Matrix
 import Foundation
-import Matrix
 import Observation
 #if os(iOS)
-import Matrix
 import UIKit
 #elseif os(macOS)
-import Matrix
 import AppKit
 #endif
 
@@ -254,20 +251,11 @@ public class LayoutOrchestrator {
     // MARK: - Timer Management
 
     private func startTimer() {
-        #if os(macOS)
         timer = Timer.scheduledTimer(withTimeInterval: config.deltaTime, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.step()
             }
         }
-        #elseif os(iOS)
-        // For iOS, we'd use CADisplayLink, but for now use Timer
-        timer = Timer.scheduledTimer(withTimeInterval: config.deltaTime, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.step()
-            }
-        }
-        #endif
     }
 
     private func stopTimer() {
@@ -278,7 +266,8 @@ public class LayoutOrchestrator {
     // MARK: - Deinitialization
 
     nonisolated deinit {
-        // Timer cleanup happens automatically when the object is deallocated
-        // No need to explicitly call stopTimer() in deinit
+        // Swift 6: nonisolated deinit cannot touch the MainActor-isolated timer.
+        // Callers must call stop() before releasing the orchestrator (e.g. in
+        // onDisappear) so the timer is invalidated while still on the main actor.
     }
 }

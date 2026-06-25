@@ -1,6 +1,6 @@
 //
 //  SettleDetector.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Detects when the layout simulation has settled (converged).
 //

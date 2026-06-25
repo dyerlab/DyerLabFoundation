@@ -5,11 +5,11 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//         Making Population Genetic Software That Doesn't Suck
+//                     Making Software That Doesn't Suck
 //
 //
 //  WrappingHStack.swift
-//  PresentationZen
+//  DyerLabFoundation
 //
 //  Originally created for Reviews, moved to PresentationZen.
 //
@@ -40,7 +40,6 @@ public struct WrappingHStack: Layout {
     ///   - horizontalSpacing: The distance between adjacent subviews in a row or `nil` if you want the stack to choose a default distance.
     ///   - verticalSpacing: The distance between consequtive rows or`nil` if you want the stack to choose a default distance.
     ///   - fitContentWidth: Determines if the width of the stack should adjust to fit its content.
-    ///   - content: A view builder that creates the content of this stack.
     @inlinable public init(alignment: Alignment = .center,
                            horizontalSpacing: CGFloat? = nil,
                            verticalSpacing: CGFloat? = nil,

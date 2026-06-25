@@ -22,8 +22,9 @@ import Accelerate
 /// - Parameters:
 ///  - lhs: The left matrix
 ///  - rhs: The right matrix
-/// - Returns: A matrix resulting from element-wise addition.
+/// - Returns: A matrix resulting from element-wise addition, or an empty 0×0 matrix if dimensions differ.
 public func +(lhs: Matrix, rhs: Matrix) -> Matrix {
+    guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return Matrix(0, 0) }
     return Matrix( lhs.rows, lhs.cols, lhs.values + rhs.values )
 }
 
@@ -31,8 +32,9 @@ public func +(lhs: Matrix, rhs: Matrix) -> Matrix {
 /// - Parameters:
 ///  - lhs: The left matrix
 ///  - rhs: The right matrix
-/// - Returns: A matrix resulting from element-wise subtraction.
+/// - Returns: A matrix resulting from element-wise subtraction, or an empty 0×0 matrix if dimensions differ.
 public func -(lhs: Matrix, rhs: Matrix) -> Matrix {
+    guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return Matrix(0, 0) }
     return Matrix( lhs.rows, lhs.cols, lhs.values - rhs.values )
 }
 
@@ -41,18 +43,20 @@ public func -(lhs: Matrix, rhs: Matrix) -> Matrix {
 /// - Parameters:
 ///  - lhs: The left matrix
 ///  - rhs: The right matrix
-/// - Returns: A matrix resulting from element-wise multiplication.
+/// - Returns: A matrix resulting from element-wise multiplication, or an empty 0×0 matrix if dimensions differ.
 public func *(lhs: Matrix, rhs: Matrix) -> Matrix {
+    guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return Matrix(0, 0) }
     return Matrix( lhs.rows, lhs.cols, lhs.values * rhs.values )
 }
 
 
-/// Matrix element-wise divsion
+/// Matrix element-wise division
 /// - Parameters:
 ///  - lhs: The left matrix
 ///  - rhs: The right matrix
-/// - Returns: A matrix resulting from element-wise division.
+/// - Returns: A matrix resulting from element-wise division, or an empty 0×0 matrix if dimensions differ.
 public func /(lhs: Matrix, rhs: Matrix) -> Matrix {
+    guard lhs.rows == rhs.rows && lhs.cols == rhs.cols else { return Matrix(0, 0) }
     return Matrix( lhs.rows, lhs.cols, lhs.values / rhs.values )
 }
 

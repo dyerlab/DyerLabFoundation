@@ -1,6 +1,6 @@
 //
 //  ForceSolver.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Force computation for force-directed graph layout.
 //  Implements repulsion, attraction, center gravity, collision, and z-flattening forces.
@@ -8,7 +8,6 @@
 
 import Matrix
 import Foundation
-import Matrix
 import simd
 
 // MARK: - Individual Force Formulas

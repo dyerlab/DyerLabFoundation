@@ -33,7 +33,7 @@ public class Media: Codable {
     
     /// Default Initializer
     /// - Parameters:
-    ///   - date: The date for the media object.  This must be the same that the ``Event`` date.
+    ///   - date: The date the media was captured.
     ///   - imageData: Raw data from image as pngData.
     public init(date: Date = .now, imageData: Data? = nil) {
         self.imageData = imageData

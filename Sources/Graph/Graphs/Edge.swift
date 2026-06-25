@@ -1,6 +1,6 @@
 //
 //  Edge.swift
-//  DLabPopGraph
+//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -43,7 +43,7 @@ public class Edge: Identifiable, Equatable, Hashable {
     /// Edge weight (default: 1.0).
     public var weight: Double
     
-    init(fromNode: Node, toNode: Node, weight: Double = 1.0 ) {
+    public init(fromNode: Node, toNode: Node, weight: Double = 1.0 ) {
         self.id = UUID()
         self.fromNode = fromNode.id
         self.toNode = toNode.id

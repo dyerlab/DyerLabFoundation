@@ -1,6 +1,6 @@
 //
 //  Node.swift
-//  DLabPopGraph
+//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -21,11 +21,7 @@
 
 import Matrix
 import SwiftUI
-import Matrix
-import SceneKit
-import Matrix
 import Foundation
-import Matrix
 import CoreLocation
 
 /// A node (vertex) in a graph.
@@ -65,7 +61,7 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
         self.color = color
     }
     
-    init(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D) {
+    public init(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D) {
         self.id = UUID()
         self.name = name
         self.size = size

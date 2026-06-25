@@ -1,6 +1,6 @@
 //
 //  ForceDirectedLayout.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Fruchterman-Reingold force-directed graph layout algorithm.
 //
@@ -9,10 +9,8 @@ import Matrix
 import Foundation
 
 #if os(iOS)
-import Matrix
 import UIKit
 #else
-import Matrix
 import AppKit
 #endif
 

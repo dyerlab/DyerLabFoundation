@@ -1,6 +1,6 @@
 //
 //  LayoutConfiguration.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Force-directed layout configuration parameters.
 //
@@ -9,10 +9,8 @@ import Matrix
 import Foundation
 
 #if os(iOS)
-import Matrix
 import UIKit
 #elseif os(macOS)
-import Matrix
 import AppKit
 #endif
 

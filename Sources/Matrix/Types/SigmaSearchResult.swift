@@ -1,6 +1,3 @@
-//
-//  File.swift
-//  MatrixStuff
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -8,7 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//         Making Population Genetic Software That Doesn't Suck
+//                     Making Software That Doesn't Suck
+//
+//  SigmaSearchResult.swift
+//  DyerLabFoundation
 //
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
@@ -17,20 +17,23 @@
 
 import Foundation
 
-/*
- Result structure for finding optimized sigma for ``tSNEAffinity``
- */
+/// Result of a binary search for the optimal sigma in
+/// ``findOptimalTSNESigma(squaredDistances:targetPerplexity:tolerance:maxIterations:)``.
+///
+/// Stores the precision parameter (beta = 1 / 2σ²), the resulting conditional
+/// probability distribution, the achieved perplexity, and the number of search
+/// iterations required to converge.
 public struct SigmaSearchResult {
-    
-    /// Precision permameter (2 sigma^2)^-1
+
+    /// Precision parameter: β = (2σ²)⁻¹.
     let beta: Double
-    
-    /// conditional probabilty distribution
+
+    /// Conditional probability distribution P(j|i) over the input neighbours.
     let probabilities: [Double]
-    
-    /// Acheived perplexity
+
+    /// Perplexity achieved at the converged sigma.
     let perplexity: Double
-    
-    /// Number o fiterations
+
+    /// Number of binary-search iterations required.
     let iterations: Int
 }

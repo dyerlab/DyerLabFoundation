@@ -17,9 +17,7 @@
 
 import Matrix
 import SwiftUI
-import Matrix
 import Foundation
-import Matrix
 import CoreLocation
 
 /// A directed graph data structure with nodes and weighted edges.
@@ -52,7 +50,7 @@ public class Graph: Identifiable, Hashable  {
     public var id: UUID
     public var nodes: [Node]
     public var edges: [Edge]
-    
+
     public init(nodes: [Node] = [] , edges: [Edge] = []) {
         self.id = UUID()
         self.nodes = nodes
@@ -73,7 +71,7 @@ public class Graph: Identifiable, Hashable  {
     /// - Parameter name: The name of the node to find
     /// - Returns: The matching node, or `nil` if not found
     public func node(name: String ) -> Node? {
-        return nodes.first(where: { $0.name == name } ) ?? nil
+        return nodes.first(where: { $0.name == name })
     }
 
     /// Finds a node by unique identifier.
@@ -81,7 +79,7 @@ public class Graph: Identifiable, Hashable  {
     /// - Parameter id: The UUID of the node to find
     /// - Returns: The matching node, or `nil` if not found
     public func node(id: UUID ) -> Node? {
-        return nodes.first( where: { $0.id == id } ) ?? nil
+        return nodes.first(where: { $0.id == id })
     }
         
     /// Adds a new node to the graph.

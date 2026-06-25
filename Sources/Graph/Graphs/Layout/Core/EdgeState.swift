@@ -1,6 +1,6 @@
 //
 //  EdgeState.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Per-edge state for activation and smooth topology transitions.
 //

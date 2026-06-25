@@ -1,6 +1,6 @@
 //
 //  LayoutState.swift
-//  MatrixStuff
+//  DyerLabFoundation
 //
 //  Simulation state for force-directed graph layout.
 //  All arrays are parallel, indexed by graph.nodes array index.
@@ -9,7 +9,6 @@
 
 import Matrix
 import Foundation
-import Matrix
 import simd
 
 /// Simulation state for force-directed layout.
