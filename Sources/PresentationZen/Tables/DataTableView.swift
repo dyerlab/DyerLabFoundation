@@ -9,7 +9,7 @@
 //
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  KeyValueTable.swift
+//  DataTableView.swift
 //
 //  Created by Rodney Dyer on 2/10/24.
 //
@@ -20,21 +20,24 @@ import TabularData
 /// A simple grid view of a ``DataTable``. Column headers come from the table's
 /// column names; cells are formatted by kind (numbers via `formatString`,
 /// dates abbreviated, strings verbatim).
-public struct KeyValueTable: View {
+public struct DataTableView: View {
     public var table: DataTable
     public var formatString: String
     public var minColWidth: Double
+    public var caption: String?
 
     private var inScrollView: Bool
 
     public init(_ table: DataTable,
                 formatString: String = "%.4f",
                 minColWidth: Double = 150,
-                inScrollView: Bool = true) {
+                inScrollView: Bool = true,
+                caption: String? = nil) {
         self.table = table
         self.formatString = formatString
         self.minColWidth = minColWidth
         self.inScrollView = inScrollView
+        self.caption = caption
     }
 
     /// Pre-rendered display strings, one entry per column.
@@ -81,20 +84,35 @@ public struct KeyValueTable: View {
         }
     }
 
+    @ViewBuilder
+    private var captionText: some View {
+        if let caption {
+            Text(caption)
+                .font(.title3)
+                .bold()
+        }
+    }
+
     public var body: some View {
         if inScrollView {
             ScrollView([.horizontal, .vertical]) {
-                tableContent
+                VStack(alignment: .leading) {
+                    captionText
+                    tableContent
+                }
             }
         } else {
-            tableContent
-                .padding()
+            VStack(alignment: .leading) {
+                captionText
+                tableContent
+            }
+            .padding()
         }
     }
 }
 #if !SPM_BUILD
 
 #Preview {
-    KeyValueTable(.sampleScatter)
+    DataTableView(.sampleScatter, caption: "Scatter Sample")
 }
 #endif

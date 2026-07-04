@@ -16,11 +16,13 @@
 //
 
 import Foundation
+import Matrix
 
 /// Computes a linear regression over a table's temporal data.
 ///
 /// Groups rows by date, averages the `y` value per group, then fits a linear
-/// model on days-since-first-date vs value.
+/// model (intercept + days-since-first-date) via ``linearModelFit(designMatrix:response:)``,
+/// the same general-linear-model core used for `anovaTable(_:)`.
 ///
 /// - Parameter table: A ``DataTable`` whose `x` role is a date column and
 ///   whose `y` role is the value column.
@@ -44,27 +46,16 @@ public func dateRegression(_ table: DataTable) -> RegressionResult? {
     guard vals.count > 1 else { return nil }
 
     let firstDate = vals[0].0
-    let x = vals.map { $0.0.timeIntervalSince(firstDate) / 86_400.0 }
+    let days = vals.map { $0.0.timeIntervalSince(firstDate) / 86_400.0 }
     let y = vals.map(\.1)
 
-    let n = Double(x.count)
-    let meanX = x.reduce(0, +) / n
-    let meanY = y.reduce(0, +) / n
-    let sXY = zip(x, y).map { ($0 - meanX) * ($1 - meanY) }.reduce(0, +)
-    let sXX = x.map { pow($0 - meanX, 2) }.reduce(0, +)
-
-    guard sXX > 0 else { return nil }
-
-    let slope = sXY / sXX
-    let intercept = meanY - slope * meanX
+    let designMatrix = Matrix(days.count, 2, days.flatMap { [1.0, $0] })
+    guard let fit = linearModelFit(designMatrix: designMatrix, response: y) else { return nil }
 
     let fitted = vals.enumerated().map { index, datedValue in
-        PlotRow(id: index, x: .date(datedValue.0), y: slope * x[index] + intercept)
+        PlotRow(id: index, x: .date(datedValue.0), y: fit.fitted[index])
     }
 
-    let ssTot = y.map { pow($0 - meanY, 2) }.reduce(0, +)
-    let ssRes = zip(y, fitted.map(\.y)).map { pow($0 - $1, 2) }.reduce(0, +)
-    let r2 = ssTot > 0 ? 1 - ssRes / ssTot : Double.nan
-
-    return RegressionResult(slope: slope, intercept: intercept, r2: r2, fitted: fitted)
+    return RegressionResult(slope: fit.coefficients[1], intercept: fit.coefficients[0],
+                             r2: fit.r2, fitted: fitted, fit: fit)
 }

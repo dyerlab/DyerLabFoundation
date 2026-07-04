@@ -126,4 +126,15 @@ struct RegressionResultTests {
         let r = RegressionResult(slope: 1.0, intercept: 0.0, r2: 1.0, fitted: fitted)
         #expect(!r.isEmpty)
     }
+
+    @Test("summary exposes the coefficients as a coefficient/value DataTable")
+    func summaryTable() {
+        let r = RegressionResult(slope: 2.0, intercept: -1.5, r2: 0.9, fitted: [])
+        let table = r.summary
+        #expect(table.rowCount == 3)
+        #expect(table.stringColumn("coefficient") == ["slope", "intercept", "rSquared"])
+        #expect(table.numericColumn("value").compactMap { $0 } == [2.0, -1.5, 0.9])
+        #expect(table.column(for: .x) == "coefficient")
+        #expect(table.column(for: .y) == "value")
+    }
 }
