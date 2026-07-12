@@ -28,16 +28,19 @@ public struct TimeSeriesPlot: View {
     public var xLabel: String
     public var soloColor: Color
     public var lineColor: Color
+    public var yAxisTicksVisible: Bool
 
     public init(_ table: DataTable,
                 yLabel: String,
                 xLabel: String = "",
                 ptColor: Color = .orange,
-                lineColor: Color = .gray) {
+                lineColor: Color = .gray,
+                yAxisTicksVisible: Bool = true) {
         self.table = table
         self.yLabel = yLabel
         self.soloColor = ptColor
         self.lineColor = lineColor
+        self.yAxisTicksVisible = yAxisTicksVisible
         if xLabel.isEmpty {
             self.xLabel = table.xKind == .date ? "Date" : "Ordinal"
         } else {
@@ -106,6 +109,9 @@ public struct TimeSeriesPlot: View {
             }
             .chartYAxisLabel(position: .trailing, alignment: .center) {
                 Text(yLabel).font(.title3)
+            }
+            .chartYAxis {
+                if yAxisTicksVisible { AxisMarks { AxisValueLabel() } }
             }
     }
 }
