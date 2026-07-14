@@ -48,12 +48,12 @@ Tests/
 
 ### What belongs here vs. what does not
 
-This is a **horizontal foundation** reused across unrelated domains. Domain-specific code must NOT enter this package. The following were intentionally excluded (hand them to the Genetics package):
+This is a **horizontal foundation** reused across unrelated domains. Domain-specific code must NOT enter this package. As of the 2026-07-14 PopulationGenetics promotion pass, the following stay in the `PopulationGenetics` package and must NOT enter this one:
 
-- `Graphs/PopulationNode.swift`
-- `Graphs/MigrationEdge.swift`
-- `Views/PopulationGraphView.swift`
-- `MatrixAlgebra.swift` genetics section: `CentroidDistance`, `CentroidVariance`, `PopGraph`
+- `Genetic/*`, `DataStore/PopGenStore*`, `GeneticDistances/*` (PhiST, Smouse-Peakall), `Simulation/*`, `PopulationGraph/*` (its `AnalysisResult`/`ResultImage` did move here — see below)
+- `DiversityType`, `Rarefaction.swift`'s domain dispatch logic, the `GeneticDistanceMatrix` ↔ `AMOVA`-equivalent adapter, `pairwisePhiST`, `MissingDataStrategy`
+
+Conversely, several PopulationGenetics files/types were found to have **no actual genetics content** and were promoted here: `AMOVA`/`AMOVAResult`/`AMOVAPermutationProgress` (renamed `DistanceVarianceDecomposition`/`...Result`/`...Progress`, `phi` renamed `varianceRatio` — Matrix), `DistanceMatrix<Kind>`/`PairwiseMeasure`/`PairwiseMatrix` (Matrix), `SplitMix64` (Matrix), `NullDistributionResult` + the open `AnalysisTag` type replacing a closed `AnalysisType` enum (Matrix), generic `Resampling.permutationTest`/`subsampleTest` engines (Matrix), `SymmetricUpperTriangle<Double>` shared storage (Matrix), `String+NaturalSort`/`Array+Hashable.valueCounts()` (Matrix, `histogram()` renamed to `valueCounts()` — collides with `Vector.histogram(bins:)` since `Vector` is `typealias Vector = [Double]`), `MappableNode` (PresentationZen — was dead code, not an active coupling fix), `AnalysisResult`/`ResultImage` (PresentationZen), `DataTable(pairwise:)`/new `DataTable(nullDistribution:)` (PresentationZen), and a small CoreLocation/MapKit utility set: `ConvexHull`, `DistanceBetween`, `MKCoordinateRegion(coordinates:)`, `MKMapRect.fromCoordinateRegion`, `Array<CLLocationCoordinate2D>.bounds()/.center` (PresentationZen). See `~/Coding/PopulationGenetics/DyerLabFoundation-Migration.md` for the full rationale per item.
 
 ### Swift version & platforms
 
@@ -73,5 +73,6 @@ All `#Preview` macros are wrapped in `#if !SPM_BUILD` / `#endif`. The `SPM_BUILD
 
 ### Downstream consumers
 
-- **PopulationGenetics** — will switch from `import MatrixStuff` to `import Matrix` / `import Graph` in `Extensions/Array+Node.swift` and `Simulation/Migration.swift`.
-- **Linguistics** — uses `Matrix` + `PresentationZen`; migration deferred.
+- **PopulationGenetics** — already migrated from `import MatrixStuff` to `import Matrix`/`import Graph`/`import PresentationZen` (resolves `dyerlabfoundation` off `branch: "main"`, not a version tag). See the promotion-plan note above.
+- **Linguistics** — uses `Matrix` + `PresentationZen`; also resolves off `branch: "main"`. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging.
+- **GeneticStudio** — a new app being built directly against this foundation as it evolves; not a stability concern, expected to simply conform.
