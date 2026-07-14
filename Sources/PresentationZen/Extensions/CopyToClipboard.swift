@@ -18,6 +18,9 @@
 import Foundation
 import SwiftUI
 
+/// Copies an image to the system pasteboard/clipboard.
+///
+/// - Parameter cgImage: The image to copy.
 @MainActor public func copyToClipboard(cgImage: CGImage) {
     #if os(macOS)
     let image = NSImage(cgImage: cgImage, size: .init(width: 1280, height: 720))

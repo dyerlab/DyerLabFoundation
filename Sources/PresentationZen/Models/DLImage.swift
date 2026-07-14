@@ -37,6 +37,10 @@ public extension DLImage {
         return dat
     }
     
+    /// Resizes this image to an exact size, without preserving aspect ratio.
+    ///
+    /// - Parameter size: The target size.
+    /// - Returns: The resized image.
      func resize(to size: CGSize ) -> DLImage? {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
@@ -47,7 +51,11 @@ public extension DLImage {
         }
         return result
     }
-    
+
+    /// Scales this image proportionally so its width doesn't exceed `maxWidth`.
+    ///
+    /// - Parameter maxWidth: The maximum output width (default: 1280).
+    /// - Returns: The scaled image, or `self` unchanged if the scaled render fails.
      func resizeKeepingAspect(maxWidth: CGFloat = 1280) -> DLImage {
         let scale = maxWidth / self.size.width
         let newHeight = self.size.height * scale
@@ -89,6 +97,10 @@ public extension DLImage {
         return data
     }
     
+    /// Resizes this image to an exact size, without preserving aspect ratio.
+    ///
+    /// - Parameter size: The target size.
+    /// - Returns: The resized image, or `nil` if no representation could be drawn.
      func resize(to size: CGSize) -> DLImage? {
         let frame = NSRect(x: 0, y: 0, width: size.width, height: size.height)
         guard let representation = self.bestRepresentation(for: frame, context: nil, hints: nil) else {
@@ -97,10 +109,14 @@ public extension DLImage {
         let image = NSImage(size: size, flipped: false, drawingHandler: { (_) -> Bool in
             return representation.draw(in: frame)
         })
-        
+
         return image
     }
-    
+
+    /// Scales this image proportionally so its width doesn't exceed `maxWidth`.
+    ///
+    /// - Parameter maxWidth: The maximum output width (default: 1280).
+    /// - Returns: The scaled image.
      func resizeKeepingAspect(maxWidth: CGFloat = 1280) -> DLImage {
         let scale = maxWidth / self.size.width
         let newHeight = self.size.height * scale
@@ -126,9 +142,17 @@ public extension DLImage {
 
 public extension DLImage {
     
+    /// Extracts this image's dominant colors via k-means clustering on pixel RGB values.
+    ///
+    /// Downsamples to 100×100 before clustering, so this is a cheap approximation rather
+    /// than an exact per-pixel analysis.
+    ///
+    /// - Parameter k: The number of dominant colors (clusters) to extract.
+    /// - Returns: One color per cluster center; empty if the image couldn't be resized
+    ///   or decoded.
      func mainColors(groups k: Int) -> [Color] {
         var ret = [Color]()
-        
+
         if let img = self.resize(to: CGSize(width: 100, height: 100) ) {
             let pts = img.toPoint3D
             let clusters = kMeansClustering(points: pts, k: k)
@@ -141,7 +165,9 @@ public extension DLImage {
         }
         return ret
     }
-    
+
+    /// This image's pixels, each expressed as an RGB point in `[0, 1]³` — the input
+    /// space `mainColors(groups:)` clusters over.
      var toPoint3D: [Point3D] {
         #if os(iOS)
         guard let cgImage = self.cgImage else { return [] }

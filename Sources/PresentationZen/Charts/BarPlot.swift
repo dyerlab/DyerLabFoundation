@@ -30,6 +30,19 @@ public struct BarPlot: View {
     public var rotateLabels: Bool
     public var barColor: Color
 
+    /// Creates a bar plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind categorical `x` and quantitative `y` roles (and
+    ///     optionally `series`/`label`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - showLabel: Whether to annotate each bar with its `label`-role value, when present.
+    ///   - showValues: Whether to annotate each bar with its formatted `y` value (ignored when
+    ///     `showLabel` shows a real label).
+    ///   - valueFormat: The `String(format:)` pattern used for `showValues` annotations.
+    ///   - rotateLabels: Whether to rotate x-axis category labels vertically, for long names.
+    ///   - barColor: The bar fill color when no `series` role is bound.
     public init(_ table: DataTable,
                 xLabel: String = "Categories",
                 yLabel: String = "Value",

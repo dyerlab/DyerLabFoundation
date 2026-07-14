@@ -26,6 +26,14 @@ public struct BoxPlot: View {
     var yLabel: String
     var medianHeight: Double
 
+    /// Creates a box plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to summarize; bind categorical `x` and quantitative `y` roles.
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - medianHeight: Half-thickness (in `y` units) of the median band drawn at the
+    ///     center of each box.
     public init(_ table: DataTable,
                 xLabel: String,
                 yLabel: String,

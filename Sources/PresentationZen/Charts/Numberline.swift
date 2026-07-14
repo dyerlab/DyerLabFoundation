@@ -25,6 +25,13 @@ public struct NumberLine: View {
     var minX: Double
     var maxX: Double
 
+    /// Creates a number line.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; the `y`-role values are positioned along the strip
+    ///     (colored by `series`, if bound).
+    ///   - minX: The lower bound of the visible range, before a 10% padding margin is applied.
+    ///   - maxX: The upper bound of the visible range, before a 10% padding margin is applied.
     public init(_ table: DataTable, minX: Double = -1.0, maxX: Double = 1.0) {
         self.table = table
         self.minX = (minX * 1.1)

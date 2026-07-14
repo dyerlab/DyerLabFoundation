@@ -67,14 +67,34 @@ public struct WrappingHStack: Layout {
         var rows: (Int, [Row])?
     }
 
+    /// `Layout` conformance: creates the initial `Cache` for a fresh set of subviews.
+    ///
+    /// - Parameter subviews: The subviews to arrange.
+    /// - Returns: A cache seeded with `subviews`' minimum size; row layout is computed
+    ///   lazily on first use.
     public func makeCache(subviews: Subviews) -> Cache {
         Cache(minSize: minSize(subviews: subviews))
     }
 
+    /// `Layout` conformance: refreshes `cache`'s minimum size when `subviews` changes.
+    ///
+    /// - Parameters:
+    ///   - cache: The cache to update in place.
+    ///   - subviews: The current subviews.
     public func updateCache(_ cache: inout Cache, subviews: Subviews) {
         cache.minSize = minSize(subviews: subviews)
     }
 
+    /// `Layout` conformance: the size this stack needs to arrange `subviews` into
+    /// wrapped rows within `proposal`.
+    ///
+    /// - Parameters:
+    ///   - proposal: The size SwiftUI proposes for this stack.
+    ///   - subviews: The subviews to arrange.
+    ///   - cache: The shared row-layout cache, reused (and populated) across this call
+    ///     and `placeSubviews(in:proposal:subviews:cache:)`.
+    /// - Returns: The size that fits all wrapped rows (or `cache.minSize` if `subviews`
+    ///   is too large to fit any row).
     public func sizeThatFits(proposal: ProposedViewSize,
                              subviews: Subviews,
                              cache: inout Cache) -> CGSize {
@@ -96,6 +116,13 @@ public struct WrappingHStack: Layout {
         return CGSize(width: width, height: height)
     }
 
+    /// `Layout` conformance: positions each subview within its wrapped row.
+    ///
+    /// - Parameters:
+    ///   - bounds: The region this stack was allotted, in the parent's coordinate space.
+    ///   - proposal: The size SwiftUI proposed for this stack.
+    ///   - subviews: The subviews to place.
+    ///   - cache: The shared row-layout cache from `sizeThatFits(proposal:subviews:cache:)`.
     public func placeSubviews(in bounds: CGRect,
                               proposal: ProposedViewSize,
                               subviews: Subviews,

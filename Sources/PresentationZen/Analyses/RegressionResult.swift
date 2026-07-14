@@ -41,6 +41,15 @@ public struct RegressionResult: Sendable {
     public let fit: LinearModelFit?
     public var isEmpty: Bool { fitted.isEmpty }
 
+    /// Creates a regression result.
+    ///
+    /// - Parameters:
+    ///   - slope: The fitted line's slope (defaults to `.nan`).
+    ///   - intercept: The fitted line's value at `x = 0` (defaults to `.nan`).
+    ///   - r2: The coefficient of determination (defaults to `.nan`).
+    ///   - fitted: The fitted line's plot points, if any (defaults to empty).
+    ///   - fit: The full `LinearModelFit` this result was derived from, if built by a fitting
+    ///     function rather than directly (defaults to `nil`).
     public init(slope: Double = Double.nan,
                 intercept: Double = Double.nan,
                 r2: Double = Double.nan,

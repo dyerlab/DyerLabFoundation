@@ -20,6 +20,10 @@ import SwiftUI
 
 public extension Image {
 
+    /// Resizes and clips this image to fill its container while preserving aspect ratio.
+    ///
+    /// - Returns: A view that fills the space `GeometryReader` gives it, cropping any
+    ///   overflow around the center.
     func centerCropped() -> some View {
         GeometryReader { geo in
             self
@@ -31,6 +35,10 @@ public extension Image {
         }
     }
 
+    /// Creates a SwiftUI `Image` from a platform-neutral `DLImage`
+    /// (`UIImage` on iOS, `NSImage` on macOS).
+    ///
+    /// - Parameter dlImage: The platform image to wrap.
     init(dlImage: DLImage) {
         #if os(iOS)
         self.init(uiImage: dlImage)
