@@ -40,6 +40,14 @@ public struct PlotRow: Identifiable, Hashable, Sendable {
     /// The per-point annotation, when a ``DataColumnRole/label`` role is bound.
     public let label: String?
 
+    /// Creates a resolved plot row.
+    ///
+    /// - Parameters:
+    ///   - id: The originating row index in the data frame.
+    ///   - x: The positional x value.
+    ///   - y: The positional y value.
+    ///   - series: The series/color group, if bound (defaults to `nil`).
+    ///   - label: The per-point annotation, if bound (defaults to `nil`).
     public init(id: Int, x: PlotValue, y: Double, series: String? = nil, label: String? = nil) {
         self.id = id
         self.x = x

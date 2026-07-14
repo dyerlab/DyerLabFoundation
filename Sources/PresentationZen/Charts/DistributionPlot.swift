@@ -32,6 +32,20 @@ public struct DistributionPlot: View {
     public var referenceColor: Color
     public var xDomain: ClosedRange<Double>?
 
+    /// Creates a distribution plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind the quantitative domain value to `x` and the
+    ///     frequency/count to `y` (see `DataTable(nullDistribution:)`/`histogram(of:bins:)`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - fillColor: The area fill color.
+    ///   - referenceLine: An optional x-position (e.g. an observed statistic) to mark with a
+    ///     dashed vertical rule.
+    ///   - referenceLabel: An optional label drawn above `referenceLine`; ignored if
+    ///     `referenceLine` is `nil`.
+    ///   - referenceColor: The reference line/label color.
+    ///   - xDomain: An optional fixed x-axis range; when `nil`, the chart scales to the data.
     public init(_ table: DataTable,
                 xLabel: String = "Value",
                 yLabel: String = "Frequency",

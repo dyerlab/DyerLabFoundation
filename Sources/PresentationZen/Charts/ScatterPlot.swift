@@ -29,6 +29,15 @@ public struct ScatterPlot: View {
     public var showLabel: Bool
     public var pointColor: Color
 
+    /// Creates a scatter plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind quantitative `x`/`y` roles (and optionally
+    ///     `series`/`label`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - showLabel: Whether to annotate each point with its `label`-role value.
+    ///   - pointColor: The point color when no `series` role is bound.
     public init(_ table: DataTable,
                 xLabel: String,
                 yLabel: String,

@@ -33,6 +33,20 @@ public struct ScatterPlotWithTrendline: View {
     public var pointColor: Color
     public var r2: Double?
 
+    /// Creates a scatter plot with an overlaid trendline.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind quantitative `x`/`y` roles (and optionally `label`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - lineSlope: The trendline's slope.
+    ///   - lineIntercept: The trendline's value at `x = 0`.
+    ///   - lineColor: The trendline's color.
+    ///   - showAnnotations: Whether to annotate each point with its `label`-role value.
+    ///   - showStats: Whether to draw an "R² = ..." annotation using `r2`.
+    ///   - pointColor: The point color.
+    ///   - r2: The coefficient of determination to display when `showStats` is `true`;
+    ///     ignored otherwise.
     public init(_ table: DataTable,
                 xLabel: String,
                 yLabel: String,

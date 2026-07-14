@@ -19,9 +19,10 @@ let package = Package(
         .macOS(.v14),
     ],
     products: [
-        .library(name: "Matrix",          targets: ["Matrix"]),
-        .library(name: "Graph",           targets: ["Graph"]),
-        .library(name: "PresentationZen", targets: ["PresentationZen"]),
+        .library(name: "Matrix",             targets: ["Matrix"]),
+        .library(name: "Graph",              targets: ["Graph"]),
+        .library(name: "PresentationZen",    targets: ["PresentationZen"]),
+        .library(name: "PopulationGenetics", targets: ["PopulationGenetics"]),
         .library(name: "DyerLabFoundation", targets: ["DyerlabFoundation"]),
     ],
     targets: [
@@ -60,8 +61,22 @@ let package = Package(
         ),
 
         .target(
-            name: "DyerlabFoundation",
+            name: "PopulationGenetics",
             dependencies: ["Matrix", "Graph", "PresentationZen"],
+            // TODO: PopulationGenetics.docc resource processing deferred until
+            // the target builds cleanly in its new home (see
+            // DyerLabFoundation-Migration-Phase2.md) -- excluded rather than
+            // processed for now.
+            exclude: ["PopulationGenetics.docc"],
+            swiftSettings: [
+                .define("SPM_BUILD"),
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .target(
+            name: "DyerlabFoundation",
+            dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
@@ -88,6 +103,14 @@ let package = Package(
         .testTarget(
             name: "PresentationZenTests",
             dependencies: ["PresentationZen"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .testTarget(
+            name: "PopulationGeneticsTests",
+            dependencies: ["PopulationGenetics", "Matrix", "Graph", "PresentationZen"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

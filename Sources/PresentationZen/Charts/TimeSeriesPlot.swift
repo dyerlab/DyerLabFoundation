@@ -30,6 +30,18 @@ public struct TimeSeriesPlot: View {
     public var lineColor: Color
     public var yAxisTicksVisible: Bool
 
+    /// Creates a time series plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind a date or numeric `x` role and a quantitative `y`
+    ///     role (and optionally `series`).
+    ///   - yLabel: The y-axis title.
+    ///   - xLabel: The x-axis title; when empty, inferred from `table`'s `x` column kind
+    ///     ("Date" or "Ordinal").
+    ///   - ptColor: The point color when no `series` role is bound (or only one group);
+    ///     points colored by `series` ignore this.
+    ///   - lineColor: The dashed connecting-line color.
+    ///   - yAxisTicksVisible: Whether to draw y-axis tick marks and labels.
     public init(_ table: DataTable,
                 yLabel: String,
                 xLabel: String = "",

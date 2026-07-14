@@ -33,6 +33,20 @@ public struct TemporalScatterPlot: View {
     public var showStats: Bool
     public var showAnnotations: Bool
 
+    /// Creates a temporal scatter plot.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind a date `x` role and a quantitative `y` role
+    ///     (and optionally `label`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
+    ///   - pointColor: The point color.
+    ///   - lineColor: The regression trendline's color.
+    ///   - showRegression: Whether to compute and draw a linear regression trendline
+    ///     (via `dateRegression(_:)`).
+    ///   - showStats: Whether to annotate the trendline with its fit statistics; ignored
+    ///     when `showRegression` is `false`.
+    ///   - showAnnotations: Whether to annotate each point with its `label`-role value.
     public init(_ table: DataTable,
                 xLabel: String = "Date",
                 yLabel: String,

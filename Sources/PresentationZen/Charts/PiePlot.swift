@@ -28,6 +28,18 @@ public struct PiePlot: View {
     public var valueFormat: String
     public var colors: [String: Color]?
 
+    /// Creates a pie/donut chart.
+    ///
+    /// - Parameters:
+    ///   - table: The table to plot; bind slice magnitude to `y` and slice name to `label`.
+    ///   - title: An optional title drawn at the chart's center.
+    ///   - innerRadius: The donut hole's radius, as a fraction of the outer radius (`0` for a
+    ///     full pie).
+    ///   - showLegend: Whether to draw a legend mapping slice names to colors.
+    ///   - showValues: Whether to annotate each slice with its formatted value.
+    ///   - valueFormat: The `String(format:)` pattern used for `showValues` annotations.
+    ///   - colors: An optional explicit slice-name-to-color mapping; slices without an entry
+    ///     fall back to the chart's default color scale.
     public init(_ table: DataTable,
                 title: String = "",
                 innerRadius: Double = 0.25,

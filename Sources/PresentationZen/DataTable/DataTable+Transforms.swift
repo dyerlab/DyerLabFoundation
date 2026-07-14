@@ -28,6 +28,12 @@ public struct BoxSummary: Identifiable, Hashable, Sendable {
     public let median: Double
     public let sd: Double
 
+    /// Creates a box summary.
+    ///
+    /// - Parameters:
+    ///   - category: The category name; also this instance's `id`.
+    ///   - median: The category's median value.
+    ///   - sd: The category's standard deviation.
     public init(category: String, median: Double, sd: Double) {
         self.category = category
         self.median = median

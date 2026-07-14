@@ -50,6 +50,7 @@ public struct Point3D: Equatable {
         z = components.blue
     }
 
+    /// Returns whether two points have identical x, y, and z components.
     public static func ==(lhs: Point3D, rhs: Point3D) -> Bool {
         return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z
     }

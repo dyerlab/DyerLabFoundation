@@ -32,6 +32,13 @@ public struct Histogram: View {
         endPoint: .bottom
     )
 
+    /// Creates a histogram.
+    ///
+    /// - Parameters:
+    ///   - table: A binned table; bind the bin center to `x` and its count to `y`
+    ///     (see `DataTable/histogram(of:bins:)`).
+    ///   - xLabel: The x-axis title.
+    ///   - yLabel: The y-axis title.
     public init(_ table: DataTable, xLabel: String = "Values", yLabel: String = "Count") {
         self.table = table
         self.xLabel = xLabel

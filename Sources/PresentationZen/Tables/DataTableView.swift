@@ -28,6 +28,14 @@ public struct DataTableView: View {
 
     private var inScrollView: Bool
 
+    /// Creates a table view.
+    ///
+    /// - Parameters:
+    ///   - table: The table to display.
+    ///   - formatString: The `String(format:)` pattern used for numeric columns.
+    ///   - minColWidth: The minimum width of each column.
+    ///   - inScrollView: Whether to wrap the grid in a horizontally-scrolling container.
+    ///   - caption: An optional caption drawn below the grid.
     public init(_ table: DataTable,
                 formatString: String = "%.4f",
                 minColWidth: Double = 150,
