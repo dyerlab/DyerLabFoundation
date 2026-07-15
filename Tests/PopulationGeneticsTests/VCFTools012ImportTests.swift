@@ -12,7 +12,8 @@
 //
 //  Created by Rodney Dyer on 7/13/26.
 //
-//  Verifies importVCFTools012 against the real Data/phylog.012 triplet.
+//  Verifies importVCFTools012 against the bundled ExampleDataset.phylogSNPPanel
+//  (the phylog.012 triplet).
 //
 
 import Testing
@@ -21,23 +22,8 @@ import Foundation
 
 struct VCFTools012ImportTests {
 
-    private static var repoRoot: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // VCFTools012ImportTests.swift -> PopulationGeneticsTests/
-            .deletingLastPathComponent() // PopulationGeneticsTests/ -> Tests/
-            .deletingLastPathComponent() // Tests/ -> repo root
-    }
-
-    private func loadDataFile(_ name: String) throws -> String {
-        try String(contentsOf: Self.repoRoot.appendingPathComponent("Data").appendingPathComponent(name), encoding: .utf8)
-    }
-
     private func importPhylog() throws -> ImportedDataset {
-        try importVCFTools012(
-            dosageText: try loadDataFile("phylog.012"),
-            indvText: try loadDataFile("phylog.012.indv"),
-            posText: try loadDataFile("phylog.012.pos")
-        )
+        try ExampleDataset.phylogSNPPanel.load()
     }
 
     @Test func importsPhylogIndividualsAndLoci() async throws {
@@ -101,8 +87,8 @@ struct VCFTools012ImportTests {
     }
 
     @Test func rejectsDosageRowCountMismatchWithIndvFile() async throws {
-        let dosage = try loadDataFile("phylog.012")
-        let posText = try loadDataFile("phylog.012.pos")
+        let dosage = try ExampleData.text("phylog", extension: "012")
+        let posText = try ExampleData.text("phylog.012", extension: "pos")
         let shortIndv = "only_one_sample\n"
 
         #expect(throws: GenotypeImportError.self) {

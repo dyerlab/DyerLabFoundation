@@ -26,23 +26,8 @@ import Matrix
 
 struct PhylogAnalysisIntegrationTests {
 
-    private static var repoRoot: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-    }
-
-    private func loadDataFile(_ name: String) throws -> String {
-        try String(contentsOf: Self.repoRoot.appendingPathComponent("Data").appendingPathComponent(name), encoding: .utf8)
-    }
-
     private func importPhylog() throws -> GenotypeMatrix {
-        try importVCFTools012(
-            dosageText: try loadDataFile("phylog.012"),
-            indvText: try loadDataFile("phylog.012.indv"),
-            posText: try loadDataFile("phylog.012.pos")
-        ).matrix
+        try ExampleDataset.phylogSNPPanel.load().matrix
     }
 
     /// Trailing capital-letter state code, e.g. "AlligatorRiverNC_1272" -> "NC".

@@ -12,9 +12,9 @@
 //
 //  Created by Rodney Dyer on 7/13/26.
 //
-//  Verifies importPopulationTable against the real Data/arapat.csv sample
-//  file, and importMicrosatTable (via a PopulationImportLayout-adjacent
-//  GenotypeImportLayout) against Data/cornus.csv.
+//  Verifies importPopulationTable against the bundled ExampleDataset.arapatPopulations
+//  (arapat.csv), and importMicrosatTable (via a PopulationImportLayout-adjacent
+//  GenotypeImportLayout) against ExampleDataset.cornusFamilies (cornus.csv).
 //
 
 import Testing
@@ -23,27 +23,10 @@ import Foundation
 
 struct PopulationImportTests {
 
-    /// Repo root, computed from this file's own location so tests don't
-    /// depend on the CWD `swift test` happens to be invoked from.
-    private static var repoRoot: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // PopulationImportTests.swift -> PopulationGeneticsTests/
-            .deletingLastPathComponent() // PopulationGeneticsTests/ -> Tests/
-            .deletingLastPathComponent() // Tests/ -> repo root
-    }
-
-    private func loadDataFile(_ name: String) throws -> String {
-        try String(contentsOf: Self.repoRoot.appendingPathComponent("Data").appendingPathComponent(name), encoding: .utf8)
-    }
-
     // MARK: - arapat.csv (population/strata)
 
     private func importArapat() throws -> ImportedDataset {
-        let csv = try loadDataFile("arapat.csv")
-        return try importPopulationTable(csv: csv, layout: .init(
-            strataColumns: ["Species", "Cluster", "Population"],
-            nameColumn: "ID", latitudeColumn: "Latitude", longitudeColumn: "Longitude"
-        ))
+        try ExampleDataset.arapatPopulations.load()
     }
 
     @Test func importsArapatIndividualsAndLoci() async throws {
@@ -82,11 +65,7 @@ struct PopulationImportTests {
     // MARK: - cornus.csv (parentage), via the existing importMicrosatTable
 
     private func importCornus() throws -> ImportedDataset {
-        let csv = try loadDataFile("cornus.csv")
-        return try importMicrosatTable(csv: csv, layout: GenotypeImportLayout(
-            familyColumn: "ID", offspringColumn: "OffID",
-            latitudeColumn: "Latitude", longitudeColumn: "Longitude"
-        ))
+        try ExampleDataset.cornusFamilies.load()
     }
 
     @Test func importsCornusIndividualsAndLoci() async throws {

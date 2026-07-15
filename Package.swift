@@ -30,6 +30,7 @@ let package = Package(
 
         .target(
             name: "Matrix",
+            resources: [ .process("Matrix.docc") ],
             cxxSettings: [
                 .define("ACCELERATE_NEW_LAPACK", to: "1"),
             ],
@@ -45,6 +46,7 @@ let package = Package(
         .target(
             name: "Graph",
             dependencies: ["Matrix"],
+            resources: [ .process("Graph.docc") ],
             swiftSettings: [
                 .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -54,6 +56,7 @@ let package = Package(
         .target(
             name: "PresentationZen",
             dependencies: ["Matrix", "Graph"],
+            resources: [ .process("PresentationZen.docc") ],
             swiftSettings: [
                 .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -63,11 +66,7 @@ let package = Package(
         .target(
             name: "PopulationGenetics",
             dependencies: ["Matrix", "Graph", "PresentationZen"],
-            // TODO: PopulationGenetics.docc resource processing deferred until
-            // the target builds cleanly in its new home (see
-            // DyerLabFoundation-Migration-Phase2.md) -- excluded rather than
-            // processed for now.
-            exclude: ["PopulationGenetics.docc"],
+            resources: [ .process("PopulationGenetics.docc"), .copy("ExampleData") ],
             swiftSettings: [
                 .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -77,6 +76,7 @@ let package = Package(
         .target(
             name: "DyerlabFoundation",
             dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics"],
+            resources: [ .process("DyerlabFoundation.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

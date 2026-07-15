@@ -17,14 +17,15 @@ Alternatively: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
 
 ## Architecture
 
-DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes three library products plus an umbrella:
+DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes four library products plus an umbrella:
 
 | Product | Depends on | Purpose |
 |---|---|---|
 | `Matrix` | — | Linear algebra: matrices, vectors, operators, t-SNE, PCA, `rSourceConvertible` protocol |
 | `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine |
 | `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, all SwiftUI views (Matrix views, Graph views, charts) |
-| `DyerLabFoundation` | all three | Umbrella — re-exports everything via `@_exported import` |
+| `PopulationGenetics` | `Matrix`, `Graph`, `PresentationZen` | Diploid genetic-marker storage/import/analysis (see below — folded in wholesale as of 2026-07-14) |
+| `DyerLabFoundation` | all four | Umbrella — re-exports everything via `@_exported import` |
 
 ### PresentationZen is the UI layer for everything
 
@@ -40,20 +41,39 @@ Sources/
   PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/
                      MatrixViews/    ← Matrix + Vector SwiftUI views
                      GraphViews/     ← Graph layout views (GraphLayoutView, MapView, etc.)
+  PopulationGenetics/ — Genetic/, DataStore/, Persistence/, Simulation/, PopulationGraph/,
+                     Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
   DyerlabFoundation/ — DyerlabFoundation.swift (@_exported imports)
 Tests/
   MatrixTests/          GraphTests/          PresentationZenTests/
-  DyerlabFoundationTests/
+  PopulationGeneticsTests/   DyerlabFoundationTests/
 ```
 
-### What belongs here vs. what does not
+### PopulationGenetics: folded in wholesale (2026-07-14), superseding the earlier promotion pass
 
-This is a **horizontal foundation** reused across unrelated domains. Domain-specific code must NOT enter this package. As of the 2026-07-14 PopulationGenetics promotion pass, the following stay in the `PopulationGenetics` package and must NOT enter this one:
+Earlier the same day, a "promotion pass" lifted specific domain-neutral types (AMOVA's variance decomposition,
+`DistanceMatrix`, `SplitMix64`, `NullDistributionResult`/`AnalysisTag`, resampling engines, `AnalysisResult`,
+spatial utilities) out of the standalone `PopulationGenetics` package into Matrix/Graph/PresentationZen, on the
+premise that this repo stays domain-neutral and genetics-specific code (`Genetic/*`, `DataStore/PopGenStore*`,
+`GeneticDistances/*`, `Simulation/*`, `PopulationGraph/*`) lives only in that separate package.
 
-- `Genetic/*`, `DataStore/PopGenStore*`, `GeneticDistances/*` (PhiST, Smouse-Peakall), `Simulation/*`, `PopulationGraph/*` (its `AnalysisResult`/`ResultImage` did move here — see below)
-- `DiversityType`, `Rarefaction.swift`'s domain dispatch logic, the `GeneticDistanceMatrix` ↔ `AMOVA`-equivalent adapter, `pairwisePhiST`, `MissingDataStrategy`
+That premise no longer holds: the `feature/populationgenetics-target` merge (`d4e2082`/`91769d7`) copied the
+*entire* `PopulationGenetics` source and test tree into this repo as a fourth product, and the umbrella now
+re-exports it (`@_exported import PopulationGenetics` in `DyerlabFoundation.swift`). This was a deliberate
+decision, confirmed 2026-07-14: **`Sources/PopulationGenetics/` in this repo is now canonical.**
 
-Conversely, several PopulationGenetics files/types were found to have **no actual genetics content** and were promoted here: `AMOVA`/`AMOVAResult`/`AMOVAPermutationProgress` (renamed `DistanceVarianceDecomposition`/`...Result`/`...Progress`, `phi` renamed `varianceRatio` — Matrix), `DistanceMatrix<Kind>`/`PairwiseMeasure`/`PairwiseMatrix` (Matrix), `SplitMix64` (Matrix), `NullDistributionResult` + the open `AnalysisTag` type replacing a closed `AnalysisType` enum (Matrix), generic `Resampling.permutationTest`/`subsampleTest` engines (Matrix), `SymmetricUpperTriangle<Double>` shared storage (Matrix), `String+NaturalSort`/`Array+Hashable.valueCounts()` (Matrix, `histogram()` renamed to `valueCounts()` — collides with `Vector.histogram(bins:)` since `Vector` is `typealias Vector = [Double]`), `MappableNode` (PresentationZen — was dead code, not an active coupling fix), `AnalysisResult`/`ResultImage` (PresentationZen), `DataTable(pairwise:)`/new `DataTable(nullDistribution:)` (PresentationZen), and a small CoreLocation/MapKit utility set: `ConvexHull`, `DistanceBetween`, `MKCoordinateRegion(coordinates:)`, `MKMapRect.fromCoordinateRegion`, `Array<CLLocationCoordinate2D>.bounds()/.center` (PresentationZen). See `~/Coding/PopulationGenetics/DyerLabFoundation-Migration.md` for the full rationale per item.
+- The standalone `github.com/dyerlab/PopulationGenetics` repo is **legacy** — do not push further changes there;
+  port fixes into this repo's `Sources/PopulationGenetics/` instead. It was tagged `1.1.0` immediately before this
+  decision (adding `ExampleDataset` + bundled resources at `Sources/PopulationGenetics/ExampleData/`), and that
+  work was re-applied here in the same session — the two trees are in sync as of that tag, but will drift from
+  here on since only this repo should receive further edits.
+- Downstream consumers that used to depend on the standalone package (e.g. GeneticStudio, once its Xcode project
+  is wired up correctly — see the Downstream consumers section) should instead depend on the `PopulationGenetics`
+  product of the `dyerlabfoundation` package, or just the `DyerLabFoundation` umbrella.
+- The "horizontal foundation, no domain-specific code" framing for `Matrix`/`Graph`/`PresentationZen` still holds
+  for *those three* products — `PopulationGenetics` is explicitly the domain-specific exception living alongside
+  them in the same repo, not an argument for putting genetics code inside `Matrix`/`Graph`/`PresentationZen`
+  themselves.
 
 ### Swift version & platforms
 
@@ -67,12 +87,31 @@ All `#Preview` macros are wrapped in `#if !SPM_BUILD` / `#endif`. The `SPM_BUILD
 
 `PresentationZen/Models/Media.swift` uses SwiftData's `@Model` macro. This macro plugin is only resolved by Xcode's build system — build `PresentationZen` from Xcode. `Matrix` and `Graph` build and test cleanly from the command line.
 
+### DocC documentation
+
+Every target (`Matrix`, `Graph`, `PresentationZen`, `PopulationGenetics`, `DyerlabFoundation`) has a `.docc`
+catalog (`Sources/<Target>/<Target>.docc/`) with a hand-written landing page (`Info.json` + `<Target>.md`, titled
+`# ``<Target>`` `) giving a one-line abstract and an overview of the target's key public types. All are wired
+into `Package.swift` via `resources: [.process("<Target>.docc")]` — none are excluded/deferred anymore. When
+adding a landing-page symbol link, only double-backtick-link symbols that belong to the *same* target being
+documented; link other targets' symbols with plain code spans (single backticks) instead, since a single
+`docc convert` pass only has that one target's symbol graph in scope and cross-module double-backtick links there
+resolve unreliably (verified 2026-07-15 by running `xcrun docc convert` against each target's own symbol graph
+and checking the diagnostics file was empty). There is no `swift-docc-plugin` dependency in this package — that's
+only needed for CLI-driven `swift package generate-documentation`/hosting; Xcode's own "Build Documentation" and
+the `xcrun docc convert` verification method above don't need it.
+
+A pre-existing, unrelated issue surfaced during that verification: six DocC symbol-link warnings in
+`PresentationZen/Analyses/{anovaTable,RegressionResult,DateRegression,hypergeometricScenarios}.swift`'s doc
+comments (references to `LinearModelFit`/`PermutationTestResult`/`hypergeometricProbability` that don't resolve).
+Not touched as of 2026-07-15 — flagged for a future pass.
+
 ### Design document
 
 `DyerLabFoundation-Consolidation.md` in the repo root is the original design brief — read it before making structural changes to targets or the Package.swift manifest.
 
 ### Downstream consumers
 
-- **PopulationGenetics** — already migrated from `import MatrixStuff` to `import Matrix`/`import Graph`/`import PresentationZen` (resolves `dyerlabfoundation` off `branch: "main"`, not a version tag). See the promotion-plan note above.
-- **Linguistics** — uses `Matrix` + `PresentationZen`; also resolves off `branch: "main"`. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging.
-- **GeneticStudio** — a new app being built directly against this foundation as it evolves; not a stability concern, expected to simply conform.
+- **PopulationGenetics** — no longer a separate downstream consumer; folded into this repo as of 2026-07-14 (see above). The standalone `github.com/dyerlab/PopulationGenetics` repo is legacy.
+- **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging.
+- **GeneticStudio** — a new app being built directly against this foundation as it evolves; not a stability concern, expected to simply conform. Its Xcode project currently only references the `dyerlabfoundation` package (no separate `PopulationGenetics` dependency), even though its own source already calls PopulationGenetics-only types (`ImportedDataset`, `GenotypeMatrixStore`, `importMicrosatTable`) — that gap needs fixing in the GeneticStudio project itself, and is now simpler to fix since `PopulationGenetics` is just another product of the one package it already depends on.

@@ -22,6 +22,17 @@ env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 
 ## Changelog
 
+### 2026-07-15 — DocC landing pages for every target
+- Added a hand-written landing page to each target's `.docc` catalog (`Matrix.docc`, `Graph.docc`, `PresentationZen.docc`, `PopulationGenetics.docc`, `DyerlabFoundation.docc`) — a one-line abstract plus an overview grouping each target's key public types, verified with a real `docc convert` pass against each target's own symbol graph (zero diagnostics on the new content).
+- `PopulationGenetics.docc` is no longer excluded from the build — its prior deferral is resolved now that the target has been folded in and builds cleanly. Its old placeholder landing comment (`PopulationGenetics.swift`, which had no attached declaration and was never actually rendered by DocC) was removed in favor of the real landing page.
+- Discovered in passing (pre-existing, not touched): six broken DocC symbol links in `PresentationZen/Analyses/{anovaTable,RegressionResult,DateRegression,hypergeometricScenarios}.swift` doc comments, referencing `LinearModelFit`/`PermutationTestResult`/`hypergeometricProbability` without resolving — invisible before since none of these targets had DocC resources wired up to actually build.
+
+### 2026-07-14 — Bundled example datasets for PopulationGenetics
+- Added `ExampleDataset` (`Sources/PopulationGenetics/Genetic/Columnar/ExampleDataset.swift`): typed loaders (`.arapatPopulations`, `.cornusFamilies`, `.phylogSNPPanel`) that import bundled sample data through the real `importPopulationTable`/`importMicrosatTable`/`importVCFTools012` paths, so bundling can never drift from real import behavior.
+- The sample files (`arapat.csv`, `cornus.csv`, the `phylog.012` triplet) are now a declared SPM resource at `Sources/PopulationGenetics/ExampleData/`, reachable via `Bundle.module` — downstream apps (e.g. GeneticStudio) can draw on real data without shipping their own copy.
+- `PopulationGeneticsPreviewData` and the import regression tests were migrated onto this same mechanism, replacing ad hoc repo-relative file paths.
+- This superseded the standalone `github.com/dyerlab/PopulationGenetics` repo, which is now legacy; the same change was applied there first (tagged `1.1.0`) before the decision to make this repo's copy canonical.
+
 ### 2026-07-14 — PopulationGenetics promoted into the package
 - `PopulationGenetics` is now a target/product here (depends on `Matrix`/`Graph`/`PresentationZen`, re-exported from the umbrella), replacing the previous separate SPM package resolved via branch dependency.
 - Ahead of the move, generic types with no actual genetics content were promoted from `PopulationGenetics` into `Matrix`/`PresentationZen`: `AMOVA`/`AMOVAResult`/`AMOVAPermutationProgress` (renamed `DistanceVarianceDecomposition`/`...Result`/`...Progress`), `DistanceMatrix<Kind>`/`PairwiseMeasure`/`PairwiseMatrix`, `SplitMix64`, `NullDistributionResult`, the open `AnalysisTag` type, generic `Resampling.permutationTest`/`subsampleTest` engines, `SymmetricUpperTriangle<Double>`, `String+NaturalSort`/`Array+Hashable.valueCounts()`, and a CoreLocation/MapKit utility set (`ConvexHull`, `DistanceBetween`, `MKCoordinateRegion`/`MKMapRect` helpers, coordinate array bounds/center).

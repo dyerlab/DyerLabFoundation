@@ -21,8 +21,8 @@ import SwiftUI
 /// Provides pre-populated sample data for SwiftUI previews and unit tests.
 ///
 /// This singleton class loads sample Araptus beetle genetic data from Baja California
-/// by importing `Data/arapat.csv` (repo-relative — see `loadAraptusSamples()`) through
-/// `importPopulationTable`, the same pipeline a real import would use.
+/// via `ExampleDataset.arapatPopulations` (see `loadAraptusSamples()`), the same
+/// bundled resource and import pipeline a real user import would use.
 ///
 /// - Note: Only available in DEBUG builds.
 ///
@@ -72,18 +72,7 @@ extension PopulationGeneticsPreviewData {
         return ret.sorted()
     }
 
-    /// The repo root, resolved from this source file's own location. Preview data is
-    /// DEBUG-only development tooling reading straight from the checked-out repo, not
-    /// a bundled resource — a real downstream app supplies its own sample data.
-    private static var repoRoot: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // PopulationGeneticsPreviewData.swift -> DataStore/
-            .deletingLastPathComponent() // DataStore/ -> PopulationGenetics/
-            .deletingLastPathComponent() // PopulationGenetics/ -> Sources/
-            .deletingLastPathComponent() // Sources/ -> repo root
-    }
-
-    /// Loads sample Araptus beetle genetic data by importing `Data/arapat.csv`.
+    /// Loads sample Araptus beetle genetic data via `ExampleDataset.arapatPopulations`.
     ///
     /// Populates the returned store with:
     /// - 8 microsatellite loci (LTRS, WNT, EN, EF, ZMP, AML, ATPS, MP20)
@@ -91,18 +80,12 @@ extension PopulationGeneticsPreviewData {
     /// - A 3-level stratum hierarchy (Species > Cluster > Population)
     /// - Genotypes for each individual at each locus
     ///
-    /// Returns an empty store if `Data/arapat.csv` can't be read or parsed — preview
+    /// Returns an empty store if the bundled dataset can't be read or parsed — preview
     /// data is a convenience, not something callers should have to handle failure for.
     ///
     /// - Returns: A `PopGenStore` populated with the Araptus sample dataset.
     static public func loadAraptusSamples() -> PopGenStore {
-        let url = repoRoot.appendingPathComponent("Data").appendingPathComponent("arapat.csv")
-        guard let csv = try? String(contentsOf: url, encoding: .utf8),
-              let dataset = try? importPopulationTable(csv: csv, layout: .init(
-                  strataColumns: ["Species", "Cluster", "Population"],
-                  nameColumn: "ID", latitudeColumn: "Latitude", longitudeColumn: "Longitude"
-              ))
-        else {
+        guard let dataset = try? ExampleDataset.arapatPopulations.load() else {
             return PopGenStore()
         }
         return PopGenStore(dataset: dataset)
