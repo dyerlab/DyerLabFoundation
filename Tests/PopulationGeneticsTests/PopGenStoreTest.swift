@@ -14,9 +14,9 @@
 //
 //  Created by Rodney Dyer on 6/2/25.
 //
-//  Definitive end-to-end regression test against the real Data/arapat.csv
+//  Definitive end-to-end regression test against the real ExampleData/arapat.csv
 //  import (via PopulationGeneticsPreviewData). Counts below are recounted
-//  directly from the file (see e.g. `tail -n +2 Data/arapat.csv | wc -l`),
+//  directly from the file (see e.g. `tail -n +2 Sources/PopulationGenetics/ExampleData/arapat.csv | wc -l`),
 //  not carried over from the old hardcoded-array preview dataset.
 //
 

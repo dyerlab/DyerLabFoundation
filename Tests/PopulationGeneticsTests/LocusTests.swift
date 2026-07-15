@@ -113,7 +113,7 @@ struct LocusTests {
     }
 
     @Test func testLocusArraySortingUsesNaturalNotLexicographicContigOrder() async throws {
-        // Real contig names from Data/phylog.012.pos. Plain lexicographic string
+        // Real contig names from ExampleData/phylog.012.pos. Plain lexicographic string
         // comparison would order these "Contig_105" < "Contig_16" < "Contig_2" <
         // "Contig_9" (comparing character-by-character); natural sort must not.
         let contig2 = Locus(name: "L2", contig: "dDocent_Contig_2")

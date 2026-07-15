@@ -22,7 +22,7 @@ struct NaturalSortTests {
     // MARK: - naturalCompare / naturalSorted
 
     @Test func sortsAraptusPopulationCodesNumericallyThenAlphabetically() async throws {
-        // Real values from Data/arapat.csv's `Population` column: a mix of purely
+        // Real values from ExampleData/arapat.csv's `Population` column: a mix of purely
         // numeric site codes and short alphabetic ones. Lexicographic sort would put
         // "12" before "2" and "160" before "9"; natural sort must not.
         let values = [
@@ -48,7 +48,7 @@ struct NaturalSortTests {
     }
 
     @Test func sortsContigNamesNumerically() async throws {
-        // Real contig names from Data/phylog.012.pos.
+        // Real contig names from ExampleData/phylog.012.pos.
         let values = ["dDocent_Contig_16", "dDocent_Contig_9", "dDocent_Contig_105", "dDocent_Contig_2"]
         let expected = ["dDocent_Contig_2", "dDocent_Contig_9", "dDocent_Contig_16", "dDocent_Contig_105"]
         #expect(values.naturalSorted() == expected)

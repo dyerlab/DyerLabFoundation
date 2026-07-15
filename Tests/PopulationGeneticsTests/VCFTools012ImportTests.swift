@@ -72,7 +72,7 @@ struct VCFTools012ImportTests {
         let dataset = try importPhylog()
 
         // At least one -1 (missing) and one 2 (hom-alt) genotype exist somewhere
-        // in the real file (confirmed directly against Data/phylog.012).
+        // in the real file (confirmed directly against ExampleData/phylog.012).
         let anyMissing = (0..<dataset.matrix.locusCount).contains { j in
             (0..<dataset.matrix.individualCount).contains { i in dataset.matrix.columns[j].isEmpty(at: i) }
         }
