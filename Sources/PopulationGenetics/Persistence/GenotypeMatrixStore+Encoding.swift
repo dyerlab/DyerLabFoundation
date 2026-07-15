@@ -21,8 +21,16 @@ import Foundation
 
 extension GenotypeMatrixStore {
 
-    func writeMeta(matrix: GenotypeMatrix, projectName: String, species: String?,
+    func writeMeta(matrix: GenotypeMatrix, parentage: ParentageDesign?, projectName: String, species: String?,
                     connection: SQLiteConnection) throws {
+        let markerTypes = Set(matrix.columns.map(\.markerType))
+        let markerComposition: DatasetSummary.MarkerComposition
+        switch markerTypes.count {
+        case 0: markerComposition = .none
+        case 1: markerComposition = DatasetSummary.MarkerComposition(rawValue: markerTypes.first!.rawValue) ?? .mixed
+        default: markerComposition = .mixed
+        }
+
         let stmt = try connection.prepare("INSERT INTO meta (key, value) VALUES (?, ?)")
         let rows: [(String, String)] = [
             ("schema_version", String(GenotypeMatrixSQLiteSchema.currentSchemaVersion)),
@@ -31,6 +39,10 @@ extension GenotypeMatrixStore {
             ("created_at", ISO8601DateFormatter().string(from: Date())),
             ("individual_count", String(matrix.individualCount)),
             ("locus_count", String(matrix.locusCount)),
+            ("marker_composition", markerComposition.rawValue),
+            ("has_parentage", (parentage?.families.isEmpty == false) ? "true" : "false"),
+            ("has_graph", "false"),
+            ("has_results", "false"),
         ]
         for (key, value) in rows {
             stmt.reset()
@@ -38,6 +50,18 @@ extension GenotypeMatrixStore {
             stmt.bind(value, at: 2)
             _ = try stmt.step()
         }
+    }
+
+    /// Flips a boolean classification flag in `meta` (e.g. `has_graph`,
+    /// `has_results`) written once by `writeMeta`. A no-op if `write(matrix:...)`
+    /// has not yet run and the key doesn't exist — callers of `writeGraph`/
+    /// `addResult` already assume `write` ran first (see `writeGraph`'s own
+    /// "loci must already be present" precondition).
+    func setMetaFlag(_ key: String, to value: Bool, connection: SQLiteConnection) throws {
+        let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
+        stmt.bind(value ? "true" : "false", at: 1)
+        stmt.bind(key, at: 2)
+        _ = try stmt.step()
     }
 
     func writeIndividuals(_ individuals: [Individual], connection: SQLiteConnection) throws {

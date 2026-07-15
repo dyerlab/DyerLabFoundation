@@ -43,7 +43,12 @@ enum GenotypeMatrixSQLiteSchema {
     ///
     /// - `2`: `loci.contig` became `TEXT` (was `INTEGER`); added
     ///   `loci.allele_provenance` and the `individual_strata` table.
-    static let currentSchemaVersion: Int32 = 2
+    /// - `3`: `meta` gained four classification rows — `marker_composition`,
+    ///   `has_parentage`, `has_graph`, `has_results` — written by
+    ///   `write()`/`writeGraph()`/`addResult()`. Lets a caller (e.g. an
+    ///   "Open Recent" file picker) classify a file's contents with a single
+    ///   `SELECT key, value FROM meta`, no genotype/graph/result decoding.
+    static let currentSchemaVersion: Int32 = 3
 
     static let createStatements: [String] = [
         """

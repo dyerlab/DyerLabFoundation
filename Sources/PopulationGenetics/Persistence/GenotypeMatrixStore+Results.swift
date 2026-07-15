@@ -37,6 +37,7 @@ extension GenotypeMatrixStore {
         stmt.bind(result.body, at: 5)
         stmt.bind(ISO8601DateFormatter().string(from: result.createdAt), at: 6)
         _ = try stmt.step()
+        try setMetaFlag("has_results", to: true, connection: connection)
     }
 
     /// All results, in the order they were added.

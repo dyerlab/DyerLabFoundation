@@ -95,7 +95,8 @@ public actor GenotypeMatrixStore {
         let connection = try requireConnection()
         try connection.beginTransaction()
         do {
-            try writeMeta(matrix: matrix, projectName: projectName, species: species, connection: connection)
+            try writeMeta(matrix: matrix, parentage: parentage, projectName: projectName, species: species,
+                          connection: connection)
             try writeIndividuals(matrix.individuals, connection: connection)
             try writeIndividualStrata(strata, individuals: matrix.individuals, connection: connection)
             try writeLoci(matrix: matrix, connection: connection)
@@ -162,6 +163,7 @@ public actor GenotypeMatrixStore {
                              values: edgeValues, ordinals: edgeOrdinals, connection: connection)
             try writeGraphValues(graphValues, connection: connection)
             try writeGraphLoci(loci, connection: connection)
+            try setMetaFlag("has_graph", to: true, connection: connection)
             try connection.commit()
         } catch {
             try? connection.rollback()
