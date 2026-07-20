@@ -49,23 +49,29 @@ public struct DataTableView: View {
     }
 
     /// Pre-rendered display strings, one entry per column.
-    private var displayColumns: [(name: String, values: [String])] {
+    private var displayColumns: [(name: String, values: [String], kind: ColumnKind?)] {
         table.columnNames.map { name in
-            switch table.kind(of: name) {
+            let kind = table.kind(of: name)
+            switch kind {
             case .number:
                 let values = table.numericColumn(name).map { value in
                     value.map { String(format: formatString, $0) } ?? ""
                 }
-                return (name, values)
+                return (name, values, kind)
             case .date:
                 let values = Array(table.frame[name, Date.self]).map { date in
                     date?.formatted(date: .abbreviated, time: .omitted) ?? ""
                 }
-                return (name, values)
+                return (name, values, kind)
             case .category, .none:
-                return (name, table.stringColumn(name).map { $0 ?? "" })
+                return (name, table.stringColumn(name).map { $0 ?? "" }, kind)
             }
         }
+    }
+
+    /// Categories and dates read as left-justified text; numbers stay centered.
+    private func alignment(for kind: ColumnKind?) -> Alignment {
+        kind == .number ? .center : .leading
     }
 
     private var gridColumns: [GridItem] {
@@ -76,18 +82,23 @@ public struct DataTableView: View {
 
     private var tableContent: some View {
         let cols = displayColumns
+        let colCount = cols.count
+        // A single flat ForEach, not a ForEach nested inside another ForEach —
+        // LazyVGrid doesn't reliably flatten the nested form into one cell per
+        // view, which silently drops every data row while the header (a lone
+        // top-level ForEach) still renders.
         return LazyVGrid(columns: gridColumns) {
             ForEach(cols.indices, id: \.self) { c in
-                Text(cols[c].name)
-                    .frame(alignment: .leading)
+                Text(cols[c].name.capitalized)
+                    .frame(maxWidth: .infinity, alignment: alignment(for: cols[c].kind))
                     .font(.headline)
             }
-            ForEach(0 ..< table.rowCount, id: \.self) { r in
-                ForEach(cols.indices, id: \.self) { c in
-                    Text(r < cols[c].values.count ? cols[c].values[r] : "")
-                        .frame(alignment: .leading)
-                        .lineLimit(1)
-                }
+            ForEach(0 ..< (table.rowCount * colCount), id: \.self) { i in
+                let r = i / colCount
+                let c = i % colCount
+                Text(r < cols[c].values.count ? cols[c].values[r] : "")
+                    .frame(maxWidth: .infinity, alignment: alignment(for: cols[c].kind))
+                    .lineLimit(1)
             }
         }
     }

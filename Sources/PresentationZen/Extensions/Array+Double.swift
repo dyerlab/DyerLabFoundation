@@ -41,6 +41,19 @@ public extension Array where Element == Double {
         }
     }
 
+    /// The `p`-quantile (`0...1`), linearly interpolated between order statistics.
+    func quantile(_ p: Double) -> Double {
+        guard !self.isEmpty else { return .nan }
+        let vals = self.sorted()
+        guard vals.count > 1 else { return vals[0] }
+        let rank = p * Double(vals.count - 1)
+        let lower = Int(rank.rounded(.down))
+        let upper = Int(rank.rounded(.up))
+        guard lower != upper else { return vals[lower] }
+        let fraction = rank - Double(lower)
+        return vals[lower] + fraction * (vals[upper] - vals[lower])
+    }
+
     /// The sample standard deviation
     func sd() -> Double {
         guard self.count > 1 else { return .nan }

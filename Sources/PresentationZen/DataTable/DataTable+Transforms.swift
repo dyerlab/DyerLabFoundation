@@ -18,6 +18,7 @@
 
 import Foundation
 import Matrix
+import TabularData
 
 /// A per-category median/standard-deviation summary, for box plots.
 ///
@@ -55,6 +56,38 @@ public extension DataTable {
         return DataTable(numbers: ["bin": histogram.map(\.center),
                                    "count": histogram.map { Double($0.count) }],
                          roles: [.x: "bin", .y: "count"])
+    }
+
+    /// Summarizes a numeric column's descriptive statistics.
+    ///
+    /// - Parameter column: The column to summarize; defaults to the column bound to `y`.
+    /// - Returns: A table with categorical `x` = statistic label (leading column) and
+    ///   quantitative `y` = its value, in Count/Minimum/1st Quartile/Median/Mean/3rd
+    ///   Quartile/Maximum order.
+    func summary(of column: String? = nil) -> DataTable {
+        guard let name = column ?? roles[.y] else { return Self.emptyXY() }
+        let values = self.column(name)
+        guard !values.isEmpty else { return Self.emptyXY() }
+
+        let labels = ["Count", "Minimum", "1st Quartile", "Median",
+                      "Mean", "3rd Quartile", "Maximum"]
+        let stats = [
+            Double(values.count),
+            values.minimum ?? .nan,
+            values.quantile(0.25),
+            values.median(),
+            values.mean,
+            values.quantile(0.75),
+            values.maximum ?? .nan,
+        ]
+
+        // Built directly on a DataFrame (rather than the numbers/strings
+        // convenience init, which always orders numbers before strings) so
+        // "statistic" leads and "value" trails, matching how the table reads.
+        var df = DataFrame()
+        df.append(column: Column(name: "statistic", contents: labels))
+        df.append(column: Column(name: "value", contents: stats))
+        return DataTable(frame: df, roles: [.x: "statistic", .y: "value"])
     }
 
     /// Counts a numeric column into integer buckets.

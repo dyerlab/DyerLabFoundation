@@ -108,7 +108,7 @@ public func anovaTable(_ result: PermutationTestResult) -> DataTable {
 /// - Parameter result: A ``PermutationTestResult``.
 /// - Returns: A `DataTable` with one `msA` column (one row per permutation)
 ///   and its `.y` role already bound, e.g.
-///   `Histogram(nullDistributionTable(result).histogram(of: "msA", bins: 20))`.
+///   `Histogram(nullDistributionTable(result), bins: 20)`.
 public func nullDistributionTable(_ result: PermutationTestResult) -> DataTable {
     DataTable(numbers: ["msA": result.nullDistribution], roles: [.y: "msA"])
 }

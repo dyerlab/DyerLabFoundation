@@ -196,6 +196,36 @@ struct DataTableTransformTests {
         #expect(boxes.first(where: { $0.category == "A" })?.median == 20)
         #expect(boxes.first(where: { $0.category == "B" })?.median == 200)
     }
+
+    @Test("summary defaults to the y-bound column and reports 7 rows")
+    func summaryDefaultsToYRole() {
+        let t = DataTable(numbers: ["value": [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 7]],
+                          roles: [.y: "value"])
+        let s = t.summary(of: nil)
+        #expect(s.rowCount == 7)
+        #expect(s.columnNames == ["statistic", "value"])
+        #expect(s.kind(of: "statistic") == .category)
+        #expect(s.kind(of: "value") == .number)
+    }
+
+    @Test("summary reports count, quartiles, mean, and extrema in order")
+    func summary() {
+        let t = DataTable(numbers: ["v": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], roles: [.y: "v"])
+        let s = t.summary(of: "v")
+        #expect(s.rowCount == 7)
+        #expect(s.column(for: .x) == "statistic")
+        #expect(s.column(for: .y) == "value")
+        #expect(s.stringColumn("statistic").compactMap { $0 } ==
+                ["Count", "Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum"])
+        let values = s.column("value")
+        #expect(values[0] == 10)
+        #expect(values[1] == 1)
+        #expect(abs(values[2] - 3.25) < 0.0001)
+        #expect(abs(values[3] - 5.5) < 0.0001)
+        #expect(abs(values[4] - 5.5) < 0.0001)
+        #expect(abs(values[5] - 7.75) < 0.0001)
+        #expect(values[6] == 10)
+    }
 }
 
 @Suite("Array<Double> extensions")
@@ -216,6 +246,16 @@ struct ArrayDoubleTests {
     @Test("sample standard deviation")
     func standardDeviation() {
         #expect(abs([0.0, 2.0, 4.0].sd() - 2.0) < 0.0001)
+    }
+
+    @Test("quantile interpolates between order statistics")
+    func quantile() {
+        let v = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+        #expect(abs(v.quantile(0.25) - 3.25) < 0.0001)
+        #expect(abs(v.quantile(0.5) - 5.5) < 0.0001)
+        #expect(abs(v.quantile(0.75) - 7.75) < 0.0001)
+        #expect(v.quantile(0) == 1)
+        #expect(v.quantile(1) == 10)
     }
 
     @Test("discretize counts occurrences per value")
