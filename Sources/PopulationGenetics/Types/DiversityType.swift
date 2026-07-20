@@ -62,7 +62,7 @@ public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable {
     ///
     /// - Allelic metrics: A, A95, Ae
     /// - Genotypic metrics: All others (Ho, He, Ht, etc.)
-    var level: DiversityLevel {
+    public var level: DiversityLevel {
         switch self {
         case .A, .A95, .Ae:
             return .Allelic
