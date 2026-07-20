@@ -22,7 +22,7 @@ import Foundation
 extension GenotypeMatrixStore {
 
     func writeMeta(matrix: GenotypeMatrix, parentage: ParentageDesign?, projectName: String, species: String?,
-                    connection: SQLiteConnection) throws {
+                    description: String? = nil, connection: SQLiteConnection) throws {
         let markerTypes = Set(matrix.columns.map(\.markerType))
         let markerComposition: DatasetSummary.MarkerComposition
         switch markerTypes.count {
@@ -36,6 +36,7 @@ extension GenotypeMatrixStore {
             ("schema_version", String(GenotypeMatrixSQLiteSchema.currentSchemaVersion)),
             ("project_name", projectName),
             ("species", species ?? ""),
+            ("description", description ?? ""),
             ("created_at", ISO8601DateFormatter().string(from: Date())),
             ("individual_count", String(matrix.individualCount)),
             ("locus_count", String(matrix.locusCount)),

@@ -56,9 +56,11 @@ extension GenotypeMatrixStore {
         }
 
         let species = try require("species")
+        let description = values["description"] ?? ""
         return DatasetSummary(
             projectName: try require("project_name"),
             species: species.isEmpty ? nil : species,
+            description: description.isEmpty ? nil : description,
             createdAt: createdAt,
             individualCount: individualCount,
             locusCount: locusCount,

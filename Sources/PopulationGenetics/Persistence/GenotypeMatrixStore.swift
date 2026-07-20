@@ -90,13 +90,13 @@ public actor GenotypeMatrixStore {
     /// replacing any existing rows.
     public func write(matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
                        strata: [UUID: [StratumReference]] = [:],
-                       projectName: String, species: String? = nil) async throws {
+                       projectName: String, species: String? = nil, description: String? = nil) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         let connection = try requireConnection()
         try connection.beginTransaction()
         do {
             try writeMeta(matrix: matrix, parentage: parentage, projectName: projectName, species: species,
-                          connection: connection)
+                          description: description, connection: connection)
             try writeIndividuals(matrix.individuals, connection: connection)
             try writeIndividualStrata(strata, individuals: matrix.individuals, connection: connection)
             try writeLoci(matrix: matrix, connection: connection)
@@ -180,11 +180,12 @@ public actor GenotypeMatrixStore {
     /// One-shot convenience: creates (overwriting) a new file and writes `matrix` to it.
     public static func save(_ matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
                              strata: [UUID: [StratumReference]] = [:],
-                             projectName: String, species: String? = nil, to url: URL) async throws {
+                             projectName: String, species: String? = nil, description: String? = nil,
+                             to url: URL) async throws {
         let store = GenotypeMatrixStore()
         try await store.create(at: url, overwrite: true)
         try await store.write(matrix: matrix, parentage: parentage, strata: strata,
-                               projectName: projectName, species: species)
+                               projectName: projectName, species: species, description: description)
         await store.close()
     }
 

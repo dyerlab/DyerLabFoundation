@@ -40,6 +40,9 @@ public struct DatasetSummary: Sendable, Equatable {
 
     public var projectName: String
     public var species: String?
+    /// Free-text description of what this project is focused on — a
+    /// paragraph or two the user can write about the study's purpose.
+    public var description: String?
     public var createdAt: Date
     public var individualCount: Int
     public var locusCount: Int
@@ -48,10 +51,12 @@ public struct DatasetSummary: Sendable, Equatable {
     public var hasGraph: Bool
     public var hasResults: Bool
 
-    public init(projectName: String, species: String?, createdAt: Date, individualCount: Int, locusCount: Int,
-                markerComposition: MarkerComposition, hasParentage: Bool, hasGraph: Bool, hasResults: Bool) {
+    public init(projectName: String, species: String?, description: String? = nil, createdAt: Date,
+                individualCount: Int, locusCount: Int, markerComposition: MarkerComposition, hasParentage: Bool,
+                hasGraph: Bool, hasResults: Bool) {
         self.projectName = projectName
         self.species = species
+        self.description = description
         self.createdAt = createdAt
         self.individualCount = individualCount
         self.locusCount = locusCount

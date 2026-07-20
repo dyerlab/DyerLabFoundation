@@ -22,9 +22,11 @@ public extension PopGenStore {
 
     /// Saves this store's current state to a SQLite file at `url`, overwriting
     /// any existing file there.
-    func save(to url: URL, projectName: String, species: String? = nil, parentage: ParentageDesign? = nil) async throws {
+    func save(to url: URL, projectName: String, species: String? = nil, description: String? = nil,
+              parentage: ParentageDesign? = nil) async throws {
         try await GenotypeMatrixStore.save(matrix, parentage: parentage, strata: individualStrata,
-                                            projectName: projectName, species: species, to: url)
+                                            projectName: projectName, species: species, description: description,
+                                            to: url)
     }
 
     /// Loads a store from a SQLite file at `url`.

@@ -43,7 +43,8 @@ struct DatasetSummaryTests {
 
         let store = GenotypeMatrixStore()
         try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project", species: "Araptus attenuatus")
+        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project", species: "Araptus attenuatus",
+                               description: "A study of cactus-associated weevils across the Sonoran Desert.")
         await store.close()
 
         let reader = GenotypeMatrixStore()
@@ -53,12 +54,30 @@ struct DatasetSummaryTests {
 
         #expect(summary.projectName == "test-project")
         #expect(summary.species == "Araptus attenuatus")
+        #expect(summary.description == "A study of cactus-associated weevils across the Sonoran Desert.")
         #expect(summary.individualCount == 2)
         #expect(summary.locusCount == 1)
         #expect(summary.markerComposition == .snp)
         #expect(summary.hasParentage == false)
         #expect(summary.hasGraph == false)
         #expect(summary.hasResults == false)
+    }
+
+    @Test func omittedDescriptionReadsBackAsNil() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = GenotypeMatrixStore()
+        try await store.create(at: url, overwrite: true)
+        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        await store.close()
+
+        let reader = GenotypeMatrixStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let summary = try await reader.readSummary()
+        await reader.close()
+
+        #expect(summary.description == nil)
     }
 
     @Test func microsatelliteMatrixReportsMicrosatelliteComposition() async throws {

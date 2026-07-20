@@ -46,6 +46,56 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
         }
     }
 
+    /// The Latin binomial this dataset was sampled from, or `nil` when the
+    /// dataset spans an anonymized panel with no single associated species.
+    public var species: String? {
+        switch self {
+        case .arapatPopulations: return "Araptus attenuatus"
+        case .cornusFamilies: return "Cornus florida"
+        case .phylogSNPPanel: return nil
+        }
+    }
+
+    /// A couple of sentences describing the dataset's origin and intended
+    /// use, suitable as the default `description` metadata when this
+    /// dataset is saved to a `GenotypeMatrixStore` file.
+    public var description: String {
+        switch self {
+        case .arapatPopulations:
+            return """
+                A range-wide sample of the cactus-associated bark beetle Araptus attenuatus across the Baja \
+                California peninsula and Sonoran Desert, genotyped at 8 microsatellite loci. Individuals are \
+                organized into a three-level Species/Cluster/Population hierarchy with georeferenced \
+                coordinates, making it well suited for spatial and hierarchical population-structure analyses.
+                """
+        case .cornusFamilies:
+            return """
+                A maternal-family sample of flowering dogwood (Cornus florida), consisting of 62 individuals \
+                across 22 open-pollinated families genotyped at 5 microsatellite loci. Designed for \
+                pollen-pool and parentage analyses, where offspring are grouped under known mothers to \
+                reconstruct mating patterns.
+                """
+        case .phylogSNPPanel:
+            return """
+                A large biallelic SNP dataset of 1,318 individuals genotyped at 926 loci, imported from \
+                vcftools --012 dosage output. Allele identity isn't preserved (each locus uses a REF/ALT \
+                placeholder codebook), so it's best suited for dosage-based analyses like distance and \
+                structure rather than allele-frequency work requiring true allele labels.
+                """
+        }
+    }
+
+    /// Imports this dataset and saves it to `url`, tagged with this
+    /// dataset's canonical `displayName`/`species`/`description` metadata —
+    /// the same metadata a "New Document" template or onboarding flow would
+    /// want without re-typing it at each call site.
+    public func save(to url: URL) async throws {
+        let dataset = try load()
+        try await GenotypeMatrixStore.save(dataset.matrix, parentage: dataset.parentage, strata: dataset.strata,
+                                            projectName: displayName, species: species, description: description,
+                                            to: url)
+    }
+
     /// Imports this dataset through the real import path.
     public func load() throws -> ImportedDataset {
         switch self {
