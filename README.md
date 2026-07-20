@@ -1,5 +1,6 @@
 # DyerLabFoundation Swift Analytics & Data Presentation Package
 A foundation-tier Swift package providing matrix algebra, graph theory, SwiftUI data-presentation tools, and population-genetics analyses shared across Dyer Lab projects. It consolidates the former `MatrixStuff` and `PresentationZen` repositories, and now the `PopulationGenetics` package, into a single, dependency-ordered package.
+
 ## Products
 | Product | Depends on | Purpose |
 |---|---|---|
