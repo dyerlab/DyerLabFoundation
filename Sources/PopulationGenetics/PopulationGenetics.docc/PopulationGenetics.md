@@ -32,6 +32,8 @@ logic lives.
 - ``AMOVA`` (a thin domain-vocabulary wrapper over `Matrix`'s `DistanceVarianceDecomposition`) — variance decomposition and permutation testing, including `pairwisePhiST` for pairwise Φ_ST between strata.
 - `genotypicRarefaction` / `allelicRarefaction` — individual-based resampling for diversity rarefaction.
 - ``ParentageDesign`` / ``MaternalFamily`` / `paternalGamete` — pollen-pool parentage analysis.
+- ``Outcrossing`` — Bayesian MCMC estimation of population mean outcrossing rate and inbreeding coefficient from maternal-family data, both multilocus (`t_m`, via `GenotypeMatrix.runOutcrossing(design:parameters:hasNullModel:)`) and single-locus (`t_s`, via `GenotypeMatrix.runSingleLocusOutcrossing(design:parameters:hasNullModel:)`).
+- ``CorrelatedPaternity`` — Ritland's moment estimator for correlated paternity (`r_p`) and the effective number of pollen donors (`1/r_p`), via `GenotypeMatrix.correlatedPaternity(design:)` and `GenotypeMatrix.correlatedPaternityPerFamily(design:)`.
 
 ### Persistence & spatial
 
