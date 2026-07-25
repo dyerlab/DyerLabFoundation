@@ -44,6 +44,7 @@ extension GenotypeMatrixStore {
             ("has_parentage", (parentage?.families.isEmpty == false) ? "true" : "false"),
             ("has_graph", "false"),
             ("has_results", "false"),
+            ("has_log", "false"),
         ]
         for (key, value) in rows {
             stmt.reset()

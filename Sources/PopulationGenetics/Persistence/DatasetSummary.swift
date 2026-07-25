@@ -50,10 +50,11 @@ public struct DatasetSummary: Sendable, Equatable {
     public var hasParentage: Bool
     public var hasGraph: Bool
     public var hasResults: Bool
+    public var hasLog: Bool
 
     public init(projectName: String, species: String?, description: String? = nil, createdAt: Date,
                 individualCount: Int, locusCount: Int, markerComposition: MarkerComposition, hasParentage: Bool,
-                hasGraph: Bool, hasResults: Bool) {
+                hasGraph: Bool, hasResults: Bool, hasLog: Bool) {
         self.projectName = projectName
         self.species = species
         self.description = description
@@ -64,5 +65,6 @@ public struct DatasetSummary: Sendable, Equatable {
         self.hasParentage = hasParentage
         self.hasGraph = hasGraph
         self.hasResults = hasResults
+        self.hasLog = hasLog
     }
 }

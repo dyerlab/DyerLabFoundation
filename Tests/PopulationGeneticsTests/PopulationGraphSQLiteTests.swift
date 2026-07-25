@@ -9,6 +9,7 @@
 import CoreLocation
 import Foundation
 import Graph
+import Matrix
 import PresentationZen
 import SwiftUI
 import Testing
@@ -207,6 +208,48 @@ struct PopulationGraphSQLiteTests {
 
         let missing = try await store.image(named: "does_not_exist", for: result.id)
         #expect(missing == nil)
+    }
+
+    // MARK: - Log
+
+    @Test func roundTripPreservesLogEntriesInInsertionOrder() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = GenotypeMatrixStore()
+        try await store.create(at: url, overwrite: true)
+
+        let first = LogEntry(logType: .fileIO, message: "Imported 2 individuals, 1 locus from test-project.csv")
+        let second = LogEntry(logType: .assumption, analysisTag: .amovaPhiST,
+                               message: "Assumed missing coordinates meant the population centroid")
+        try await store.appendLog(first)
+        try await store.appendLog(second)
+
+        let entries = try await store.logEntries()
+        #expect(entries.map(\.id) == [first.id, second.id])
+        #expect(entries[0].logType == .fileIO)
+        #expect(entries[0].analysisTag == nil)
+        #expect(entries[0].message == "Imported 2 individuals, 1 locus from test-project.csv")
+        #expect(entries[1].logType == .assumption)
+        #expect(entries[1].analysisTag == .amovaPhiST)
+    }
+
+    @Test func openReadOnlyRejectsLogWrites() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = GenotypeMatrixStore()
+        try await store.create(at: url, overwrite: true)
+        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        await store.close()
+
+        let reader = GenotypeMatrixStore()
+        try await reader.open(at: url, mode: .readOnly)
+
+        await #expect(throws: PersistenceError.readOnly) {
+            try await reader.appendLog(LogEntry(logType: .error, message: "boom"))
+        }
+        await reader.close()
     }
 
     @Test func openReadOnlyRejectsGraphAndResultWrites() async throws {

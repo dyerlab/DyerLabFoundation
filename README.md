@@ -22,7 +22,8 @@ env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
 ## Changelog
-
+### 2026-07-25 — Added logging 
+- Added some logging functionality to saved files for all apps to use.
 ### 2026-07-15 — DocC landing pages for every target
 - Added a hand-written landing page to each target's `.docc` catalog (`Matrix.docc`, `Graph.docc`, `PresentationZen.docc`, `PopulationGenetics.docc`, `DyerlabFoundation.docc`) — a one-line abstract plus an overview grouping each target's key public types, verified with a real `docc convert` pass against each target's own symbol graph (zero diagnostics on the new content).
 - `PopulationGenetics.docc` is no longer excluded from the build — its prior deferral is resolved now that the target has been folded in and builds cleanly. Its old placeholder landing comment (`PopulationGenetics.swift`, which had no attached declaration and was never actually rendered by DocC) was removed in favor of the real landing page.
