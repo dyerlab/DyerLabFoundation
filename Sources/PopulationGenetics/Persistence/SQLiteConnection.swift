@@ -12,7 +12,7 @@
 //
 //  A thin wrapper around the raw SQLite3 C API. Isolates every `sqlite3_*`
 //  call so the schema-encoding/decoding code above it stays readable. Not
-//  thread-safe on its own; callers (e.g. `GenotypeMatrixStore`, an actor)
+//  thread-safe on its own; callers (e.g. `ProjectStore`, an actor)
 //  are responsible for serializing access.
 //
 

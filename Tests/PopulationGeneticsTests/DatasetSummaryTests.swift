@@ -3,8 +3,8 @@
 //  PopulationGenetics
 //
 //  Exercises DatasetSummary — the cheap meta-table classification read by
-//  GenotypeMatrixStore.readSummary(), used e.g. by an "Open Recent" file
-//  picker to choose an icon without decoding the full dataset.
+//  ProjectStore.readSummary(), used e.g. by an "Open Recent" file picker to
+//  choose an icon without decoding the full dataset.
 //
 
 import CoreLocation
@@ -41,13 +41,13 @@ struct DatasetSummaryTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project", species: "Araptus attenuatus",
-                               description: "A study of cactus-associated weevils across the Sonoran Desert.")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project", species: "Araptus attenuatus",
+                                description: "A study of cactus-associated weevils across the Sonoran Desert.")
+        try await store.writeGeneticData(matrix: makeSNPMatrix())
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -62,18 +62,19 @@ struct DatasetSummaryTests {
         #expect(summary.hasGraph == false)
         #expect(summary.hasResults == false)
         #expect(summary.hasLog == false)
+        #expect(summary.hasMatrices == false)
     }
 
     @Test func omittedDescriptionReadsBackAsNil() async throws {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeSNPMatrix())
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -85,12 +86,12 @@ struct DatasetSummaryTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMicrosatMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMicrosatMatrix())
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -105,12 +106,12 @@ struct DatasetSummaryTests {
         let matrix = makeMicrosatMatrix()
         let parentage = ParentageDesign(families: [MaternalFamily(id: "fam1", mother: 0, offspring: [1])])
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: matrix, parentage: parentage, projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: matrix, parentage: parentage)
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -122,9 +123,9 @@ struct DatasetSummaryTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeSNPMatrix())
 
         let graph = Graph()
         graph.addNode(name: "A", size: 1.0, color: .red, coordinate: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4))
@@ -133,7 +134,7 @@ struct DatasetSummaryTests {
         try await store.writeGraph(graph)
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -145,13 +146,13 @@ struct DatasetSummaryTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeSNPMatrix())
         try await store.addResult(AnalysisResult(name: "AMOVA", body: "# AMOVA"))
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
@@ -163,17 +164,70 @@ struct DatasetSummaryTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeSNPMatrix())
         try await store.appendLog(LogEntry(logType: .fileIO, message: "Imported test-project.csv"))
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let summary = try await reader.readSummary()
         await reader.close()
 
         #expect(summary.hasLog == true)
+    }
+
+    // MARK: - Component presence vs. absence
+
+    @Test func partialComponentsReadAsNilNotFalse() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, components: .log, projectName: "log-only-project")
+        try await store.appendLog(LogEntry(logType: .fileIO, message: "started"))
+        await store.close()
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let summary = try await reader.readSummary()
+        await reader.close()
+
+        #expect(summary.projectName == "log-only-project")
+        #expect(summary.hasLog == true)
+        #expect(summary.individualCount == nil)
+        #expect(summary.locusCount == nil)
+        #expect(summary.markerComposition == nil)
+        #expect(summary.hasParentage == nil)
+        #expect(summary.hasGraph == nil)
+        #expect(summary.hasResults == nil)
+        #expect(summary.hasMatrices == nil)
+    }
+
+    @Test func readingAnAbsentComponentThrowsComponentNotPresent() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, components: .log, projectName: "log-only-project")
+        await store.close()
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+
+        await #expect(throws: PersistenceError.componentNotPresent("graph")) {
+            _ = try await reader.readGraph()
+        }
+        await #expect(throws: PersistenceError.componentNotPresent("results")) {
+            _ = try await reader.results()
+        }
+        await #expect(throws: PersistenceError.componentNotPresent("geneticData")) {
+            _ = try await reader.readGeneticData()
+        }
+        await #expect(throws: PersistenceError.componentNotPresent("matrices")) {
+            _ = try await reader.matrices()
+        }
+        await reader.close()
     }
 }

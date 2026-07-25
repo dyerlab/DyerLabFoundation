@@ -29,7 +29,6 @@ import Matrix
 /// on demand for callers that want the standardized tabular form (e.g. to
 /// hand to `DataTableView` or a chart) instead of the raw scalars.
 ///
-/// `fit` carries the full ``LinearModelFit`` (df/SS/MS/F breakdown) computed
 /// by `dateRegression(_:)`; it's `nil` when a `RegressionResult` is built
 /// directly rather than fit from data. Pass it to `anovaTable(_:)` — or just
 /// pass this whole result to the `anovaTable(_:)` overload that accepts one.

@@ -21,7 +21,6 @@ import Matrix
 /// Computes a linear regression over a table's temporal data.
 ///
 /// Groups rows by date, averages the `y` value per group, then fits a linear
-/// model (intercept + days-since-first-date) via ``linearModelFit(designMatrix:response:)``,
 /// the same general-linear-model core used for `anovaTable(_:)`.
 ///
 /// - Parameter table: A ``DataTable`` whose `x` role is a date column and

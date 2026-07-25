@@ -13,9 +13,9 @@
 //  Created by Rodney Dyer on 7/13/26.
 //
 //  Ergonomic query/mutation facade over the columnar storage model
-//  (`GenotypeMatrix` + `GenotypeMatrixStore`), replacing the older UUID
+//  (`GenotypeMatrix` + `ProjectStore`), replacing the older UUID
 //  dictionary-graph store. `GenotypeMatrix` is a fixed-shape batch structure
-//  with no incremental `add*` API, and `GenotypeMatrixStore` is a fully
+//  with no incremental `add*` API, and `ProjectStore` is a fully
 //  `async` actor built around whole-file SQLite round-trips — neither is
 //  suited to the one-row-at-a-time mutation a SwiftUI app or an importer
 //  needs. `PopGenStore` instead owns growable native "staging" arrays

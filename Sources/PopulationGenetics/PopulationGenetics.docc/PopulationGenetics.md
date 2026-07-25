@@ -37,7 +37,8 @@ logic lives.
 
 ### Persistence & spatial
 
-- ``GenotypeMatrixStore`` — an actor-based SQLite store for a `GenotypeMatrix` and its population graph, safe to hold and `await` from any context.
+- ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Five equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, and named generic matrices — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
+- ``DatasetSummary`` — a cheap `meta`-table classification of a `ProjectStore` file's contents (project identity plus which components are present) without decoding the full dataset.
 - ``PopulationGraphDataset`` — a population graph paired with its spatial layout.
 - ``PlacardMapView`` / ``MapPlacard`` — MapKit-backed views for a population graph.
 - `pairwiseGreatCircleDistance` — spatial distance between sampling locations.

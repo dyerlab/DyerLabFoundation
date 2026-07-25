@@ -7,22 +7,99 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+Encoding.swift
+//  ProjectStore+Encoding.swift
 //  PopulationGenetics
 //
-//  The write path: turns in-memory `GenotypeMatrix`/`ParentageDesign` values
-//  into rows in the schema defined by `GenotypeMatrixSQLiteSchema`. Each
-//  helper prepares one statement and reuses it across the row loop (reset +
-//  rebind) rather than re-preparing SQL text per row, which matters once
-//  locus counts run into the tens/hundreds of thousands.
+//  Read/write access to the `.geneticData` component: turns in-memory
+//  `GenotypeMatrix`/`ParentageDesign` values into rows in the schema defined
+//  by `GeneticDataSQLiteSchema.swift`. Each helper prepares one statement and
+//  reuses it across the row loop (reset + rebind) rather than re-preparing
+//  SQL text per row, which matters once locus counts run into the
+//  tens/hundreds of thousands.
 //
 
 import Foundation
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
-    func writeMeta(matrix: GenotypeMatrix, parentage: ParentageDesign?, projectName: String, species: String?,
-                    description: String? = nil, connection: SQLiteConnection) throws {
+    /// Writes the full genetic dataset into the currently open connection in
+    /// one transaction, replacing any previously-written genetic data.
+    /// Leaves every other component (graph/results/log/matrices) untouched.
+    public func writeGeneticData(matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
+                                  strata: [UUID: [StratumReference]] = [:]) async throws {
+        guard mode == .readWrite else { throw PersistenceError.readOnly }
+        try requireComponent(.geneticData, "geneticData")
+        let connection = try requireConnection()
+        try connection.beginTransaction()
+        do {
+            try deleteGeneticDataRows(connection: connection)
+            try writeGeneticDataMeta(matrix: matrix, parentage: parentage, connection: connection)
+            try writeIndividuals(matrix.individuals, connection: connection)
+            try writeIndividualStrata(strata, individuals: matrix.individuals, connection: connection)
+            try writeLoci(matrix: matrix, connection: connection)
+            try writeCodebooksAndBlobs(matrix: matrix, connection: connection)
+            try writeParentage(parentage, connection: connection)
+            try connection.commit()
+        } catch {
+            try? connection.rollback()
+            throw error
+        }
+    }
+
+    /// Reconstructs the `GenotypeMatrix` from the currently open connection.
+    public func readGeneticData() async throws -> GenotypeMatrix {
+        try requireComponent(.geneticData, "geneticData")
+        return try decodeMatrix(connection: try requireConnection())
+    }
+
+    /// Reconstructs the `ParentageDesign`, or `nil` if no families were stored.
+    public func readParentage() async throws -> ParentageDesign? {
+        try requireComponent(.geneticData, "geneticData")
+        return try decodeParentage(connection: try requireConnection())
+    }
+
+    /// Reconstructs each individual's hierarchical stratum lineage, keyed by
+    /// `Individual.id`. Empty if no strata were stored.
+    public func readIndividualStrata() async throws -> [UUID: [StratumReference]] {
+        try requireComponent(.geneticData, "geneticData")
+        return try readIndividualStrata(connection: try requireConnection())
+    }
+
+    /// Reconstructs the full `ImportedDataset`, synthesizing an empty
+    /// `ParentageDesign` when none was stored.
+    public func readDataset() async throws -> ImportedDataset {
+        try requireComponent(.geneticData, "geneticData")
+        let connection = try requireConnection()
+        let matrix = try decodeMatrix(connection: connection)
+        let parentage = try decodeParentage(connection: connection) ?? ParentageDesign(families: [])
+        let strata = try readIndividualStrata(connection: connection)
+        return ImportedDataset(matrix: matrix, parentage: parentage, strata: strata)
+    }
+
+    // MARK: - Write helpers
+
+    /// Flips a boolean classification flag in `meta` (e.g. `has_graph`,
+    /// `has_results`), seeded to `"false"` by each component's own
+    /// `createSchema`. Shared by `writeGraph`/`addResult`/`appendLog`/`addMatrix`.
+    func setMetaFlag(_ key: String, to value: Bool, connection: SQLiteConnection) throws {
+        let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
+        stmt.bind(value ? "true" : "false", at: 1)
+        stmt.bind(key, at: 2)
+        _ = try stmt.step()
+    }
+
+    /// Clears every row this component owns, so `writeGeneticData` can be
+    /// called again on an already-populated connection without hitting the
+    /// tables' primary keys.
+    private func deleteGeneticDataRows(connection: SQLiteConnection) throws {
+        for table in ["family_offspring", "families", "individual_strata", "genotype_blobs",
+                      "codebooks", "loci", "individuals"] {
+            try connection.execute("DELETE FROM \(table)")
+        }
+    }
+
+    private func writeGeneticDataMeta(matrix: GenotypeMatrix, parentage: ParentageDesign?,
+                                       connection: SQLiteConnection) throws {
         let markerTypes = Set(matrix.columns.map(\.markerType))
         let markerComposition: DatasetSummary.MarkerComposition
         switch markerTypes.count {
@@ -31,20 +108,13 @@ extension GenotypeMatrixStore {
         default: markerComposition = .mixed
         }
 
-        let stmt = try connection.prepare("INSERT INTO meta (key, value) VALUES (?, ?)")
+        let stmt = try connection.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
         let rows: [(String, String)] = [
-            ("schema_version", String(GenotypeMatrixSQLiteSchema.currentSchemaVersion)),
-            ("project_name", projectName),
-            ("species", species ?? ""),
-            ("description", description ?? ""),
-            ("created_at", ISO8601DateFormatter().string(from: Date())),
             ("individual_count", String(matrix.individualCount)),
             ("locus_count", String(matrix.locusCount)),
             ("marker_composition", markerComposition.rawValue),
             ("has_parentage", (parentage?.families.isEmpty == false) ? "true" : "false"),
-            ("has_graph", "false"),
-            ("has_results", "false"),
-            ("has_log", "false"),
+            (GeneticDataSchemaComponent.hasFlagKey, "true"),
         ]
         for (key, value) in rows {
             stmt.reset()
@@ -52,18 +122,6 @@ extension GenotypeMatrixStore {
             stmt.bind(value, at: 2)
             _ = try stmt.step()
         }
-    }
-
-    /// Flips a boolean classification flag in `meta` (e.g. `has_graph`,
-    /// `has_results`) written once by `writeMeta`. A no-op if `write(matrix:...)`
-    /// has not yet run and the key doesn't exist — callers of `writeGraph`/
-    /// `addResult` already assume `write` ran first (see `writeGraph`'s own
-    /// "loci must already be present" precondition).
-    func setMetaFlag(_ key: String, to value: Bool, connection: SQLiteConnection) throws {
-        let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
-        stmt.bind(value ? "true" : "false", at: 1)
-        stmt.bind(key, at: 2)
-        _ = try stmt.step()
     }
 
     func writeIndividuals(_ individuals: [Individual], connection: SQLiteConnection) throws {
@@ -83,7 +141,7 @@ extension GenotypeMatrixStore {
     }
 
     /// Writes each individual's hierarchical stratum lineage. Mirrors
-    /// `writeNodeStrata` (`GenotypeMatrixStore+GraphEncoding.swift`), but builds its
+    /// `writeNodeStrata` (`ProjectStore+GraphEncoding.swift`), but builds its
     /// own ordinal map locally since `writeIndividuals` already establishes
     /// ordinal == array index and callers don't otherwise have one to pass in.
     func writeIndividualStrata(_ strata: [UUID: [StratumReference]], individuals: [Individual],

@@ -1,9 +1,9 @@
 //
-//  PopulationGraphSQLiteTests.swift
+//  GraphResultsLogPersistenceTests.swift
 //  PopulationGenetics
 //
-//  Round-trip tests for the population graph and results/images tables
-//  layered onto a GenotypeMatrixStore file.
+//  Round-trip tests for the `.graph`, `.results`, and `.log` components
+//  layered onto a ProjectStore file.
 //
 
 import CoreLocation
@@ -15,7 +15,7 @@ import SwiftUI
 import Testing
 @testable import PopulationGenetics
 
-struct PopulationGraphSQLiteTests {
+struct GraphResultsLogPersistenceTests {
 
     private func makeMatrix() -> GenotypeMatrix {
         let individuals = [Individual(name: "i0"), Individual(name: "i1")]
@@ -45,15 +45,15 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
 
         let original = makeGraph()
         try await store.writeGraph(original)
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
         await reader.close()
@@ -83,9 +83,9 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
 
         let graph = makeGraph()
         let nodeA = graph.nodes[0]
@@ -104,7 +104,7 @@ struct PopulationGraphSQLiteTests {
         )
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
         await reader.close()
@@ -131,13 +131,13 @@ struct PopulationGraphSQLiteTests {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let matrix = makeMatrix()
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: matrix, projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: matrix)
         try await store.writeGraph(makeGraph(), loci: matrix.loci)
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
         await reader.close()
@@ -151,14 +151,37 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
 
         let strangerLocus = Locus(name: "not-in-file")
         await #expect(throws: PersistenceError.self) {
             try await store.writeGraph(makeGraph(), loci: [strangerLocus])
         }
+    }
+
+    @Test func writeGraphCalledTwiceReplacesRatherThanThrows() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGraph(makeGraph())
+
+        let replacement = Graph()
+        replacement.addNode(name: "solo", size: 9.0, color: .gray)
+        try await store.writeGraph(replacement)
+        await store.close()
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let dataset = try await reader.readGraph()
+        await reader.close()
+
+        #expect(dataset.graph.nodes.count == 1)
+        #expect(dataset.graph.nodes.first?.name == "solo")
+        #expect(dataset.graph.edges.isEmpty)
     }
 
     // MARK: - Results / images
@@ -167,8 +190,8 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
 
         let first = AnalysisResult(name: "AMOVA", description: "Permutation test", body: "# AMOVA\n\nΦ = 0.14")
         let second = AnalysisResult(name: "Rarefaction", body: "# Rarefaction curve")
@@ -190,8 +213,8 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
 
         let result = AnalysisResult(name: "AMOVA", body: "![Null distribution](attachment:null_distribution)")
         try await store.addResult(result)
@@ -216,8 +239,8 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
 
         let first = LogEntry(logType: .fileIO, message: "Imported 2 individuals, 1 locus from test-project.csv")
         let second = LogEntry(logType: .assumption, analysisTag: .amovaPhiST,
@@ -238,12 +261,12 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
 
         await #expect(throws: PersistenceError.readOnly) {
@@ -256,12 +279,12 @@ struct PopulationGraphSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: makeMatrix(), projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
 
         await #expect(throws: PersistenceError.readOnly) {

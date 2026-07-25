@@ -21,7 +21,6 @@ import Matrix
 /// Summarizes a hypergeometric draw into "at least", "exact", and "fewer than"
 /// probabilities, ready to hand to a chart.
 ///
-/// Built on ``hypergeometricProbability(populationSize:successesInPopulation:draws:observedSuccesses:)``,
 /// this answers the practical framing of a draw-without-replacement question —
 /// e.g. "by turn 4, what's the chance I've drawn at least one copy of this
 /// card, exactly one, or none at all?" — as a three-row `DataTable` with an

@@ -11,7 +11,7 @@
 //  PopulationGenetics
 //
 //  The full result of reading a population graph back out of a
-//  `GenotypeMatrixStore`: the `Graph` itself plus the
+//  `ProjectStore`: the `Graph` itself plus the
 //  population-genetics metadata layered on top of it (stratum lineage,
 //  numeric node/edge/graph measures, and which loci built it).
 //
@@ -21,7 +21,7 @@ import Graph
 
 /// `Graph`/`Node`/`Edge` (from the Graph module) are plain reference types with
 /// no `Sendable` conformance of their own. Each read constructs a fresh
-/// graph that the actor-isolated `GenotypeMatrixStore` hands off and never
+/// graph that the actor-isolated `ProjectStore` hands off and never
 /// touches again, so treating them as `Sendable` here is safe in practice
 /// even though the compiler can't verify it structurally.
 ///

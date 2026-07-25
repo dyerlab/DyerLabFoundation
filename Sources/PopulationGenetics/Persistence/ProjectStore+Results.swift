@@ -7,24 +7,25 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+Results.swift
+//  ProjectStore+Results.swift
 //  PopulationGenetics
 //
-//  Read/write access to the `results`/`result_images` log — a generic,
-//  append-only record of Markdown analysis writeups and their attached
-//  images. Platform-neutral: images are stored and returned as raw `Data`
-//  here; `UIImage`/`NSImage` convenience lives in
-//  `GenotypeMatrixStore+PlatformImage.swift`, gated per-platform.
+//  Read/write access to the `.results` component's `results`/`result_images`
+//  tables — a generic, append-only record of Markdown analysis writeups and
+//  their attached images. Platform-neutral: images are stored and returned
+//  as raw `Data` here; `UIImage`/`NSImage` convenience lives in
+//  `ProjectStore+PlatformImage.swift`, gated per-platform.
 //
 
 import Foundation
 import PresentationZen
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
     /// Appends one result. Results are never updated in place; each call adds a new row.
     public func addResult(_ result: AnalysisResult) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
+        try requireComponent(.results, "results")
         let connection = try requireConnection()
         let ordinal = try nextResultOrdinal(connection: connection)
         let stmt = try connection.prepare("""
@@ -37,11 +38,12 @@ extension GenotypeMatrixStore {
         stmt.bind(result.body, at: 5)
         stmt.bind(ISO8601DateFormatter().string(from: result.createdAt), at: 6)
         _ = try stmt.step()
-        try setMetaFlag("has_results", to: true, connection: connection)
+        try setMetaFlag(ResultsSchemaComponent.hasFlagKey, to: true, connection: connection)
     }
 
     /// All results, in the order they were added.
     public func results() async throws -> [AnalysisResult] {
+        try requireComponent(.results, "results")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
             SELECT uuid, name, description, body, created_at FROM results ORDER BY ordinal
@@ -56,6 +58,7 @@ extension GenotypeMatrixStore {
 
     /// A single result by id, or `nil` if none exists.
     public func result(id: UUID) async throws -> AnalysisResult? {
+        try requireComponent(.results, "results")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
             SELECT uuid, name, description, body, created_at FROM results WHERE uuid = ?
@@ -70,6 +73,7 @@ extension GenotypeMatrixStore {
     /// unique — attaching the same name twice throws.
     public func attachImage(_ image: ResultImage, to resultID: UUID) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
+        try requireComponent(.results, "results")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
             INSERT INTO result_images (result_uuid, name, mime_type, width, height, data) VALUES (?, ?, ?, ?, ?, ?)
@@ -85,6 +89,7 @@ extension GenotypeMatrixStore {
 
     /// The image attached to a result under the given `attachment:` name, or `nil`.
     public func image(named name: String, for resultID: UUID) async throws -> ResultImage? {
+        try requireComponent(.results, "results")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
             SELECT mime_type, width, height, data FROM result_images WHERE result_uuid = ? AND name = ?

@@ -11,7 +11,7 @@
 //  PopulationGenetics
 //
 
-/// Errors thrown by the SQLite-backed `GenotypeMatrixStore`.
+/// Errors thrown by the SQLite-backed `ProjectStore`.
 public enum PersistenceError: Error, Equatable {
     /// The file at the given path could not be opened.
     case cannotOpen(String)
@@ -25,4 +25,6 @@ public enum PersistenceError: Error, Equatable {
     case notOpen
     /// A write was attempted on a store opened `.readOnly`.
     case readOnly
+    /// The requested component (e.g. `.graph`) was never created for this file.
+    case componentNotPresent(String)
 }

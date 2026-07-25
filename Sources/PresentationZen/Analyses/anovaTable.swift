@@ -22,7 +22,6 @@ import Matrix
 /// mean-square, and F-statistic breakdown as a classic ANOVA source table.
 ///
 /// - Parameter fit: Any fitted general linear model — simple regression and
-///   one-way analysis of variance both produce a ``LinearModelFit``.
 /// - Returns: A three-row `DataTable` (`Model`, `Residual`, `Total`) with
 ///   `source`/`df`/`ss`/`ms`/`f` columns. `ms`/`f` are `Double.nan` on the
 ///   `Total` row (and `f` on `Residual`), matching a standard ANOVA table.
@@ -42,7 +41,6 @@ public func anovaTable(_ fit: LinearModelFit) -> DataTable {
 ///
 /// - Parameter result: A ``RegressionResult`` produced by `dateRegression(_:)`.
 /// - Returns: The ANOVA source table, or `nil` if `result` was built directly
-///   rather than fit from data (so it carries no ``LinearModelFit``).
 public func anovaTable(_ result: RegressionResult) -> DataTable? {
     result.fit.map(anovaTable)
 }
@@ -83,7 +81,6 @@ public func anovaTable(_ table: DataTable) -> DataTable? {
 /// mean-square, and F-statistic breakdown, with an empirical p-value on the
 /// `Model` row in place of an assumed F-distribution.
 ///
-/// - Parameter result: A ``PermutationTestResult``.
 /// - Returns: The ANOVA source table with an added `p` column (`Double.nan`
 ///   on the `Residual`/`Total` rows, matching how `ms`/`f` are already
 ///   padded there).
@@ -105,7 +102,6 @@ public func anovaTable(_ result: PermutationTestResult) -> DataTable {
 /// permutation test, as a raw single-column `DataTable` ready for binning
 /// and charting.
 ///
-/// - Parameter result: A ``PermutationTestResult``.
 /// - Returns: A `DataTable` with one `msA` column (one row per permutation)
 ///   and its `.y` role already bound, e.g.
 ///   `Histogram(nullDistributionTable(result), bins: 20)`.

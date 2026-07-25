@@ -12,7 +12,7 @@
 //
 //  Created by Rodney Dyer on 7/13/26.
 //
-//  SQLite-backed persistence via GenotypeMatrixStore. Unlike the old JSON store,
+//  SQLite-backed persistence via ProjectStore. Unlike the old JSON store,
 //  this does not round-trip allele lineage (see PopGenStore.swift header).
 //
 
@@ -20,18 +20,24 @@ import Foundation
 
 public extension PopGenStore {
 
-    /// Saves this store's current state to a SQLite file at `url`, overwriting
-    /// any existing file there.
+    /// Saves this store's current genetic data to a SQLite file at `url`.
+    ///
+    /// Opens `url` in place if it already exists (preserving whatever
+    /// graph/results/log/matrices data it holds) or creates it with just the
+    /// `.geneticData` component otherwise — never destroys the file, unlike
+    /// the old behavior of recreating it from scratch on every save.
     func save(to url: URL, projectName: String, species: String? = nil, description: String? = nil,
               parentage: ParentageDesign? = nil) async throws {
-        try await GenotypeMatrixStore.save(matrix, parentage: parentage, strata: individualStrata,
-                                            projectName: projectName, species: species, description: description,
-                                            to: url)
+        let store = ProjectStore()
+        try await store.openOrCreate(at: url, components: .geneticData, projectName: projectName,
+                                      species: species, description: description)
+        try await store.writeGeneticData(matrix: matrix, parentage: parentage, strata: individualStrata)
+        await store.close()
     }
 
     /// Loads a store from a SQLite file at `url`.
     static func load(from url: URL) async throws -> PopGenStore {
-        let dataset = try await GenotypeMatrixStore.load(from: url)
+        let dataset = try await ProjectStore.load(from: url)
         return PopGenStore(dataset: dataset)
     }
 }

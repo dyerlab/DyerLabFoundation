@@ -7,16 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+Decoding.swift
+//  ProjectStore+Decoding.swift
 //  PopulationGenetics
 //
 //  The read path: reconstructs in-memory `GenotypeMatrix`/`ParentageDesign`
-//  values from the rows written by `GenotypeMatrixStore+Encoding`.
+//  values from the rows written by `ProjectStore+Encoding`.
 //
 
 import Foundation
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
     func decodeMatrix(connection: SQLiteConnection) throws -> GenotypeMatrix {
         let individuals = try readIndividuals(connection: connection)
@@ -102,7 +102,7 @@ extension GenotypeMatrixStore {
     }
 
     /// Reads each individual's hierarchical stratum lineage. Mirrors
-    /// `readNodeStrata` (`GenotypeMatrixStore+GraphDecoding.swift`).
+    /// `readNodeStrata` (`ProjectStore+GraphDecoding.swift`).
     func readIndividualStrata(connection: SQLiteConnection) throws -> [UUID: [StratumReference]] {
         let individuals = try readIndividuals(connection: connection)
         let stmt = try connection.prepare("""

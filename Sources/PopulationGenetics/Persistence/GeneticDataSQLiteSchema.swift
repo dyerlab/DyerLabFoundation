@@ -7,14 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixSQLiteSchema.swift
+//  GeneticDataSQLiteSchema.swift
 //  PopulationGenetics
 //
-//  The on-disk SQLite schema for a persisted `GenotypeMatrix`. Ordinals
-//  (0-based array index) are the join key throughout, mirroring the in-memory
-//  model exactly; UUIDs are stored only for identity round-trip, never as a
-//  foreign key. This doubles as the authoritative byte-layout spec that any
-//  non-Swift reader (e.g. the companion R script) must match:
+//  The on-disk SQLite schema for the `.geneticData` component: individuals,
+//  loci, genotypes, parentage. Ordinals (0-based array index) are the join
+//  key throughout, mirroring the in-memory model exactly; UUIDs are stored
+//  only for identity round-trip, never as a foreign key. This doubles as the
+//  authoritative byte-layout spec that any non-Swift reader (e.g. the
+//  companion R script) must match:
 //
 //  - `genotype_blobs.blob_a`/`blob_b` for `biallelicSNP` loci hold the same
 //    2-bit-packed, 4-genotypes-per-byte, LSB-first bytes as
@@ -28,38 +29,30 @@
 //  - `loci.allele_provenance == 'refAltPlaceholder'` marks loci whose codebook
 //    holds `Z`/`z` placeholders (REF-slot/ALT-slot) rather than real bases,
 //    e.g. loci imported from allele-anonymous sources like vcftools `--012`.
-//  - `individual_strata` mirrors `node_strata` (see
-//    `PopulationGraphSQLiteSchema.swift`) but keyed to `individuals(ordinal)`:
-//    one row per (individual, level) pair, fully denormalized, no separate
-//    strata table.
+//  - `individual_strata` mirrors `node_strata` (see `GraphSQLiteSchema.swift`)
+//    but keyed to `individuals(ordinal)`: one row per (individual, level)
+//    pair, fully denormalized, no separate strata table.
+//
+//  Like every other component (see `StoreComponents.swift`), this one is
+//  independently optional: a `ProjectStore` file can hold graph/results/log/
+//  matrices data with no genetic data at all.
 //
 
 import Foundation
 
-enum GenotypeMatrixSQLiteSchema {
+enum GeneticDataSchemaComponent {
 
     /// Bumped whenever the on-disk layout changes in a way that breaks
-    /// existing readers.
-    ///
-    /// - `2`: `loci.contig` became `TEXT` (was `INTEGER`); added
-    ///   `loci.allele_provenance` and the `individual_strata` table.
-    /// - `3`: `meta` gained four classification rows — `marker_composition`,
-    ///   `has_parentage`, `has_graph`, `has_results` — written by
-    ///   `write()`/`writeGraph()`/`addResult()`. Lets a caller (e.g. an
-    ///   "Open Recent" file picker) classify a file's contents with a single
-    ///   `SELECT key, value FROM meta`, no genotype/graph/result decoding.
-    /// - `4`: `meta` gained a fifth classification row, `has_log`, written by
-    ///   `write()`/`appendLog()`. The `log_entries` table itself lives in
-    ///   `PopulationGraphSQLiteSchema` alongside `results`/`result_images`.
-    static let currentSchemaVersion: Int32 = 4
+    /// existing readers. Tracked via the `genetic_data_schema_version` row in
+    /// `meta`, whose mere presence signals this component exists in the file
+    /// — not `PRAGMA user_version`, which can't express "this optional
+    /// component is present" the way a per-component meta key can.
+    static let currentSchemaVersion: Int32 = 1
+
+    static let metaVersionKey = "genetic_data_schema_version"
+    static let hasFlagKey = "has_genetic_data"
 
     static let createStatements: [String] = [
-        """
-        CREATE TABLE meta (
-            key   TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        )
-        """,
         """
         CREATE TABLE individuals (
             ordinal   INTEGER PRIMARY KEY,
@@ -123,19 +116,41 @@ enum GenotypeMatrixSQLiteSchema {
         """,
     ]
 
-    /// Creates every table for a freshly-opened, empty database and sets
-    /// `PRAGMA user_version` to `currentSchemaVersion`.
+    /// Creates this component's tables and records its version + `has_genetic_data`
+    /// flag (initially `false`) in `meta`.
     static func createSchema(in connection: SQLiteConnection) throws {
         for statement in createStatements {
             try connection.execute(statement)
         }
-        try connection.setUserVersion(currentSchemaVersion)
+        let stmt = try connection.prepare("INSERT INTO meta (key, value) VALUES (?, ?)")
+        stmt.bind(metaVersionKey, at: 1)
+        stmt.bind(String(currentSchemaVersion), at: 2)
+        _ = try stmt.step()
+        stmt.reset()
+        stmt.bind(hasFlagKey, at: 1)
+        stmt.bind("false", at: 2)
+        _ = try stmt.step()
     }
 
-    /// Validates that an opened database's `user_version` matches
-    /// `currentSchemaVersion`, throwing `.schemaVersionMismatch` otherwise.
+    /// `true` if this component's tables were created for the currently open file.
+    static func isPresent(in connection: SQLiteConnection) throws -> Bool {
+        let stmt = try connection.prepare("SELECT 1 FROM meta WHERE key = ?")
+        stmt.bind(metaVersionKey, at: 1)
+        return try stmt.step()
+    }
+
+    /// Validates that this component's `meta` version row matches
+    /// `currentSchemaVersion`. Assumes the caller already confirmed presence.
     static func validateSchemaVersion(of connection: SQLiteConnection) throws {
-        let found = try connection.userVersion()
+        let stmt = try connection.prepare("SELECT value FROM meta WHERE key = ?")
+        stmt.bind(metaVersionKey, at: 1)
+        guard try stmt.step() else {
+            throw PersistenceError.corruptData("missing \(metaVersionKey) row in meta table")
+        }
+        let valueString = stmt.columnText(at: 0)
+        guard let found = Int32(valueString) else {
+            throw PersistenceError.corruptData("invalid \(metaVersionKey) value: \(valueString)")
+        }
         guard found == currentSchemaVersion else {
             throw PersistenceError.schemaVersionMismatch(found: found, expected: currentSchemaVersion)
         }

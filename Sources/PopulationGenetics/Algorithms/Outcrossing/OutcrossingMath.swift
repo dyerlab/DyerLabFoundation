@@ -29,7 +29,6 @@ extension Outcrossing {
     /// the product across loci is a different (incorrect) model — it would
     /// decorrelate homozygosity across loci, destroying the very correlation
     /// multilocus outcrossing-rate estimators depend on. See
-    /// ``Outcrossing/Sampler/progenyLogLikelihood(familyIndex:state:)`` for where
     /// the mixture is actually taken.
     ///
     /// - Note: Missing offspring data at this locus is not this function's

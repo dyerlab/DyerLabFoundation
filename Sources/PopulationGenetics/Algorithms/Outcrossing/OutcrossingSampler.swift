@@ -62,7 +62,6 @@ extension Outcrossing {
         /// Unnormalized allele weights driving ``alleleFrequencies``, indexed `[locus][allele]`.
         ///
         /// These persist across steps and are only perturbed one allele at a
-        /// time (see ``Sampler/updateAlleleFrequencies()``); ``alleleFrequencies``
         /// is their renormalization and is what the likelihood actually reads.
         public var yValues: [[Double]]
 
@@ -79,7 +78,6 @@ extension Outcrossing {
     /// maternal-family genotype matrix.
     ///
     /// By default estimates the multilocus rate `t_m` from every locus
-    /// jointly; restrict ``activeLoci`` (via the `loci:` initializer
     /// parameter) to a single locus for a `t_s` component. See ``Outcrossing``.
     ///
     /// Construct with ``init(matrix:design:parameters:hasNullModel:loci:)``
@@ -131,7 +129,6 @@ extension Outcrossing {
         /// genotype with no maternal tissue is imputed by searching for an
         /// allele pair consistent with every offspring's genotype at that
         /// locus. Both flagged cases are then refined by the chain via
-        /// ``updateMaternalGenotypes()``.
         ///
         /// - Parameters:
         ///   - matrix: The genotype matrix supplying both maternal and offspring genotypes.

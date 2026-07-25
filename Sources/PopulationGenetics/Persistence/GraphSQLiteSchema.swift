@@ -7,52 +7,38 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  PopulationGraphSQLiteSchema.swift
+//  GraphSQLiteSchema.swift
 //  PopulationGenetics
 //
-//  Adds a single population graph, plus a generic analysis-results log, to
-//  the same SQLite file as `GenotypeMatrixSQLiteSchema` — one project file
-//  holds the genetic data and (optionally) the one graph derived from it, so
-//  a simulation loop's "genotypes + graph per generation" stays as one file
-//  instead of a pair that can drift apart.
+//  The on-disk schema for the `.graph` component. `nodes`, `node_values`,
+//  `edges`, `edge_values`, and `graph_values` are domain-neutral — movable
+//  as-is to a future generic `Persistence` target. `node_strata` and
+//  `graph_loci` are genetics-specific extensions (population-strata lineage
+//  on graph nodes; the subset of `.geneticData`'s `loci` a graph was built
+//  from) and stay bundled here rather than splitting further, since a graph
+//  in this store is nearly always genetics-derived even though `.geneticData`
+//  itself is optional. SQLite never enforces the `REFERENCES loci(...)` FK
+//  in this codebase (`PRAGMA foreign_keys` is never set), so creating this
+//  component without `.geneticData` is harmless — `graph_loci` simply stays
+//  empty, matching `writeGraph`'s `loci:` parameter defaulting to `[]`.
 //
-//  Deliberately not a `graphs` (plural) table: this file holds at most one
-//  graph. Multiple derived graphs (different strata levels, different
-//  candidate constructions) get their own files.
-//
-//  `graph_loci` references `GenotypeMatrixSQLiteSchema`'s existing `loci`
-//  table by ordinal rather than duplicating locus metadata — the graph's
-//  loci are always a subset of this same file's genotype loci. As with that
-//  schema, `REFERENCES` here documents intent; SQLite foreign keys are not
-//  enforced (`PRAGMA foreign_keys` is never set), so referential integrity
-//  is the encoder's responsibility, not the database's.
-//
-//  Versioned independently of the genotype schema via a `graph_schema_version`
-//  row in the shared `meta` table, since `PRAGMA user_version` is already
-//  spoken for by `GenotypeMatrixSQLiteSchema` and the two schemas can evolve
-//  on separate timelines.
-//
-//  `log_entries` lives here (rather than in `GenotypeMatrixSQLiteSchema`)
-//  for the same reason `results`/`result_images` do: both schemas are
-//  always created together in `GenotypeMatrixStore.create(at:)`, so there is
-//  no functional difference, and this keeps every generic/append-only
-//  record type in one place.
+//  Deliberately not a `graphs` (plural) table: this component holds at most
+//  one *current* graph — `writeGraph` replaces it in place, rather than
+//  accumulating a history. Multiple derived graphs (different strata levels,
+//  different candidate constructions) get their own files.
 //
 
 import Foundation
 
-enum PopulationGraphSQLiteSchema {
+enum GraphSchemaComponent {
 
     /// Bumped whenever the on-disk layout changes in a way that breaks
-    /// existing readers. Tracked in `meta`, independent of the genotype
-    /// schema's `PRAGMA user_version`.
-    ///
-    /// - `2`: added the `log_entries` table.
-    static let currentSchemaVersion: Int32 = 2
+    /// existing readers.
+    static let currentSchemaVersion: Int32 = 1
 
     static let metaVersionKey = "graph_schema_version"
+    static let hasFlagKey = "has_graph"
 
-    /// Assumes `meta` already exists (created by `GenotypeMatrixSQLiteSchema`).
     static let createStatements: [String] = [
         """
         CREATE TABLE nodes (
@@ -112,42 +98,10 @@ enum PopulationGraphSQLiteSchema {
             locus_ordinal INTEGER NOT NULL PRIMARY KEY REFERENCES loci(ordinal)
         )
         """,
-        """
-        CREATE TABLE results (
-            ordinal     INTEGER PRIMARY KEY,
-            uuid        TEXT NOT NULL UNIQUE,
-            name        TEXT NOT NULL,
-            description TEXT,
-            body        TEXT NOT NULL,
-            created_at  TEXT NOT NULL
-        )
-        """,
-        """
-        CREATE TABLE result_images (
-            result_uuid TEXT NOT NULL REFERENCES results(uuid),
-            name        TEXT NOT NULL,
-            mime_type   TEXT NOT NULL,
-            width       INTEGER,
-            height      INTEGER,
-            data        BLOB NOT NULL,
-            PRIMARY KEY (result_uuid, name)
-        )
-        """,
-        """
-        CREATE TABLE log_entries (
-            ordinal      INTEGER PRIMARY KEY,
-            uuid         TEXT NOT NULL UNIQUE,
-            timestamp    TEXT NOT NULL,
-            log_type     TEXT NOT NULL,
-            analysis_tag TEXT,
-            message      TEXT NOT NULL
-        )
-        """,
     ]
 
-    /// Creates every table for a freshly-opened database (after
-    /// `GenotypeMatrixSQLiteSchema.createSchema` has already run) and
-    /// records `graph_schema_version` in `meta`.
+    /// Creates this component's tables and records its version + `has_graph`
+    /// flag (initially `false`) in `meta`.
     static func createSchema(in connection: SQLiteConnection) throws {
         for statement in createStatements {
             try connection.execute(statement)
@@ -156,10 +110,21 @@ enum PopulationGraphSQLiteSchema {
         stmt.bind(metaVersionKey, at: 1)
         stmt.bind(String(currentSchemaVersion), at: 2)
         _ = try stmt.step()
+        stmt.reset()
+        stmt.bind(hasFlagKey, at: 1)
+        stmt.bind("false", at: 2)
+        _ = try stmt.step()
     }
 
-    /// Validates that an opened database's `graph_schema_version` meta row
-    /// matches `currentSchemaVersion`, throwing `.schemaVersionMismatch` otherwise.
+    /// `true` if this component's tables were created for the currently open file.
+    static func isPresent(in connection: SQLiteConnection) throws -> Bool {
+        let stmt = try connection.prepare("SELECT 1 FROM meta WHERE key = ?")
+        stmt.bind(metaVersionKey, at: 1)
+        return try stmt.step()
+    }
+
+    /// Validates that this component's `meta` version row matches
+    /// `currentSchemaVersion`. Assumes the caller already confirmed presence.
     static func validateSchemaVersion(of connection: SQLiteConnection) throws {
         let stmt = try connection.prepare("SELECT value FROM meta WHERE key = ?")
         stmt.bind(metaVersionKey, at: 1)

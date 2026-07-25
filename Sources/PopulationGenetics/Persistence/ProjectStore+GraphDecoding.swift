@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+GraphDecoding.swift
+//  ProjectStore+GraphDecoding.swift
 //  PopulationGenetics
 //
-//  The read path: reconstructs a `Graph` plus its
-//  population-genetics metadata from the rows written by
-//  `GenotypeMatrixStore+GraphEncoding`.
+//  The read path: reconstructs a `Graph` plus its population-genetics
+//  metadata from the rows written by `ProjectStore+GraphEncoding`.
 //
 //  `Edge`'s initializer is internal to the Graph module, so edges can only be
 //  reconstructed via `Graph.addEdge(from:to:weight:symmetric:)` — never by
@@ -26,7 +25,14 @@ import Foundation
 import Graph
 import SwiftUI
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
+
+    /// Reconstructs the population graph and its associated metadata from the
+    /// currently open connection.
+    public func readGraph() async throws -> PopulationGraphDataset {
+        try requireComponent(.graph, "graph")
+        return try decodeGraph(connection: try requireConnection())
+    }
 
     func decodeGraph(connection: SQLiteConnection) throws -> PopulationGraphDataset {
         let nodeRows = try readNodeRows(connection: connection)
@@ -175,6 +181,10 @@ extension GenotypeMatrixStore {
     }
 
     private func readGraphLoci(connection: SQLiteConnection) throws -> [Locus] {
+        // `graph_loci` can only hold rows if `.geneticData`'s `loci` table
+        // exists (writeGraph's `loci:` defaults to `[]` otherwise) — skip the
+        // join entirely rather than querying a table that may not exist.
+        guard presentComponents.contains(.geneticData) else { return [] }
         let stmt = try connection.prepare("""
             SELECT loci.uuid, loci.name, loci.contig, loci.location, loci.allele_provenance
             FROM graph_loci JOIN loci ON graph_loci.locus_ordinal = loci.ordinal

@@ -7,18 +7,69 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+GraphEncoding.swift
+//  ProjectStore+GraphEncoding.swift
 //  PopulationGenetics
 //
-//  The write path: turns an in-memory `Graph` plus its
-//  population-genetics metadata into rows in the schema defined by
-//  `PopulationGraphSQLiteSchema`.
+//  Read/write access to the `.graph` component: turns an in-memory `Graph`
+//  plus its population-genetics metadata into rows in the schema defined by
+//  `GraphSQLiteSchema.swift`.
 //
 
 import Foundation
 import Graph
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
+
+    /// Writes the population graph into the currently open connection, in one
+    /// transaction, replacing any previously-written graph. Leaves every
+    /// other component (geneticData/results/log/matrices) untouched.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph structure itself (nodes carry `name`, `size`, `coordinate`).
+    ///   - nodeStrata: Ancestor stratum lineage per node, keyed by `Node.id`.
+    ///   - nodeValues: Sparse numeric measures per node, keyed by `Node.id`.
+    ///   - edgeValues: Sparse numeric measures per edge, keyed by `Edge.id`.
+    ///   - graphValues: Graph-wide computed measures (diameter, component count, ...) by name.
+    ///   - loci: The loci this graph was built from, if any. Every locus here must
+    ///     already be present in this file's `loci` table (i.e. `.geneticData` written
+    ///     first via `writeGeneticData`) — leave empty for a graph with no underlying
+    ///     genetic data.
+    public func writeGraph(_ graph: Graph, nodeStrata: [UUID: [StratumReference]] = [:],
+                            nodeValues: [UUID: [GraphValue]] = [:], edgeValues: [UUID: [GraphValue]] = [:],
+                            graphValues: [String: Double] = [:], loci: [Locus] = []) async throws {
+        guard mode == .readWrite else { throw PersistenceError.readOnly }
+        try requireComponent(.graph, "graph")
+        let connection = try requireConnection()
+        try connection.beginTransaction()
+        do {
+            try deleteGraphRows(connection: connection)
+            let nodeOrdinals = try writeNodes(graph.nodes, connection: connection)
+            try writeEdges(graph.edges, nodeOrdinals: nodeOrdinals, connection: connection)
+            try writeNodeStrata(nodeStrata, nodeOrdinals: nodeOrdinals, connection: connection)
+            try writeValues(table: "node_values", ordinalColumn: "node_ordinal",
+                             values: nodeValues, ordinals: nodeOrdinals, connection: connection)
+            let edgeOrdinals = Dictionary(uniqueKeysWithValues: graph.edges.enumerated().map { ($1.id, $0) })
+            try writeValues(table: "edge_values", ordinalColumn: "edge_ordinal",
+                             values: edgeValues, ordinals: edgeOrdinals, connection: connection)
+            try writeGraphValues(graphValues, connection: connection)
+            try writeGraphLoci(loci, connection: connection)
+            try setMetaFlag(GraphSchemaComponent.hasFlagKey, to: true, connection: connection)
+            try connection.commit()
+        } catch {
+            try? connection.rollback()
+            throw error
+        }
+    }
+
+    // MARK: - Write helpers
+
+    /// Clears every row this component owns, so `writeGraph` can be called
+    /// again on an already-populated connection to replace the graph.
+    private func deleteGraphRows(connection: SQLiteConnection) throws {
+        for table in ["graph_loci", "graph_values", "edge_values", "edges", "node_values", "node_strata", "nodes"] {
+            try connection.execute("DELETE FROM \(table)")
+        }
+    }
 
     /// Writes `nodes`, returning each node's assigned ordinal keyed by its `id`
     /// so later tables (edges, node_strata, node_values) can reference it.
@@ -116,7 +167,7 @@ extension GenotypeMatrixStore {
 
     /// Records which of this file's already-written loci built the graph.
     /// Every locus must already exist in the `loci` table (written via
-    /// `write(matrix:...)`); this never duplicates locus metadata.
+    /// `writeGeneticData`); this never duplicates locus metadata.
     func writeGraphLoci(_ loci: [Locus], connection: SQLiteConnection) throws {
         guard !loci.isEmpty else { return }
         let lookupStmt = try connection.prepare("SELECT ordinal FROM loci WHERE uuid = ?")

@@ -7,25 +7,26 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+Log.swift
+//  ProjectStore+Log.swift
 //  PopulationGenetics
 //
-//  Read/write access to the `log_entries` table — a generic, append-only
-//  running log of timestamped notes (file I/O, warnings, errors, documented
-//  assumptions, ...) recorded alongside a project's data. Mirrors
-//  `GenotypeMatrixStore+Results.swift`'s shape (ordinal PK for insertion
-//  order, uuid for stable identity).
+//  Read/write access to the `.log` component's `log_entries` table — a
+//  generic, append-only running log of timestamped notes (file I/O,
+//  warnings, errors, documented assumptions, ...) recorded alongside a
+//  project's data. Mirrors `ProjectStore+Results.swift`'s shape (ordinal PK
+//  for insertion order, uuid for stable identity).
 //
 
 import Foundation
 import PresentationZen
 import Matrix
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
     /// Appends one log entry. Entries are never updated in place; each call adds a new row.
     public func appendLog(_ entry: LogEntry) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
+        try requireComponent(.log, "log")
         let connection = try requireConnection()
         let ordinal = try nextLogOrdinal(connection: connection)
         let stmt = try connection.prepare("""
@@ -39,11 +40,12 @@ extension GenotypeMatrixStore {
         stmt.bindOptional(entry.analysisTag?.rawValue, at: 5)
         stmt.bind(entry.message, at: 6)
         _ = try stmt.step()
-        try setMetaFlag("has_log", to: true, connection: connection)
+        try setMetaFlag(LogSchemaComponent.hasFlagKey, to: true, connection: connection)
     }
 
     /// All log entries, in the order they were added.
     public func logEntries() async throws -> [LogEntry] {
+        try requireComponent(.log, "log")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
             SELECT uuid, timestamp, log_type, analysis_tag, message FROM log_entries ORDER BY ordinal

@@ -18,6 +18,8 @@
 
 import Testing
 import Foundation
+import Graph
+import SwiftUI
 @testable import PopulationGenetics
 
 struct PopGenStoreTests {
@@ -205,5 +207,43 @@ struct PopGenStoreTests {
         let reloadedA = reloaded.fetchIndividuals().first { $0.name == "A" }!
         #expect(reloaded.getGenotype(for: reloadedA, locusName: "MP20")?.leftAllele == "128")
         #expect(reloaded.getStrata(for: reloadedA).map(\.name) == ["SBP"])
+    }
+
+    /// The GeneticStudio-shaped regression case: a document that already has
+    /// a graph written directly against the underlying ProjectStore must not
+    /// lose it when PopGenStore saves genetic-data edits on top.
+    @Test func savingTwiceThroughPopGenStorePreservesAGraphWrittenInBetween() async throws {
+        let store = makeStore()
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".db")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        // A document-owning app creates the file with every component up front.
+        let projectStore = ProjectStore()
+        try await projectStore.create(at: url, overwrite: true, projectName: "test-project")
+        await projectStore.close()
+
+        try await store.save(to: url, projectName: "test-project")
+
+        let graphWriter = ProjectStore()
+        try await graphWriter.open(at: url, mode: .readWrite)
+        let graph = Graph()
+        graph.addNode(name: "A", size: 1.0, color: .gray)
+        try await graphWriter.writeGraph(graph)
+        await graphWriter.close()
+
+        // Second save, simulating an edit to the genetic data.
+        _ = store.addIndividual(name: "D")
+        try await store.save(to: url, projectName: "test-project")
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let reloadedGraph = try await reader.readGraph()
+        await reader.close()
+
+        #expect(reloadedGraph.graph.nodes.count == 1)
+        #expect(reloadedGraph.graph.nodes.first?.name == "A")
+
+        let reloaded = try await PopGenStore.load(from: url)
+        #expect(reloaded.fetchIndividuals().count == 4)
     }
 }

@@ -1,15 +1,15 @@
 //
-//  GenotypeMatrixSQLiteTests.swift
+//  GeneticDataPersistenceTests.swift
 //  PopulationGenetics
 //
-//  Round-trip tests for the SQLite-backed GenotypeMatrixStore.
+//  Round-trip tests for the SQLite-backed ProjectStore's `.geneticData` component.
 //
 
 import Foundation
 import Testing
 @testable import PopulationGenetics
 
-struct GenotypeMatrixSQLiteTests {
+struct GeneticDataPersistenceTests {
 
     /// Builds a 4-individual matrix with one biallelic SNP and one microsat locus.
     private func makeMatrix() -> GenotypeMatrix {
@@ -55,8 +55,8 @@ struct GenotypeMatrixSQLiteTests {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let original = makeMatrix()
-        try await GenotypeMatrixStore.save(original, projectName: "test-project", to: url)
-        let reloaded = try await GenotypeMatrixStore.load(from: url).matrix
+        try await ProjectStore.save(original, projectName: "test-project", to: url)
+        let reloaded = try await ProjectStore.load(from: url).matrix
 
         #expect(reloaded.individualCount == original.individualCount)
         #expect(reloaded.locusCount == original.locusCount)
@@ -82,8 +82,8 @@ struct GenotypeMatrixSQLiteTests {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let original = makeMatrix()
-        try await GenotypeMatrixStore.save(original, projectName: "test-project", to: url)
-        let reloaded = try await GenotypeMatrixStore.load(from: url).matrix
+        try await ProjectStore.save(original, projectName: "test-project", to: url)
+        let reloaded = try await ProjectStore.load(from: url).matrix
 
         for locusIndex in 0..<original.locusCount {
             let originalColumn = original.columns[locusIndex]
@@ -103,8 +103,8 @@ struct GenotypeMatrixSQLiteTests {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let original = makeMatrix()
-        try await GenotypeMatrixStore.save(original, projectName: "test-project", to: url)
-        let reloaded = try await GenotypeMatrixStore.load(from: url).matrix
+        try await ProjectStore.save(original, projectName: "test-project", to: url)
+        let reloaded = try await ProjectStore.load(from: url).matrix
 
         for i in 0..<original.locusCount {
             #expect(reloaded.columns[i].codebook.labels == original.columns[i].codebook.labels)
@@ -117,8 +117,8 @@ struct GenotypeMatrixSQLiteTests {
 
         let matrix = makeMatrix()
         let parentage = makeParentage()
-        try await GenotypeMatrixStore.save(matrix, parentage: parentage, projectName: "test-project", to: url)
-        let reloaded = try await GenotypeMatrixStore.load(from: url).parentage
+        try await ProjectStore.save(matrix, parentage: parentage, projectName: "test-project", to: url)
+        let reloaded = try await ProjectStore.load(from: url).parentage
 
         #expect(reloaded.families.count == parentage.families.count)
         for i in 0..<parentage.families.count {
@@ -139,13 +139,12 @@ struct GenotypeMatrixSQLiteTests {
         let populationRef = StratumReference(level: "Population", name: "SBP")
         let regionRef = StratumReference(level: "Region", name: "North")
 
-        let store = GenotypeMatrixStore()
-        try await store.create(at: url, overwrite: true)
-        try await store.write(matrix: matrix, strata: [individualA.id: [populationRef, regionRef]],
-                               projectName: "test-project")
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: matrix, strata: [individualA.id: [populationRef, regionRef]])
         await store.close()
 
-        let reader = GenotypeMatrixStore()
+        let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readDataset()
         let strataAgain = try await reader.readIndividualStrata()
@@ -168,8 +167,8 @@ struct GenotypeMatrixSQLiteTests {
         let loci = [Locus(name: "snp_anon", contig: "dDocent_Contig_16", alleleProvenance: .refAltPlaceholder)]
         let matrix = GenotypeMatrix(individuals: individuals, loci: loci, columns: [snp])
 
-        try await GenotypeMatrixStore.save(matrix, projectName: "test-project", to: url)
-        let reloaded = try await GenotypeMatrixStore.load(from: url).matrix
+        try await ProjectStore.save(matrix, projectName: "test-project", to: url)
+        let reloaded = try await ProjectStore.load(from: url).matrix
 
         #expect(reloaded.loci[0].alleleProvenance == .refAltPlaceholder)
         #expect(reloaded.columns[0].codebook.labels == ["", "Z", "z"])
@@ -179,8 +178,8 @@ struct GenotypeMatrixSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        try await GenotypeMatrixStore.save(makeMatrix(), projectName: "test-project", to: url)
-        let dataset = try await GenotypeMatrixStore.load(from: url)
+        try await ProjectStore.save(makeMatrix(), projectName: "test-project", to: url)
+        let dataset = try await ProjectStore.load(from: url)
 
         #expect(dataset.parentage.families.isEmpty)
     }
@@ -189,12 +188,12 @@ struct GenotypeMatrixSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        try await GenotypeMatrixStore.save(makeMatrix(), projectName: "test-project", to: url)
+        try await ProjectStore.save(makeMatrix(), projectName: "test-project", to: url)
 
-        let store = GenotypeMatrixStore()
+        let store = ProjectStore()
         try await store.open(at: url, mode: .readOnly)
         await #expect(throws: PersistenceError.readOnly) {
-            try await store.write(matrix: makeMatrix(), projectName: "test-project")
+            try await store.writeGeneticData(matrix: makeMatrix())
         }
         await store.close()
     }
@@ -203,17 +202,48 @@ struct GenotypeMatrixSQLiteTests {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }
 
-        try await GenotypeMatrixStore.save(makeMatrix(), projectName: "test-project", to: url)
+        try await ProjectStore.save(makeMatrix(), projectName: "test-project", to: url)
 
         // Corrupt the on-disk schema version directly.
         let connection = SQLiteConnection()
         try connection.open(at: url, mode: .readWrite)
-        try connection.setUserVersion(GenotypeMatrixSQLiteSchema.currentSchemaVersion + 1)
+        let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
+        stmt.bind(String(GeneticDataSchemaComponent.currentSchemaVersion + 1), at: 1)
+        stmt.bind(GeneticDataSchemaComponent.metaVersionKey, at: 2)
+        _ = try stmt.step()
         connection.close()
 
-        let store = GenotypeMatrixStore()
+        let store = ProjectStore()
         await #expect(throws: PersistenceError.self) {
             try await store.open(at: url, mode: .readOnly)
         }
+    }
+
+    // MARK: - Replace-in-place (fixes the destructive-save bug)
+
+    @Test func writeGeneticDataCalledTwiceReplacesRatherThanThrows() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        try await store.writeGeneticData(matrix: makeMatrix())
+
+        let edited = GenotypeMatrix(individuals: [Individual(name: "only-one")],
+                                     loci: [Locus(name: "only-locus", location: 5, contig: "9")],
+                                     columns: [BiallelicColumn(codebook: AlleleCodebook(alleles: ["C", "T"]),
+                                                                codes: [2])])
+        try await store.writeGeneticData(matrix: edited)
+        await store.close()
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let reloaded = try await reader.readGeneticData()
+        await reader.close()
+
+        #expect(reloaded.individualCount == 1)
+        #expect(reloaded.individuals[0].name == "only-one")
+        #expect(reloaded.locusCount == 1)
+        #expect(reloaded.loci[0].name == "only-locus")
     }
 }

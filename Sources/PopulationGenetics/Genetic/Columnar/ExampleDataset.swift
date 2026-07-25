@@ -58,7 +58,7 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
 
     /// A couple of sentences describing the dataset's origin and intended
     /// use, suitable as the default `description` metadata when this
-    /// dataset is saved to a `GenotypeMatrixStore` file.
+    /// dataset is saved to a `ProjectStore` file.
     public var description: String {
         switch self {
         case .arapatPopulations:
@@ -91,9 +91,9 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
     /// want without re-typing it at each call site.
     public func save(to url: URL) async throws {
         let dataset = try load()
-        try await GenotypeMatrixStore.save(dataset.matrix, parentage: dataset.parentage, strata: dataset.strata,
-                                            projectName: displayName, species: species, description: description,
-                                            to: url)
+        try await ProjectStore.save(dataset.matrix, parentage: dataset.parentage, strata: dataset.strata,
+                                     projectName: displayName, species: species, description: description,
+                                     to: url)
     }
 
     /// Imports this dataset through the real import path.

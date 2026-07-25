@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  GenotypeMatrixStore+PlatformImage.swift
+//  ProjectStore+PlatformImage.swift
 //  PopulationGenetics
 //
 //  Optional `UIImage`/`NSImage` convenience over the platform-neutral
-//  `ResultImage` (Data) API in `GenotypeMatrixStore+Results.swift`. Gated by
+//  `ResultImage` (Data) API in `ProjectStore+Results.swift`. Gated by
 //  `canImport` so the package still does not unconditionally import
 //  UIKit/AppKit — only whichever one actually exists on the build platform.
 //
@@ -22,7 +22,7 @@ import PresentationZen
 #if canImport(UIKit)
 import UIKit
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
     /// Encodes `image` as PNG and attaches it to `resultID` under `name`.
     public func attachImage(_ image: UIImage, name: String, to resultID: UUID) async throws {
@@ -44,7 +44,7 @@ extension GenotypeMatrixStore {
 #elseif canImport(AppKit)
 import AppKit
 
-extension GenotypeMatrixStore {
+extension ProjectStore {
 
     /// Encodes `image` as PNG and attaches it to `resultID` under `name`.
     public func attachImage(_ image: NSImage, name: String, to resultID: UUID) async throws {
