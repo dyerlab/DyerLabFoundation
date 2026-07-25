@@ -34,8 +34,9 @@ public struct LogEntry: Sendable, Identifiable, Equatable {
     /// What kind of event this is (file I/O, warning, error, assumption, ...).
     public var logType: LogType
 
-    /// Which analysis this entry pertains to, if any. `nil` for entries not
-    /// tied to a specific analysis (e.g. most `fileIO` entries).
+    /// Which analysis (or other app-defined context/section) this entry
+    /// pertains to, if any. `nil` for entries not tied to anything more
+    /// specific than the project as a whole (e.g. most `fileIO` entries).
     public var analysisTag: AnalysisTag?
 
     /// Freeform description of what happened.

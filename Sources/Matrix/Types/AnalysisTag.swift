@@ -16,12 +16,15 @@
 //
 //  An open, extensible label for what produced a `NullDistributionResult`
 //  (distance-based variance decomposition, rarefaction, a future Mantel
-//  test, ...). Deliberately a struct wrapping a raw string, not an enum:
-//  Swift enums are closed across modules, so a fixed set of cases here
-//  would force every consuming package to route new analyses through
-//  Matrix. This ships the tagging *mechanism* only — no predefined values —
-//  the same way `Notification.Name` lets any module mint its own constants
-//  via `static let` extensions rather than requiring a shared closed set.
+//  test, ...) — or, more generally, any other app-defined context or
+//  section a consuming app wants to filter records by (e.g. `LogEntry`
+//  uses this same tag to associate a log entry with a UI section rather
+//  than an analysis). Deliberately a struct wrapping a raw string, not an
+//  enum: Swift enums are closed across modules, so a fixed set of cases here
+//  would force every consuming package to route new tags through Matrix.
+//  This ships the tagging *mechanism* only — no predefined values — the
+//  same way `Notification.Name` lets any module mint its own constants via
+//  `static let` extensions rather than requiring a shared closed set.
 //
 //  Deliberately not defaulted anywhere it's used as a parameter: the same
 //  underlying computation is sometimes given different names by different
@@ -32,8 +35,9 @@
 //
 
 /// An open, string-backed label identifying which analysis produced a
-/// `NullDistributionResult`. Any module can mint its own values via a
-/// `static let`/`static func` extension.
+/// `NullDistributionResult` — or any other app-defined context/section a
+/// consuming app wants to filter records by. Any module can mint its own
+/// values via a `static let`/`static func` extension.
 public struct AnalysisTag: Sendable, Equatable, Hashable, CustomStringConvertible {
 
     /// The tag's underlying label.
