@@ -48,7 +48,10 @@ enum GenotypeMatrixSQLiteSchema {
     ///   `write()`/`writeGraph()`/`addResult()`. Lets a caller (e.g. an
     ///   "Open Recent" file picker) classify a file's contents with a single
     ///   `SELECT key, value FROM meta`, no genotype/graph/result decoding.
-    static let currentSchemaVersion: Int32 = 3
+    /// - `4`: `meta` gained a fifth classification row, `has_log`, written by
+    ///   `write()`/`appendLog()`. The `log_entries` table itself lives in
+    ///   `PopulationGraphSQLiteSchema` alongside `results`/`result_images`.
+    static let currentSchemaVersion: Int32 = 4
 
     static let createStatements: [String] = [
         """

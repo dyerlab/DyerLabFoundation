@@ -67,6 +67,7 @@ extension GenotypeMatrixStore {
             markerComposition: markerComposition,
             hasParentage: try require("has_parentage") == "true",
             hasGraph: try require("has_graph") == "true",
-            hasResults: try require("has_results") == "true")
+            hasResults: try require("has_results") == "true",
+            hasLog: try require("has_log") == "true")
     }
 }

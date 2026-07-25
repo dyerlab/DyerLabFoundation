@@ -61,6 +61,7 @@ struct DatasetSummaryTests {
         #expect(summary.hasParentage == false)
         #expect(summary.hasGraph == false)
         #expect(summary.hasResults == false)
+        #expect(summary.hasLog == false)
     }
 
     @Test func omittedDescriptionReadsBackAsNil() async throws {
@@ -156,5 +157,23 @@ struct DatasetSummaryTests {
         await reader.close()
 
         #expect(summary.hasResults == true)
+    }
+
+    @Test func appendingLogEntryFlipsHasLog() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = GenotypeMatrixStore()
+        try await store.create(at: url, overwrite: true)
+        try await store.write(matrix: makeSNPMatrix(), projectName: "test-project")
+        try await store.appendLog(LogEntry(logType: .fileIO, message: "Imported test-project.csv"))
+        await store.close()
+
+        let reader = GenotypeMatrixStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let summary = try await reader.readSummary()
+        await reader.close()
+
+        #expect(summary.hasLog == true)
     }
 }

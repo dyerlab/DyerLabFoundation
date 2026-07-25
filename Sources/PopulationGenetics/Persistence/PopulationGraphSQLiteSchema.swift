@@ -32,6 +32,12 @@
 //  spoken for by `GenotypeMatrixSQLiteSchema` and the two schemas can evolve
 //  on separate timelines.
 //
+//  `log_entries` lives here (rather than in `GenotypeMatrixSQLiteSchema`)
+//  for the same reason `results`/`result_images` do: both schemas are
+//  always created together in `GenotypeMatrixStore.create(at:)`, so there is
+//  no functional difference, and this keeps every generic/append-only
+//  record type in one place.
+//
 
 import Foundation
 
@@ -40,7 +46,9 @@ enum PopulationGraphSQLiteSchema {
     /// Bumped whenever the on-disk layout changes in a way that breaks
     /// existing readers. Tracked in `meta`, independent of the genotype
     /// schema's `PRAGMA user_version`.
-    static let currentSchemaVersion: Int32 = 1
+    ///
+    /// - `2`: added the `log_entries` table.
+    static let currentSchemaVersion: Int32 = 2
 
     static let metaVersionKey = "graph_schema_version"
 
@@ -123,6 +131,16 @@ enum PopulationGraphSQLiteSchema {
             height      INTEGER,
             data        BLOB NOT NULL,
             PRIMARY KEY (result_uuid, name)
+        )
+        """,
+        """
+        CREATE TABLE log_entries (
+            ordinal      INTEGER PRIMARY KEY,
+            uuid         TEXT NOT NULL UNIQUE,
+            timestamp    TEXT NOT NULL,
+            log_type     TEXT NOT NULL,
+            analysis_tag TEXT,
+            message      TEXT NOT NULL
         )
         """,
     ]
