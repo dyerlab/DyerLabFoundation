@@ -120,11 +120,9 @@ public struct TemporalScatterPlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     TemporalScatterPlot(.sampleTemporal, yLabel: "Score")
         .frame(height: 300)
         .padding()
 }
-#endif

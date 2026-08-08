@@ -22,25 +22,28 @@ DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixSt
 | Product | Depends on | Purpose |
 |---|---|---|
 | `Matrix` | — | Linear algebra: matrices, vectors, operators, t-SNE, PCA, `rSourceConvertible` protocol |
-| `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine |
-| `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, all SwiftUI views (Matrix views, Graph views, charts) |
+| `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine + its own SwiftUI views (GraphLayoutView, MapView) + file import (.pgraph, GeoJSON) |
+| `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, SwiftUI views for Matrix/Vector and general data-communication (charts, tables) |
 | `PopulationGenetics` | `Matrix`, `Graph`, `PresentationZen` | Diploid genetic-marker storage/import/analysis (see below — folded in wholesale as of 2026-07-14) |
 | `DyerLabFoundation` | all four | Umbrella — re-exports everything via `@_exported import` |
 
-### PresentationZen is the UI layer for everything
+### PresentationZen is the UI layer — except Graph, which owns its own views
 
-All SwiftUI views live in PresentationZen regardless of the type they display. If you need a view for a `Matrix`, `Vector`, or `Graph`, import `PresentationZen`. This means `PresentationZen` depends on both `Matrix` and `Graph`.
+All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: charts, tables, analyses) live in PresentationZen — import `PresentationZen` for those. `Graph` is a deliberate exception (as of 2026-08-08): its views (`GraphLayoutView`, `MapView`, `NodeInspectorForm`, `LayoutAnimator`, under `Sources/Graph/Views/`) live alongside its model and force-directed layout engine rather than in PresentationZen, because a graph's rendering is inseparable from the layout-simulation state that drives it. `PresentationZen` still depends on both `Matrix` and `Graph` (for the layout engine and non-view types it re-uses), but no longer supplies Graph's SwiftUI views — code that imported `PresentationZen` only to reach `GraphLayoutView`/`MapView` must now `import Graph` instead.
 
 ### Source layout
 
 ```
 Sources/
   Matrix/          — Matrices/, Vectors/, Algorithms/, Protocols/, Types/, Operators.swift
-  Graph/           — Graphs/{Adjacency,Centrality,Edge,Graph,Node,Path}.swift
-                     Graphs/Layout/{Camera,Core,Legacy,Simulation}/
+  Graph/           — Models/{Graph,Node,Edge,Path}.swift, Extensions/{Adjacency,Centrality}.swift
+                     Layout/{Camera,Core,Legacy,Simulation}/
+                     Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
+                               GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm, LayoutAnimator
+                     IO/     ← file import: importPGraph, importGeoJSON, GraphExampleData
+                     Data/   ← bundled example graph files (lopho.pgraph, lopho.geojson)
   PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/
                      MatrixViews/    ← Matrix + Vector SwiftUI views
-                     GraphViews/     ← Graph layout views (GraphLayoutView, MapView, etc.)
   PopulationGenetics/ — Genetic/, DataStore/, Persistence/, Simulation/, PopulationGraph/,
                      Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
   DyerlabFoundation/ — DyerlabFoundation.swift (@_exported imports)
@@ -79,9 +82,9 @@ decision, confirmed 2026-07-14: **`Sources/PopulationGenetics/` in this repo is 
 
 Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v17), .macOS(.v14)`.
 
-### `#Preview` guards
+### `#Preview` guards — removed (2026-08-08)
 
-All `#Preview` macros are wrapped in `#if !SPM_BUILD` / `#endif`. The `SPM_BUILD` flag is defined on every target for command-line builds, suppressing previews that require Xcode's `PreviewsMacros` plugin.
+`#Preview` macros used to be wrapped in `#if !SPM_BUILD` / `#endif`, with `SPM_BUILD` defined unconditionally in every target's `swiftSettings`. That define applies to *any* build of this manifest — including Xcode's — so the guard was permanently suppressing previews in Xcode too, not just in CLI builds as intended; removed once that was noticed. `#Preview` genuinely does fail under the bare Command Line Tools toolchain (`external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found`, confirmed 2026-08-08), but this repo already mandates the full Xcode toolchain for `swift build`/`swift test` regardless (see Commands, above) for Swift Testing/SwiftData macro support — so that toolchain gap was never actually reachable through this project's supported workflow.
 
 ### SwiftData note
 

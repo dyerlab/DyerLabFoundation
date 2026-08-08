@@ -20,8 +20,7 @@
 import Testing
 import Foundation
 import simd
-import Graph
-@testable import PresentationZen
+@testable import Graph
 
 @MainActor
 @Suite("Layout Controllers")

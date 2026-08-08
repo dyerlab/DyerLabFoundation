@@ -15,16 +15,12 @@
 //  SwiftUI bridge for animating force-directed layouts.
 //
 
-import Graph
 import SwiftUI
-import Graph
 import Observation
 
 #if os(iOS)
-import Graph
 import UIKit
 #elseif os(macOS)
-import Graph
 import AppKit
 #endif
 

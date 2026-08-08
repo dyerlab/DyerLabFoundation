@@ -15,9 +15,7 @@
 //  Created by Rodney Dyer on 5/21/25.
 //
 
-import Graph
 import SwiftUI
-import Graph
 import CoreLocation
 
 struct NodeInspectorForm: View {
@@ -38,7 +36,6 @@ struct NodeInspectorForm: View {
     }
 }
 
-#if !SPM_BUILD
 #Preview {
     NodeInspectorForm( node: .constant( Node( name: "BaC",
                                               size: 12.8707,
@@ -46,4 +43,3 @@ struct NodeInspectorForm: View {
                                               coordinate: CLLocationCoordinate2D( latitude: 26.59,
                                                                                   longitude: -111.79) ) ) )
 }
-#endif

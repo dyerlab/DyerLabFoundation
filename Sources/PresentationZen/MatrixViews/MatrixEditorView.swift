@@ -88,7 +88,6 @@ private func islandMatrix(k: Int, m: Double) -> Matrix {
     }
     return mat
 }
-#if !SPM_BUILD
 
 #Preview("3×3 island model") {
     MatrixEditorView(matrix: islandMatrix(k: 3, m: 0.1))
@@ -110,4 +109,3 @@ private func islandMatrix(k: Int, m: Double) -> Matrix {
         .padding()
         .frame(minWidth: 480)
 }
-#endif

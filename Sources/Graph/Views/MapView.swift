@@ -15,9 +15,7 @@
 //  Created by Rodney Dyer on 5/21/25.
 //
 
-import Graph
 import SwiftUI
-import Graph
 import MapKit
 
 
@@ -102,7 +100,6 @@ enum MapStyleOption: String, CaseIterable, Hashable {
 
 
 
-#if !SPM_BUILD
 #Preview {
     MapView(
         graph: .constant( Graph.lophoGraph ),
@@ -110,6 +107,5 @@ enum MapStyleOption: String, CaseIterable, Hashable {
         nodeScaling: .constant( 10.0 )
     )
 }
-#endif
 
 

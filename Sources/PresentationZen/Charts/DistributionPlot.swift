@@ -119,7 +119,6 @@ public struct DistributionPlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     DistributionPlot(
@@ -135,4 +134,3 @@ public struct DistributionPlot: View {
     .frame(height: 250)
     .padding()
 }
-#endif

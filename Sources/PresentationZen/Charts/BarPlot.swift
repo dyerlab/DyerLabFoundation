@@ -99,7 +99,6 @@ public struct BarPlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     VStack(spacing: 25) {
@@ -110,4 +109,3 @@ public struct BarPlot: View {
     .frame(minHeight: 600)
     .padding()
 }
-#endif

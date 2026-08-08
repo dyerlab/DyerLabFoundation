@@ -119,7 +119,6 @@ public struct ScatterPlotWithTrendline: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     ScatterPlotWithTrendline(.sampleScatter,
@@ -131,4 +130,3 @@ public struct ScatterPlotWithTrendline: View {
                              r2: 0.78)
     .padding()
 }
-#endif

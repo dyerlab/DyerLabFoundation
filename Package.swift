@@ -35,7 +35,6 @@ let package = Package(
                 .define("ACCELERATE_NEW_LAPACK", to: "1"),
             ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
             linkerSettings: [
@@ -46,9 +45,8 @@ let package = Package(
         .target(
             name: "Graph",
             dependencies: ["Matrix"],
-            resources: [ .process("Graph.docc") ],
+            resources: [ .process("Graph.docc"), .copy("Data") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),
@@ -58,7 +56,6 @@ let package = Package(
             dependencies: ["Matrix", "Graph"],
             resources: [ .process("PresentationZen.docc") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),
@@ -68,7 +65,6 @@ let package = Package(
             dependencies: ["Matrix", "Graph", "PresentationZen"],
             resources: [ .process("PopulationGenetics.docc"), .copy("ExampleData") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),

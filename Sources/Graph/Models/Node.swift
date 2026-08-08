@@ -53,22 +53,36 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
 
     /// Optional 2D layout position for non-geographic layouts.
     public var layoutCoordinate: CGPoint?
-    
-    public init(name: String, size: Double, color: Color = .red) {
+
+    /// Open-ended categorical (string-valued) attributes, keyed by name
+    /// (e.g. `"Region": "1"`). Populated by file importers for whatever
+    /// classification columns/properties the source data happens to carry.
+    public var categoricalAttributes: [String: String]
+
+    /// Open-ended continuous (real-valued) attributes, keyed by name
+    /// (e.g. `"elevation": 125.3`).
+    public var continuousAttributes: [String: Double]
+
+    public init(name: String, size: Double, color: Color = .red,
+                categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
         self.id = UUID()
         self.name = name
         self.size = size
         self.color = color
+        self.categoricalAttributes = categoricalAttributes
+        self.continuousAttributes = continuousAttributes
     }
-    
-    public init(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D) {
+
+    public init(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D,
+                categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
         self.id = UUID()
         self.name = name
         self.size = size
         self.color = color
         self.coordinate = CLLocationCoordinate2D(latitude: coordinate.latitude,
                                                  longitude: coordinate.longitude )
-        
+        self.categoricalAttributes = categoricalAttributes
+        self.continuousAttributes = continuousAttributes
     }
     
     

@@ -80,10 +80,10 @@ public struct VectorCell: View {
             )
             #if os(macOS)
             .textFieldStyle(.plain)
-            #endif
             .multilineTextAlignment(.trailing)
             .font(.body.monospacedDigit())
             .frame(maxWidth: .infinity)
+            #endif
         }
         .padding(.horizontal, 8)
         .frame(height: VectorView.Constants.rowHeight)
@@ -92,7 +92,6 @@ public struct VectorCell: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -116,4 +115,3 @@ public struct VectorCell: View {
         .padding()
         .frame(width: 240)
 }
-#endif

@@ -120,7 +120,6 @@ public struct MatrixDataRow: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -147,4 +146,3 @@ public struct MatrixDataRow: View {
     )
     .padding()
 }
-#endif

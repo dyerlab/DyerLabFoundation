@@ -116,7 +116,6 @@ public struct VectorView: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -141,4 +140,3 @@ public struct VectorView: View {
     return VectorView(values: $values)
         .frame(width: 240, height: 260)
 }
-#endif
