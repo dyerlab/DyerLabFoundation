@@ -8,7 +8,7 @@
 import Matrix
 import Foundation
 import simd
-#if os(iOS)
+#if os(iOS) || os(visionOS)
 import UIKit
 #elseif os(macOS)
 import AppKit

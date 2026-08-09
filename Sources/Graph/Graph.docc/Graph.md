@@ -33,6 +33,11 @@ inseparable from the layout engine that drives it.
 - ``GraphControlPanel`` / ``GraphInspectorPanel`` — the stats/play/pause/reset/reheat bar and the rendering/physics-slider sidebar, also independently previewable.
 - ``GraphLayoutOptions`` — the display/chrome options (labels, inspector/controls visibility, edge width, node size) shared across the three views above.
 - ``MapView`` — a MapKit-backed spatial view for graphs whose nodes carry geographic coordinates.
+- ``RealityGraphView`` — a RealityKit-based 3D visualization, on iOS/macOS as a windowed scene and on visionOS as
+  a volumetric one; the intended long-term replacement for ``GraphCanvasView`` across all three platforms (see the
+  `realitykit_unification_decision` design note). Uses a headless `LayoutOrchestrator` precompute pass, then hands
+  live rendering/interaction to RealityKit's own physics via ``RealityGraphEntityBuilder``, configured by
+  ``RealityGraphOptions``.
 
 ### File import
 

@@ -234,7 +234,7 @@ extension Vector {
             return SCNVector3Make(CGFloat(self[0]), CGFloat(self[1]), 0)
         default:
             return SCNVector3Make(CGFloat(self[0]), CGFloat(self[1]), CGFloat(self[2]))
-#elseif os(iOS)
+#elseif os(iOS) || os(visionOS)
         case 1:
             return SCNVector3Make(Float(self[0]), 0.0, 0.0)
         case 2:

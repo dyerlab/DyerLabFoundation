@@ -70,11 +70,15 @@ public struct MapView: View {
             MapPitchSlider()
             #endif 
         }
+        // .inspector(isPresented:content:) is unavailable on visionOS. This is a
+        // compile-fix, not a visionOS UX story for MapView — that's a separate concern.
+        #if !os(visionOS)
         .inspector(isPresented: $isPresentingInspector ) {
             if let index = graph.nodes.firstIndex(where: { $0.id == selectedNodeID }) {
                 NodeInspectorForm(node: $graph.nodes[index])
             }
         }
+        #endif
         
         
     }

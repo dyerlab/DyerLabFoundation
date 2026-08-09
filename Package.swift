@@ -15,8 +15,9 @@ import PackageDescription
 let package = Package(
     name: "DyerLabFoundation",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
+        .iOS(.v18),
+        .macOS(.v15),
+        .visionOS(.v2),
     ],
     products: [
         .library(name: "Matrix",             targets: ["Matrix"]),

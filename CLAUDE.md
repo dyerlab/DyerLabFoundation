@@ -40,6 +40,10 @@ Sources/
                      Layout/{Camera,Core,Simulation}/
                      Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
                                GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm
+                               Reality/  ← RealityGraphView, RealityGraphEntityBuilder, RealityGraphOptions
+                                          (RealityKit-based 3D visualization; the intended long-term
+                                          replacement for GraphCanvasView across iOS/macOS/visionOS — see
+                                          realitykit_unification_decision)
                      IO/     ← file import: importPGraph, importGeoJSON, GraphExampleData
                      Data/   ← bundled example graph files (lopho.pgraph, lopho.geojson)
   PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/
@@ -80,7 +84,7 @@ decision, confirmed 2026-07-14: **`Sources/PopulationGenetics/` in this repo is 
 
 ### Swift version & platforms
 
-Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v17), .macOS(.v14)`.
+Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v18), .macOS(.v15), .visionOS(.v2)` (raised from `.iOS(.v17), .macOS(.v14)` on 2026-08-09 to add visionOS and support `RealityGraphView`'s `RealityView`/`PhysicsDistanceJoint` usage — those APIs require exactly this floor). No per-symbol `@available` gating is needed anywhere in the package as a result, since every target's minimum already matches.
 
 ### `#Preview` guards — removed (2026-08-08)
 
@@ -116,7 +120,7 @@ Not touched as of 2026-07-15 — flagged for a future pass.
 ### Downstream consumers
 
 - **PopulationGenetics** — no longer a separate downstream consumer; folded into this repo as of 2026-07-14 (see above). The standalone `github.com/dyerlab/PopulationGenetics` repo is legacy.
-- **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging.
+- **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging. **Flagged, not yet verified (2026-08-09):** the platform-floor bump to iOS 18/macOS 15 for `RealityGraphView` raises this for the *whole package*, including `Matrix`/`PresentationZen` — since Linguistics tracks `main` directly, it inherits this floor immediately with no opt-out. Confirm Linguistics' own deployment target tolerates iOS 18/macOS 15 before merging this to `main`.
 - **GeneticStudio** — a new app being built directly against this foundation as it evolves; not a stability concern, expected to simply conform. Its Xcode project currently only references the `dyerlabfoundation` package (no separate `PopulationGenetics` dependency), even though its own source already calls PopulationGenetics-only types (`ImportedDataset`, `ProjectStore`, `importMicrosatTable`) — that gap needs fixing in the GeneticStudio project itself, and is now simpler to fix since `PopulationGenetics` is just another product of the one package it already depends on.
   - **`GenotypeMatrixStore` was renamed to `ProjectStore` on 2026-07-25** (breaking — GeneticStudio's build will fail on the old name) as part of making genetic data one of five equal, independently optional components (`StoreComponents`: `.geneticData`, `.graph`, `.results`, `.log`, `.matrices`) instead of a mandatory one, motivated by GeneticStudio's own document-save path (`create(overwrite:true)` + `write` only) silently discarding any graph/results/log data on every save. Migration for GeneticStudio's document/save code specifically:
     - `write(matrix:...)` → `writeGeneticData(matrix:parentage:strata:)`; `projectName`/`species`/`description` moved from that call to `create(at:overwrite:components:projectName:species:description:)`.
