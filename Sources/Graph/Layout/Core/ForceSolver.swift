@@ -96,11 +96,10 @@ public func computeForces(
     }
 
     // 2. Attraction (edges with activation)
+    let nodeIndices = graph.nodeIndices()
     for (edgeIndex, edge) in graph.edges.enumerated() {
-        guard let fromNode = graph.node(id: edge.fromNode),
-              let toNode = graph.node(id: edge.toNode),
-              let i = graph.nodes.firstIndex(of: fromNode),
-              let j = graph.nodes.firstIndex(of: toNode) else { continue }
+        guard let i = nodeIndices[edge.fromNode],
+              let j = nodeIndices[edge.toNode] else { continue }
 
         let delta = state.positions[j] - state.positions[i]
         let distance = simd_length(delta)

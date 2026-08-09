@@ -81,7 +81,22 @@ public class Graph: Identifiable, Hashable  {
     public func node(id: UUID ) -> Node? {
         return nodes.first(where: { $0.id == id })
     }
-        
+
+    /// Maps each node's id to its index in `nodes`.
+    ///
+    /// Building this once and reusing it for every edge turns an O(edges × n) scan
+    /// (looking up each edge's endpoints via `node(id:)` + `nodes.firstIndex(of:)`)
+    /// into O(n + edges). Intended for hot loops (force computation, per-frame
+    /// rendering) that need every edge's endpoint indices — not cached on `Graph`
+    /// itself since `nodes` is mutable and a stale cache would silently misbehave.
+    func nodeIndices() -> [UUID: Int] {
+        var indices = [UUID: Int](minimumCapacity: nodes.count)
+        for (index, node) in nodes.enumerated() {
+            indices[node.id] = index
+        }
+        return indices
+    }
+
     /// Adds a new node to the graph.
     ///
     /// - Parameters:
@@ -222,72 +237,6 @@ public class Graph: Identifiable, Hashable  {
 
 
 public extension Graph {
-
-    /// Initializes all nodes with random layout positions within the specified bounds.
-    ///
-    /// This method assigns random `layoutCoordinate` values to all nodes in the graph,
-    /// which is typically the first step before running a force-directed layout algorithm.
-    ///
-    /// - Parameter bounds: The bounding rectangle for random placement
-    ///
-    /// ## Example
-    /// ```swift
-    /// let graph = Graph.smallGraph
-    /// graph.initializeRandomLayout(in: CGRect(x: 0, y: 0, width: 500, height: 500))
-    /// let simulation = LayoutSimulation(graph: graph)
-    /// simulation.start()
-    /// ```
-    func initializeRandomLayout(in bounds: CGRect) {
-        var generator = SystemRandomNumberGenerator()
-        initializeRandomLayout(in: bounds, using: &generator)
-    }
-
-    /// Initializes all nodes with random layout positions using a caller-supplied generator.
-    ///
-    /// Supplying a deterministic generator (e.g. a seeded one) makes the resulting
-    /// layout reproducible, which is useful for tests.
-    ///
-    /// - Parameters:
-    ///   - bounds: The bounding rectangle for random placement
-    ///   - generator: The random number generator to draw positions from
-    func initializeRandomLayout<G: RandomNumberGenerator>(in bounds: CGRect, using generator: inout G) {
-        for node in nodes {
-            node.layoutCoordinate = CGPoint(
-                x: Double.random(in: bounds.minX...bounds.maxX, using: &generator),
-                y: Double.random(in: bounds.minY...bounds.maxY, using: &generator)
-            )
-        }
-    }
-
-    /// Computes the bounding box of current layout positions.
-    ///
-    /// Returns the smallest rectangle that contains all nodes with `layoutCoordinate` values.
-    /// Useful for auto-scaling visualizations or determining canvas size.
-    ///
-    /// - Returns: The bounding rectangle, or `nil` if no nodes have layout coordinates
-    ///
-    /// ## Example
-    /// ```swift
-    /// if let bounds = graph.layoutBoundingBox() {
-    ///     print("Graph spans \(bounds.width) × \(bounds.height)")
-    /// }
-    /// ```
-    func layoutBoundingBox() -> CGRect? {
-        let positions = nodes.compactMap { $0.layoutCoordinate }
-        guard !positions.isEmpty else { return nil }
-
-        let minX = positions.map { $0.x }.min() ?? 0
-        let maxX = positions.map { $0.x }.max() ?? 0
-        let minY = positions.map { $0.y }.min() ?? 0
-        let maxY = positions.map { $0.y }.max() ?? 0
-
-        return CGRect(
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-        )
-    }
 
     static var smallGraph: Graph {
         let g = Graph()

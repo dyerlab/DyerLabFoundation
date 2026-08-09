@@ -17,12 +17,11 @@ it the same way.
 
 ### Force-directed layout
 
-- ``ForceDirectedLayout`` / ``LayoutConfiguration`` — configures and runs the force-directed simulation.
-- ``LayoutSimulation`` / ``LayoutOrchestrator`` / ``LayoutState`` — drives the simulation loop and holds its running state.
+- ``LayoutConfiguration`` — configures the force-directed simulation.
+- ``LayoutOrchestrator`` / ``LayoutState`` — drives the simulation loop and holds its running state.
 - ``SettleDetector`` — detects when a layout simulation has converged.
 - ``EdgeState`` / ``EdgeStateManager`` — per-edge animation/visual state during layout.
 - ``Camera2D`` — a 2D viewport/camera for rendering a laid-out graph.
-- ``LayoutUpdateCallback`` — the callback shape a host view uses to observe layout progress.
 
 ### Views
 
@@ -33,7 +32,6 @@ inseparable from the layout engine that drives it.
 - ``GraphCanvasView`` — the `Canvas`-based rendering + pan/zoom/drag-gesture surface, independently previewable.
 - ``GraphControlPanel`` / ``GraphInspectorPanel`` — the stats/play/pause/reset/reheat bar and the rendering/physics-slider sidebar, also independently previewable.
 - ``GraphLayoutOptions`` — the display/chrome options (labels, inspector/controls visibility, edge width, node size) shared across the three views above.
-- ``LayoutAnimator`` — an `@Observable` SwiftUI bridge that drives a layout simulation's animation loop.
 - ``MapView`` — a MapKit-backed spatial view for graphs whose nodes carry geographic coordinates.
 
 ### File import

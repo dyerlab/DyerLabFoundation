@@ -29,7 +29,7 @@ DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixSt
 
 ### PresentationZen is the UI layer — except Graph, which owns its own views
 
-All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: charts, tables, analyses) live in PresentationZen — import `PresentationZen` for those. `Graph` is a deliberate exception (as of 2026-08-08): its views (`GraphLayoutView`, `MapView`, `NodeInspectorForm`, `LayoutAnimator`, under `Sources/Graph/Views/`) live alongside its model and force-directed layout engine rather than in PresentationZen, because a graph's rendering is inseparable from the layout-simulation state that drives it. `PresentationZen` still depends on both `Matrix` and `Graph` (for the layout engine and non-view types it re-uses), but no longer supplies Graph's SwiftUI views — code that imported `PresentationZen` only to reach `GraphLayoutView`/`MapView` must now `import Graph` instead.
+All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: charts, tables, analyses) live in PresentationZen — import `PresentationZen` for those. `Graph` is a deliberate exception (as of 2026-08-08): its views (`GraphLayoutView`, `MapView`, `NodeInspectorForm`, under `Sources/Graph/Views/`) live alongside its model and force-directed layout engine rather than in PresentationZen, because a graph's rendering is inseparable from the layout-simulation state that drives it. `PresentationZen` still depends on both `Matrix` and `Graph` (for the layout engine and non-view types it re-uses), but no longer supplies Graph's SwiftUI views — code that imported `PresentationZen` only to reach `GraphLayoutView`/`MapView` must now `import Graph` instead.
 
 ### Source layout
 
@@ -37,9 +37,9 @@ All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: 
 Sources/
   Matrix/          — Matrices/, Vectors/, Algorithms/, Protocols/, Types/, Operators.swift
   Graph/           — Models/{Graph,Node,Edge,Path}.swift, Extensions/{Adjacency,Centrality}.swift
-                     Layout/{Camera,Core,Legacy,Simulation}/
+                     Layout/{Camera,Core,Simulation}/
                      Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
-                               GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm, LayoutAnimator
+                               GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm
                      IO/     ← file import: importPGraph, importGeoJSON, GraphExampleData
                      Data/   ← bundled example graph files (lopho.pgraph, lopho.geojson)
   PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/

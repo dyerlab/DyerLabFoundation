@@ -96,37 +96,4 @@ struct LayoutControllerTests {
         o.unpinNode(at: -1)
         #expect(o.state.pinned.allSatisfy { $0 == false })
     }
-
-    // MARK: - LayoutAnimator
-
-    @Test func animatorInitialState() {
-        let a = LayoutAnimator(graph: Graph.smallGraph)
-
-        #expect(a.isAnimating == false)
-        #expect(a.iteration == 0)
-        #expect(a.hasConverged == false)
-        #expect(a.temperature == LayoutConfiguration().initialTemperature)
-        #expect(a.progress == 0.0)
-    }
-
-    @Test func animatorUpdateConfigurationResetsTemperature() {
-        let a = LayoutAnimator(graph: Graph.smallGraph)
-        var cfg = LayoutConfiguration()
-        cfg.initialTemperature = 123.0
-
-        a.updateConfiguration(cfg)
-
-        #expect(a.temperature == 123.0)
-        #expect(a.isAnimating == false, "Updating config on a paused animator leaves it paused")
-    }
-
-    @Test func animatorResetRestoresState() {
-        let a = LayoutAnimator(graph: Graph.smallGraph)
-
-        a.reset()
-
-        #expect(a.iteration == 0)
-        #expect(a.hasConverged == false)
-        #expect(a.temperature == LayoutConfiguration().initialTemperature)
-    }
 }

@@ -26,7 +26,7 @@ import AppKit
 /// config.coolingFactor = 0.98  // Slower cooling for smoother convergence
 /// config.bounds = CGRect(x: 0, y: 0, width: 800, height: 600)
 ///
-/// let simulation = LayoutSimulation(graph: graph, configuration: config)
+/// let orchestrator = LayoutOrchestrator(graph: graph, config: config)
 /// ```
 public struct LayoutConfiguration {
 

@@ -113,11 +113,10 @@ public struct GraphCanvasView: View {
 
     /// Draws all edges as lines.
     private func drawEdges(context: GraphicsContext, size: CGSize) {
+        let nodeIndices = orchestrator.graph.nodeIndices()
         for (edgeIndex, edge) in orchestrator.graph.edges.enumerated() {
-            guard let fromNode = orchestrator.graph.node(id: edge.fromNode),
-                  let toNode = orchestrator.graph.node(id: edge.toNode),
-                  let fromIndex = orchestrator.graph.nodes.firstIndex(of: fromNode),
-                  let toIndex = orchestrator.graph.nodes.firstIndex(of: toNode) else { continue }
+            guard let fromIndex = nodeIndices[edge.fromNode],
+                  let toIndex = nodeIndices[edge.toNode] else { continue }
 
             let pos1 = orchestrator.state.positions[fromIndex]
             let pos2 = orchestrator.state.positions[toIndex]

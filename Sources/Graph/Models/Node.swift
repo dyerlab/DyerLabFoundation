@@ -51,9 +51,6 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
     /// Optional geographic coordinate (latitude/longitude).
     public var coordinate: CLLocationCoordinate2D?
 
-    /// Optional 2D layout position for non-geographic layouts.
-    public var layoutCoordinate: CGPoint?
-
     /// Open-ended categorical (string-valued) attributes, keyed by name
     /// (e.g. `"Region": "1"`). Populated by file importers for whatever
     /// classification columns/properties the source data happens to carry.
