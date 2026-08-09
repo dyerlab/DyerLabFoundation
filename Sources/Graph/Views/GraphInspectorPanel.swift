@@ -66,7 +66,7 @@ public struct GraphInspectorPanel: View {
                     Text("Node Size")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Slider(value: $options.nodeSizeMultiplier, in: 0.50...2.0)
+                    Slider(value: $options.nodeSizeMultiplier, in: 0.1...10.0)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {

@@ -25,6 +25,7 @@ let package = Package(
         .library(name: "PresentationZen",    targets: ["PresentationZen"]),
         .library(name: "PopulationGenetics", targets: ["PopulationGenetics"]),
         .library(name: "DyerLabFoundation", targets: ["DyerlabFoundation"]),
+        .executable(name: "GraphDemoApp", targets: ["GraphDemoApp"]),
     ],
     targets: [
         // MARK: - Library targets
@@ -74,6 +75,16 @@ let package = Package(
             name: "DyerlabFoundation",
             dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics"],
             resources: [ .process("DyerlabFoundation.docc") ],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        // MARK: - Demo app target
+
+        .executableTarget(
+            name: "GraphDemoApp",
+            dependencies: ["Graph"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
