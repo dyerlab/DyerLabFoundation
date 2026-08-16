@@ -42,6 +42,58 @@ public struct DLColor {
         self.alpha = alpha
     }
 
+    /// Creates a color from a hex string, e.g. `"#FF8800"`, `"FF8800"`, or `"#FF8800CC"`.
+    ///
+    /// Accepts 3-digit (`RGB`), 6-digit (`RRGGBB`), and 8-digit (`RRGGBBAA`) forms, with or
+    /// without a leading `#`. Returns `nil` if `hex` isn't a valid hex color string.
+    ///
+    /// - Parameter hex: The hex color string to parse.
+    public init?(hex: String) {
+        var digits = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if digits.hasPrefix("#") { digits.removeFirst() }
+
+        switch digits.count {
+        case 3:
+            digits = digits.map { "\($0)\($0)" }.joined()
+        case 6, 8:
+            break
+        default:
+            return nil
+        }
+
+        guard var value = UInt64(digits, radix: 16) else { return nil }
+
+        let alpha: CGFloat
+        if digits.count == 8 {
+            alpha = CGFloat(value & 0xFF) / 255
+            value >>= 8
+        } else {
+            alpha = 1
+        }
+
+        let red = CGFloat((value & 0xFF0000) >> 16) / 255
+        let green = CGFloat((value & 0x00FF00) >> 8) / 255
+        let blue = CGFloat(value & 0x0000FF) / 255
+
+        let maxComponent = max(red, green, blue)
+        let minComponent = min(red, green, blue)
+        let delta = maxComponent - minComponent
+
+        var hue: CGFloat = 0
+        if delta != 0 {
+            switch maxComponent {
+            case red: hue = ((green - blue) / delta).truncatingRemainder(dividingBy: 6)
+            case green: hue = (blue - red) / delta + 2
+            default: hue = (red - green) / delta + 4
+            }
+            hue /= 6
+            if hue < 0 { hue += 1 }
+        }
+        let saturation = maxComponent == 0 ? 0 : delta / maxComponent
+
+        self.init(hue: hue, saturation: saturation, brightness: maxComponent, alpha: alpha)
+    }
+
     private func shift(_ value: CGFloat, by amount: CGFloat) -> CGFloat {
         return abs((value + amount).truncatingRemainder(dividingBy: 1) )
     }
