@@ -6,14 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Use Xcode's toolchain — Command Line Tools lacks Swift Testing and SwiftData macros
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter MatrixTests
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter GraphTests
-env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift package resolve
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift build
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift package resolve
 ```
 
-Alternatively: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once, then plain `swift build` / `swift test`.
+Alternatively: `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
 
 ## Architecture
 
