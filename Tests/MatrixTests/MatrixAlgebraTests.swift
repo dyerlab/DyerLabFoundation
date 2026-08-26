@@ -299,6 +299,55 @@ struct MatrixAlgebraTests {
         #expect(sub[1,1] == 12.0) // M[2,3]
     }
 
+    @Test func chiSquareQuantileMatchesRQchisq() {
+        // Reference values from R: qchisq(c(0.5,0.9,0.95,0.975,0.99,0.999), 1)
+        let cases: [(p: Double, expected: Double)] = [
+            (0.5, 0.454936423119573),
+            (0.9, 2.705543454095416),
+            (0.95, 3.841458820694126),
+            (0.975, 5.023886187314890),
+            (0.99, 6.634896601021214),
+            (0.999, 10.827566170662731),
+        ]
+        for c in cases {
+            #expect(isApprox(ChiSquareQuantileOneDF(c.p), c.expected, tolerance: 1e-8),
+                    "p=\(c.p): got \(ChiSquareQuantileOneDF(c.p)), expected \(c.expected)")
+        }
+    }
+
+    @Test func moorePenroseInverseMatchesTrueInverseForNonSingularMatrix() {
+        // For a non-singular square matrix, the pseudo-inverse equals the true inverse.
+        let M = Matrix(2, 2, Vector([4.0, 7.0, 2.0, 6.0]))
+        let pinv = MoorePenroseInverse(M)
+        let I = M .* pinv
+
+        #expect(isApprox(I[0, 0], 1.0, tolerance: 1e-9))
+        #expect(isApprox(I[1, 1], 1.0, tolerance: 1e-9))
+        #expect(isApprox(I[0, 1], 0.0, tolerance: 1e-9))
+        #expect(isApprox(I[1, 0], 0.0, tolerance: 1e-9))
+    }
+
+    @Test func moorePenroseInverseHandlesSingularMatrix() {
+        // Row 2 = 2 x Row 1 => singular. Unlike GeneralizedInverse (LU-based,
+        // returns empty for singular input), the pseudo-inverse must still
+        // return a well-defined K×K result — the whole point of using it for
+        // PopulationGraph's rank-deficient correlation matrices.
+        let M = Matrix(2, 2, Vector([1.0, 2.0, 2.0, 4.0]))
+        let pinv = MoorePenroseInverse(M)
+
+        #expect(pinv.rows == 2)
+        #expect(pinv.cols == 2)
+
+        // M * pinv * M == M is the defining Moore-Penrose property (holds even
+        // when M is singular, unlike M * pinv == I).
+        let reconstructed = M .* pinv .* M
+        for i in 0..<2 {
+            for j in 0..<2 {
+                #expect(isApprox(reconstructed[i, j], M[i, j], tolerance: 1e-9))
+            }
+        }
+    }
+
     @Test func testGetRowGetCol() {
         let M = Matrix(3, 3, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]))
 

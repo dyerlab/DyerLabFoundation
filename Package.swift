@@ -119,6 +119,7 @@ let package = Package(
         .testTarget(
             name: "PopulationGeneticsTests",
             dependencies: ["PopulationGenetics", "Matrix", "Graph", "PresentationZen"],
+            resources: [ .copy("Fixtures") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

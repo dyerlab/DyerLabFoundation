@@ -60,7 +60,43 @@ struct CentralityTests {
         #expect( b == A2, "Weighted adjacency matrix incorrect")
 
     }
-    
+
+    @Test func GraphFromAdjacencyMatrixTests() async throws {
+        // A -- B (2.0), B -- C (3.0), A and C not connected.
+        let A = Matrix(3, 3, 0.0)
+        A.rowNames = ["A", "B", "C"]
+        A.colNames = ["A", "B", "C"]
+        A[0, 1] = 2.0; A[1, 0] = 2.0
+        A[1, 2] = 3.0; A[2, 1] = 3.0
+
+        let g = Graph(adjacency: A, weighted: true)
+
+        #expect(g.nodes.count == 3)
+        #expect(g.edges.count == 2)
+        #expect(Set(g.nodes.map { $0.name }) == Set(["A", "B", "C"]))
+
+        let weightByNames: (String, String) -> Double? = { n1, n2 in
+            g.edges.first {
+                guard let a = g.node(id: $0.fromNode), let b = g.node(id: $0.toNode) else { return false }
+                return Set([a.name, b.name]) == Set([n1, n2])
+            }?.weight
+        }
+        #expect(weightByNames("A", "B") == 2.0)
+        #expect(weightByNames("B", "C") == 3.0)
+        #expect(weightByNames("A", "C") == nil)
+
+        // AdjacencyMatrix(graph:) reads edges as directed (fromNode -> toNode
+        // only, as AdjacencyTests above demonstrates for smallGraph) — since
+        // Graph(adjacency:) emits one edge per pair with fromNode at the
+        // lower row index, only the upper triangle round-trips.
+        let roundTripped = AdjacencyMatrix(graph: g, weighed: true)
+        for i in 0..<3 {
+            for j in (i + 1)..<3 {
+                #expect(roundTripped[i, j] == A[i, j])
+            }
+        }
+    }
+
     @Test func DegreeCentralityTests() async throws {
         let g = Graph.smallGraph
         

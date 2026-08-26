@@ -53,6 +53,40 @@ public func AdjacencyMatrix( graph: Graph, weighed: Bool ) -> Matrix {
             }
         }
     }
-    
+
     return ret
+}
+
+extension Graph {
+
+    /// Builds an undirected graph from a weighted adjacency matrix.
+    ///
+    /// One `Node` per row/column (named from `adjacency.rowNames`), and one
+    /// `Edge` for every off-diagonal, non-zero entry with `i < j` — the
+    /// inverse of `AdjacencyMatrix(graph:weighed:)`, and matching R/igraph's
+    /// `graph_from_adjacency_matrix(mode="undirected", diag=FALSE)`.
+    ///
+    /// - Parameters:
+    ///   - adjacency: A square matrix; row/column `i` is node `i`.
+    ///   - weighted: If `true`, edge weights come from the matrix entries;
+    ///     if `false`, every retained edge gets weight `1.0`.
+    ///   - nodeSize: Per-node visual size, keyed by node index; defaults to
+    ///     `1.0` for nodes not present in the dictionary.
+    public convenience init(adjacency: Matrix, weighted: Bool = true, nodeSize: [Int: Double] = [:]) {
+        let names = adjacency.rowNames
+        let nodes = names.enumerated().map { index, name in
+            Node(name: name, size: nodeSize[index] ?? 1.0)
+        }
+
+        var edges: [Edge] = []
+        for i in 0..<adjacency.rows {
+            for j in (i + 1)..<adjacency.cols {
+                let value = adjacency[i, j]
+                guard value != 0.0 else { continue }
+                edges.append(Edge(fromNode: nodes[i], toNode: nodes[j], weight: weighted ? value : 1.0))
+            }
+        }
+
+        self.init(nodes: nodes, edges: edges)
+    }
 }

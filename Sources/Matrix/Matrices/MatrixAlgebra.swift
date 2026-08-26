@@ -211,6 +211,36 @@ public func SingularValueDecomposition(_ A: Matrix) -> (U: Matrix, d: Vector, V:
 }
 
 
+/// Computes the Moore-Penrose pseudo-inverse of a matrix via SVD.
+///
+/// Unlike `GeneralizedInverse(_:)` (an LU-based true inverse, only valid for
+/// non-singular square matrices), this handles singular/rank-deficient
+/// matrices correctly — the same guarantee R's `MASS::ginv()` provides.
+/// Matches `MASS::ginv`'s algorithm exactly, including its default
+/// tolerance: singular values `d[i] > tol * d[0]` are inverted; the rest are
+/// treated as zero.
+///
+/// - Parameters:
+///   - X: An M×N matrix.
+///   - tol: Relative tolerance against the largest singular value (default:
+///     `sqrt(.ulpOfOne)`, the same default `MASS::ginv` uses).
+/// - Returns: The N×M pseudo-inverse, or an all-zero N×M matrix if `X` has
+///   no singular values above tolerance (or SVD fails).
+public func MoorePenroseInverse(_ X: Matrix, tol: Double = Double.ulpOfOne.squareRoot()) -> Matrix {
+    guard let svd = SingularValueDecomposition(X) else { return Matrix(X.cols, X.rows, 0.0) }
+
+    let threshold = max(tol * svd.d[0], 0.0)
+    let positive = svd.d.indices.filter { svd.d[$0] > threshold }
+    guard !positive.isEmpty else { return Matrix(X.cols, X.rows, 0.0) }
+
+    let V = svd.V.submatrix(Array(0..<svd.V.rows), positive)
+    let U = svd.U.submatrix(Array(0..<svd.U.rows), positive)
+    let Dinv = Matrix.DiagonalMatrix(diagonal: positive.map { 1.0 / svd.d[$0] })
+
+    return V .* Dinv .* U.transpose
+}
+
+
 // MARK: - Eigenvector Computation
 
 

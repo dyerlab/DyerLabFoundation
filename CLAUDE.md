@@ -6,14 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Use Xcode's toolchain — Command Line Tools lacks Swift Testing and SwiftData macros
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift build
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift package resolve
+env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift build
+env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test
+env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
+env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
+env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift package resolve
 ```
 
-Alternatively: `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
+Alternatively: `sudo xcode-select -s /Users/rodney/Downloads/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
+
+This path has moved before (was `/Applications/Xcode-beta.app` as of 2026-07-30) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
 
 ## Architecture
 
