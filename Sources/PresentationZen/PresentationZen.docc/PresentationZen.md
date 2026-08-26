@@ -1,12 +1,13 @@
 # ``PresentationZen``
 
-The SwiftUI presentation layer for `Matrix` and `Graph` — charts, statistical analyses, data tables, and views.
+The SwiftUI presentation layer for `Matrix` — charts, statistical analyses, data tables, and views.
 
 ## Overview
 
-`PresentationZen` depends on both `Matrix` and `Graph`: it is the UI layer for everything, regardless of which
-target defines the underlying type. If a downstream package needs a SwiftUI view for a `Matrix`, `Vector`, or
-`Graph` value, it lives here rather than alongside the type itself.
+`PresentationZen` depends on both `Matrix` and `Graph`. It is the UI layer for `Matrix`/`Vector` values and for
+data communication (charts, tables, analyses) generally. `Graph` is the one exception: it owns its own SwiftUI
+views (`GraphLayoutView`, `MapView`) alongside its model and layout-engine code, so it has no UI dependency on
+this target.
 
 ### Data tables
 

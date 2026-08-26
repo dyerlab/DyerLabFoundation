@@ -72,7 +72,6 @@ public struct BoxPlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     BoxPlot(
@@ -84,4 +83,3 @@ public struct BoxPlot: View {
     )
     .padding()
 }
-#endif

@@ -77,7 +77,6 @@ public struct VectorStatsRow: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -91,4 +90,3 @@ public struct VectorStatsRow: View {
     VectorStatsRow(values: [])
         .frame(width: 400)
 }
-#endif

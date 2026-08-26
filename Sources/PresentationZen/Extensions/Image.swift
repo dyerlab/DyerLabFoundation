@@ -40,7 +40,7 @@ public extension Image {
     ///
     /// - Parameter dlImage: The platform image to wrap.
     init(dlImage: DLImage) {
-        #if os(iOS)
+        #if os(iOS) || os(visionOS)
         self.init(uiImage: dlImage)
         #elseif os(macOS)
         self.init(nsImage: dlImage)

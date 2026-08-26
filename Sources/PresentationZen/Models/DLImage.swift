@@ -20,7 +20,7 @@ import Foundation
 import SwiftUI
 
 
-#if os(iOS)
+#if os(iOS) || os(visionOS)
 import UIKit
 public typealias DLImage = UIImage
 
@@ -169,7 +169,7 @@ public extension DLImage {
     /// This image's pixels, each expressed as an RGB point in `[0, 1]³` — the input
     /// space `mainColors(groups:)` clusters over.
      var toPoint3D: [Point3D] {
-        #if os(iOS)
+        #if os(iOS) || os(visionOS)
         guard let cgImage = self.cgImage else { return [] }
         assert(cgImage.bitsPerPixel == 32, "Only support 32bit images")
         assert(cgImage.bitsPerComponent == 8,  "only support 8 bit per channel")

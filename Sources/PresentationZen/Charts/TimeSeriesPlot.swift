@@ -127,7 +127,6 @@ public struct TimeSeriesPlot: View {
             }
     }
 }
-#if !SPM_BUILD
 
 #Preview("Date") {
     TimeSeriesPlot(.sampleTemporal, yLabel: "Y-Axis Data")
@@ -138,4 +137,3 @@ public struct TimeSeriesPlot: View {
     TimeSeriesPlot(.sampleScatter, yLabel: "Y-Axis Data")
         .padding()
 }
-#endif

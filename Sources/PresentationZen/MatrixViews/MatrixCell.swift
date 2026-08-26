@@ -63,9 +63,9 @@ public struct MatrixCell: View {
                 )
                 #if os(macOS)
                 .textFieldStyle(.plain)
-                #endif
                 .multilineTextAlignment(.center)
                 .font(.body.monospacedDigit())
+                #endif
             }
         }
         .frame(width: MatrixView.Constants.cellWidth,
@@ -75,7 +75,6 @@ public struct MatrixCell: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -90,4 +89,3 @@ public struct MatrixCell: View {
     return MatrixCell(value: $value, isDiagonal: true, isReadOnly: true)
         .padding()
 }
-#endif

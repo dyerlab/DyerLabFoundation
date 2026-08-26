@@ -15,8 +15,9 @@ import PackageDescription
 let package = Package(
     name: "DyerLabFoundation",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
+        .iOS(.v18),
+        .macOS(.v15),
+        .visionOS(.v2),
     ],
     products: [
         .library(name: "Matrix",             targets: ["Matrix"]),
@@ -24,6 +25,7 @@ let package = Package(
         .library(name: "PresentationZen",    targets: ["PresentationZen"]),
         .library(name: "PopulationGenetics", targets: ["PopulationGenetics"]),
         .library(name: "DyerLabFoundation", targets: ["DyerlabFoundation"]),
+        .executable(name: "GraphDemoApp", targets: ["GraphDemoApp"]),
     ],
     targets: [
         // MARK: - Library targets
@@ -35,7 +37,6 @@ let package = Package(
                 .define("ACCELERATE_NEW_LAPACK", to: "1"),
             ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
             linkerSettings: [
@@ -46,9 +47,8 @@ let package = Package(
         .target(
             name: "Graph",
             dependencies: ["Matrix"],
-            resources: [ .process("Graph.docc") ],
+            resources: [ .process("Graph.docc"), .copy("Data") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),
@@ -58,7 +58,6 @@ let package = Package(
             dependencies: ["Matrix", "Graph"],
             resources: [ .process("PresentationZen.docc") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),
@@ -68,7 +67,6 @@ let package = Package(
             dependencies: ["Matrix", "Graph", "PresentationZen"],
             resources: [ .process("PopulationGenetics.docc"), .copy("ExampleData") ],
             swiftSettings: [
-                .define("SPM_BUILD"),
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
         ),
@@ -77,6 +75,16 @@ let package = Package(
             name: "DyerlabFoundation",
             dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics"],
             resources: [ .process("DyerlabFoundation.docc") ],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        // MARK: - Demo app target
+
+        .executableTarget(
+            name: "GraphDemoApp",
+            dependencies: ["Graph"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

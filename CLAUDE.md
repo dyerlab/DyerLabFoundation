@@ -22,25 +22,32 @@ DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixSt
 | Product | Depends on | Purpose |
 |---|---|---|
 | `Matrix` | — | Linear algebra: matrices, vectors, operators, t-SNE, PCA, `rSourceConvertible` protocol |
-| `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine |
-| `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, all SwiftUI views (Matrix views, Graph views, charts) |
+| `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine + its own SwiftUI views (GraphLayoutView, MapView) + file import (.pgraph, GeoJSON) |
+| `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, SwiftUI views for Matrix/Vector and general data-communication (charts, tables) |
 | `PopulationGenetics` | `Matrix`, `Graph`, `PresentationZen` | Diploid genetic-marker storage/import/analysis (see below — folded in wholesale as of 2026-07-14) |
 | `DyerLabFoundation` | all four | Umbrella — re-exports everything via `@_exported import` |
 
-### PresentationZen is the UI layer for everything
+### PresentationZen is the UI layer — except Graph, which owns its own views
 
-All SwiftUI views live in PresentationZen regardless of the type they display. If you need a view for a `Matrix`, `Vector`, or `Graph`, import `PresentationZen`. This means `PresentationZen` depends on both `Matrix` and `Graph`.
+All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: charts, tables, analyses) live in PresentationZen — import `PresentationZen` for those. `Graph` is a deliberate exception (as of 2026-08-08): its views (`GraphLayoutView`, `MapView`, `NodeInspectorForm`, under `Sources/Graph/Views/`) live alongside its model and force-directed layout engine rather than in PresentationZen, because a graph's rendering is inseparable from the layout-simulation state that drives it. `PresentationZen` still depends on both `Matrix` and `Graph` (for the layout engine and non-view types it re-uses), but no longer supplies Graph's SwiftUI views — code that imported `PresentationZen` only to reach `GraphLayoutView`/`MapView` must now `import Graph` instead.
 
 ### Source layout
 
 ```
 Sources/
   Matrix/          — Matrices/, Vectors/, Algorithms/, Protocols/, Types/, Operators.swift
-  Graph/           — Graphs/{Adjacency,Centrality,Edge,Graph,Node,Path}.swift
-                     Graphs/Layout/{Camera,Core,Legacy,Simulation}/
+  Graph/           — Models/{Graph,Node,Edge,Path}.swift, Extensions/{Adjacency,Centrality}.swift
+                     Layout/{Camera,Core,Simulation}/
+                     Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
+                               GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm
+                               Reality/  ← RealityGraphView, RealityGraphEntityBuilder, RealityGraphOptions
+                                          (RealityKit-based 3D visualization; the intended long-term
+                                          replacement for GraphCanvasView across iOS/macOS/visionOS — see
+                                          realitykit_unification_decision)
+                     IO/     ← file import: importPGraph, importGeoJSON, GraphExampleData
+                     Data/   ← bundled example graph files (lopho.pgraph, lopho.geojson)
   PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/
                      MatrixViews/    ← Matrix + Vector SwiftUI views
-                     GraphViews/     ← Graph layout views (GraphLayoutView, MapView, etc.)
   PopulationGenetics/ — Genetic/, DataStore/, Persistence/, Simulation/, PopulationGraph/,
                      Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
   DyerlabFoundation/ — DyerlabFoundation.swift (@_exported imports)
@@ -77,11 +84,11 @@ decision, confirmed 2026-07-14: **`Sources/PopulationGenetics/` in this repo is 
 
 ### Swift version & platforms
 
-Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v17), .macOS(.v14)`.
+Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v18), .macOS(.v15), .visionOS(.v2)` (raised from `.iOS(.v17), .macOS(.v14)` on 2026-08-09 to add visionOS and support `RealityGraphView`'s `RealityView`/`PhysicsDistanceJoint` usage — those APIs require exactly this floor). No per-symbol `@available` gating is needed anywhere in the package as a result, since every target's minimum already matches.
 
-### `#Preview` guards
+### `#Preview` guards — removed (2026-08-08)
 
-All `#Preview` macros are wrapped in `#if !SPM_BUILD` / `#endif`. The `SPM_BUILD` flag is defined on every target for command-line builds, suppressing previews that require Xcode's `PreviewsMacros` plugin.
+`#Preview` macros used to be wrapped in `#if !SPM_BUILD` / `#endif`, with `SPM_BUILD` defined unconditionally in every target's `swiftSettings`. That define applies to *any* build of this manifest — including Xcode's — so the guard was permanently suppressing previews in Xcode too, not just in CLI builds as intended; removed once that was noticed. `#Preview` genuinely does fail under the bare Command Line Tools toolchain (`external macro implementation type 'PreviewsMacros.SwiftUIView' could not be found`, confirmed 2026-08-08), but this repo already mandates the full Xcode toolchain for `swift build`/`swift test` regardless (see Commands, above) for Swift Testing/SwiftData macro support — so that toolchain gap was never actually reachable through this project's supported workflow.
 
 ### SwiftData note
 
@@ -113,7 +120,7 @@ Not touched as of 2026-07-15 — flagged for a future pass.
 ### Downstream consumers
 
 - **PopulationGenetics** — no longer a separate downstream consumer; folded into this repo as of 2026-07-14 (see above). The standalone `github.com/dyerlab/PopulationGenetics` repo is legacy.
-- **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging.
+- **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging. The platform-floor bump to iOS 18/macOS 15/visionOS 2 for `RealityGraphView` (2026-08-09) raises this for the *whole package*, including `Matrix`/`PresentationZen` — Linguistics tracks `main` directly, so it inherits this floor immediately with no opt-out. Confirmed compatible across all downstream artifacts/projects (2026-08-09) — sole-developer setup, verified directly rather than through a feature-branch check.
 - **GeneticStudio** — a new app being built directly against this foundation as it evolves; not a stability concern, expected to simply conform. Its Xcode project currently only references the `dyerlabfoundation` package (no separate `PopulationGenetics` dependency), even though its own source already calls PopulationGenetics-only types (`ImportedDataset`, `ProjectStore`, `importMicrosatTable`) — that gap needs fixing in the GeneticStudio project itself, and is now simpler to fix since `PopulationGenetics` is just another product of the one package it already depends on.
   - **`GenotypeMatrixStore` was renamed to `ProjectStore` on 2026-07-25** (breaking — GeneticStudio's build will fail on the old name) as part of making genetic data one of five equal, independently optional components (`StoreComponents`: `.geneticData`, `.graph`, `.results`, `.log`, `.matrices`) instead of a mandatory one, motivated by GeneticStudio's own document-save path (`create(overwrite:true)` + `write` only) silently discarding any graph/results/log data on every save. Migration for GeneticStudio's document/save code specifically:
     - `write(matrix:...)` → `writeGeneticData(matrix:parentage:strata:)`; `projectName`/`species`/`description` moved from that call to `create(at:overwrite:components:projectName:species:description:)`.

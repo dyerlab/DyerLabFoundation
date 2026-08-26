@@ -70,7 +70,6 @@ public struct ScatterPlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     ScrollView {
@@ -87,4 +86,3 @@ public struct ScatterPlot: View {
         .padding()
     }
 }
-#endif

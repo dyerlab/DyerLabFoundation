@@ -89,6 +89,42 @@ struct DLColorTests {
         #expect(DLColor.textColor(from: dark) == Color.white)
     }
 
+    @Test("hex initializer parses 6-digit RRGGBB")
+    func hexSixDigit() throws {
+        let c = try #require(DLColor(hex: "#FF0000"))
+        #expect(abs(c.hue - 0.0) < 0.001)
+        #expect(abs(c.saturation - 1.0) < 0.001)
+        #expect(abs(c.brightness - 1.0) < 0.001)
+        #expect(c.alpha == 1.0)
+    }
+
+    @Test("hex initializer parses without leading #")
+    func hexNoHash() throws {
+        let c = try #require(DLColor(hex: "00FF00"))
+        #expect(abs(c.hue - 1.0/3.0) < 0.001)
+    }
+
+    @Test("hex initializer parses 3-digit shorthand")
+    func hexThreeDigit() throws {
+        let short = try #require(DLColor(hex: "#F00"))
+        let long = try #require(DLColor(hex: "#FF0000"))
+        #expect(abs(short.hue - long.hue) < 0.001)
+        #expect(abs(short.saturation - long.saturation) < 0.001)
+        #expect(abs(short.brightness - long.brightness) < 0.001)
+    }
+
+    @Test("hex initializer parses 8-digit RRGGBBAA alpha")
+    func hexEightDigit() throws {
+        let c = try #require(DLColor(hex: "#0000FF80"))
+        #expect(abs(c.alpha - 128.0/255.0) < 0.001)
+    }
+
+    @Test("hex initializer returns nil for invalid input")
+    func hexInvalid() {
+        #expect(DLColor(hex: "not-a-color") == nil)
+        #expect(DLColor(hex: "#12345") == nil)
+    }
+
     @Test("Color.components handles grayscale (2-component) colors")
     func grayscaleComponents() {
         let white = Color.white

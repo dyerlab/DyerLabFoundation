@@ -94,7 +94,6 @@ public struct PiePlot: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     PiePlot(DataTable(numbers: ["count": [30, 20, 15, 35]],
@@ -106,4 +105,3 @@ public struct PiePlot: View {
             valueFormat: "%.0f")
     .padding()
 }
-#endif

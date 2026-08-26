@@ -129,9 +129,7 @@ public struct DataTableView: View {
         }
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     DataTableView(.sampleScatter, caption: "Scatter Sample")
 }
-#endif

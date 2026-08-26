@@ -52,7 +52,6 @@ public struct NumberLine: View {
         .chartLegend(.hidden)
     }
 }
-#if !SPM_BUILD
 
 #Preview {
     NumberLine(
@@ -62,4 +61,3 @@ public struct NumberLine: View {
     )
     .padding()
 }
-#endif

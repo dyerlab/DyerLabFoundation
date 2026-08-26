@@ -115,7 +115,6 @@ private func steppingStoneValues(k: Int, m: Double) -> [[Double]] {
     }
     return v
 }
-#if !SPM_BUILD
 
 #Preview("3-population stepping stone") {
     @Previewable @State var values = steppingStoneValues(k: 3, m: 0.05)
@@ -141,4 +140,3 @@ private func steppingStoneValues(k: Int, m: Double) -> [[Double]] {
         .padding()
         .frame(minWidth: 500)
 }
-#endif

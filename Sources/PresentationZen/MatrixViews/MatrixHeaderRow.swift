@@ -63,7 +63,6 @@ public struct MatrixHeaderRow: View {
     }
 
 }
-#if !SPM_BUILD
 
 // MARK: - Previews
 
@@ -76,4 +75,3 @@ public struct MatrixHeaderRow: View {
     MatrixHeaderRow(colNames: ["LongPopulationName01", "LongPopulationName02"])
         .padding(.vertical, 4)
 }
-#endif
