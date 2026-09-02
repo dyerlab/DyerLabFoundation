@@ -1,0 +1,379 @@
+{
+  "triangle": {
+    "nodes": ["A", "B", "C"],
+    "edges": [
+      {
+        "from": "A",
+        "to": "B",
+        "weight": 2
+      },
+      {
+        "from": "A",
+        "to": "C",
+        "weight": 3
+      },
+      {
+        "from": "B",
+        "to": "C",
+        "weight": 1
+      }
+    ],
+    "graph_asymmetries": {
+      "bandwidth": {
+        "A": 2.5,
+        "B": 1.5,
+        "C": 2
+      },
+      "edges": [
+        {
+          "from": "A",
+          "to": "B",
+          "w_away": 0.598687660112452,
+          "w_to": 0.33924363123418283,
+          "delta": 0.25944402887826917
+        },
+        {
+          "from": "A",
+          "to": "C",
+          "w_away": 0.401312339887548,
+          "w_to": 0.2689414213699951,
+          "delta": 0.13237091851755289
+        },
+        {
+          "from": "B",
+          "to": "C",
+          "w_away": 0.66075636876581723,
+          "w_to": 0.7310585786300049,
+          "delta": -0.07030220986418767
+        }
+      ]
+    }
+  },
+  "quad": {
+    "nodes": ["A", "B", "C", "D"],
+    "edges": [
+      {
+        "from": "A",
+        "to": "B",
+        "weight": 0.5
+      },
+      {
+        "from": "A",
+        "to": "C",
+        "weight": 1.2
+      },
+      {
+        "from": "B",
+        "to": "C",
+        "weight": 0.80000000000000004
+      },
+      {
+        "from": "C",
+        "to": "D",
+        "weight": 0.40000000000000002
+      }
+    ],
+    "graph_asymmetries": {
+      "bandwidth": {
+        "A": 0.84999999999999998,
+        "B": 0.65000000000000002,
+        "C": 0.79999999999999993,
+        "D": 0.40000000000000002
+      },
+      "edges": [
+        {
+          "from": "A",
+          "to": "B",
+          "w_away": 0.69498502223522307,
+          "w_to": 0.61337907846252593,
+          "delta": 0.081605943772697143
+        },
+        {
+          "from": "A",
+          "to": "C",
+          "w_away": 0.30501497776477687,
+          "w_to": 0.17900206323603943,
+          "delta": 0.12601291452873745
+        },
+        {
+          "from": "B",
+          "to": "C",
+          "w_away": 0.38662092153747413,
+          "w_to": 0.33441988101275771,
+          "delta": 0.052201040524716413
+        },
+        {
+          "from": "C",
+          "to": "D",
+          "w_away": 0.48657805575120294,
+          "w_to": 1,
+          "delta": -0.51342194424879706
+        }
+      ]
+    },
+    "asymmetric_weights": [
+      {
+        "i": "A",
+        "j": "B",
+        "pij": 0.50148749561158057,
+        "pji": 0.50048749984552354,
+        "cGD": 0.5,
+        "dij": 0.25024950616796604,
+        "dji": 0.24975049383203402,
+        "delta": 0.00049901233593202532
+      },
+      {
+        "i": "A",
+        "j": "C",
+        "pij": 0.49851250438841932,
+        "pji": 0.33217862126950753,
+        "cGD": 1.2,
+        "dij": 0.72014132183283275,
+        "dji": 0.47985867816716732,
+        "delta": 0.24028264366566543
+      },
+      {
+        "i": "B",
+        "j": "C",
+        "pij": 0.49951250015447646,
+        "pji": 0.33350999673034037,
+        "cGD": 0.80000000000000004,
+        "dij": 0.47971093411998911,
+        "dji": 0.32028906588001094,
+        "delta": 0.15942186823997817
+      },
+      {
+        "i": "C",
+        "j": "D",
+        "pij": 0.33431138200015209,
+        "pji": 1,
+        "cGD": 0.40000000000000002,
+        "dij": 0.10021989964561781,
+        "dji": 0.29978010035438224,
+        "delta": -0.19956020070876443
+      }
+    ],
+    "asymmetric_popgraph": {
+      "edges": [
+        {
+          "from": "A",
+          "to": "B",
+          "weight": 0.25024950616796604
+        },
+        {
+          "from": "A",
+          "to": "C",
+          "weight": 0.72014132183283275
+        },
+        {
+          "from": "B",
+          "to": "C",
+          "weight": 0.47971093411998911
+        },
+        {
+          "from": "C",
+          "to": "D",
+          "weight": 0.10021989964561781
+        },
+        {
+          "from": "B",
+          "to": "A",
+          "weight": 0.24975049383203402
+        },
+        {
+          "from": "C",
+          "to": "A",
+          "weight": 0.47985867816716732
+        },
+        {
+          "from": "C",
+          "to": "B",
+          "weight": 0.32028906588001094
+        },
+        {
+          "from": "D",
+          "to": "C",
+          "weight": 0.29978010035438224
+        }
+      ],
+      "edge_count": 8,
+      "weight_sum": 2.9000000000000004
+    }
+  },
+  "congruence": {
+    "graph1_edges": [
+      {
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "from": "A",
+        "to": "C"
+      },
+      {
+        "from": "B",
+        "to": "C"
+      },
+      {
+        "from": "C",
+        "to": "D"
+      }
+    ],
+    "graph2_edges": [
+      {
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "from": "A",
+        "to": "C"
+      },
+      {
+        "from": "A",
+        "to": "D"
+      },
+      {
+        "from": "B",
+        "to": "C"
+      },
+      {
+        "from": "B",
+        "to": "D"
+      }
+    ],
+    "graph1_nodes": ["A", "B", "C", "D"],
+    "graph2_nodes": ["A", "B", "C", "D"],
+    "topology_nodes": ["A", "B", "C", "D"],
+    "topology_edges": [
+      {
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "from": "A",
+        "to": "C"
+      },
+      {
+        "from": "B",
+        "to": "C"
+      }
+    ],
+    "topology_node_count": 4,
+    "topology_edge_count": 3,
+    "test_congruence": {
+      "estimate": -0.31622776601683789,
+      "statistic": -0.66666666666666663,
+      "df": 4,
+      "p_value": 0.54146973927558495
+    }
+  },
+  "ops_minus": {
+    "e1_nodes": ["Node-1", "Node-2", "Node-3", "Node-4", "Node-5", "Node-6", "Node-7"],
+    "e1_edges": [
+      {
+        "from": "Node-1",
+        "to": "Node-2"
+      },
+      {
+        "from": "Node-2",
+        "to": "Node-3"
+      },
+      {
+        "from": "Node-3",
+        "to": "Node-4"
+      },
+      {
+        "from": "Node-4",
+        "to": "Node-5"
+      },
+      {
+        "from": "Node-5",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-1",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-1",
+        "to": "Node-7"
+      },
+      {
+        "from": "Node-6",
+        "to": "Node-7"
+      },
+      {
+        "from": "Node-5",
+        "to": "Node-7"
+      },
+      {
+        "from": "Node-1",
+        "to": "Node-3"
+      }
+    ],
+    "e2_nodes": ["Node-1", "Node-2", "Node-3", "Node-4", "Node-5", "Node-6", "Node-7"],
+    "e2_edges": [
+      {
+        "from": "Node-1",
+        "to": "Node-2"
+      },
+      {
+        "from": "Node-2",
+        "to": "Node-3"
+      },
+      {
+        "from": "Node-3",
+        "to": "Node-4"
+      },
+      {
+        "from": "Node-4",
+        "to": "Node-5"
+      },
+      {
+        "from": "Node-5",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-1",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-2",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-3",
+        "to": "Node-6"
+      },
+      {
+        "from": "Node-3",
+        "to": "Node-5"
+      },
+      {
+        "from": "Node-3",
+        "to": "Node-7"
+      },
+      {
+        "from": "Node-5",
+        "to": "Node-7"
+      }
+    ],
+    "result_nodes": ["Node-1", "Node-2", "Node-3", "Node-4", "Node-5", "Node-6", "Node-7"],
+    "result_edges": [
+      {
+        "from": "Node-1",
+        "to": "Node-3"
+      },
+      {
+        "from": "Node-1",
+        "to": "Node-7"
+      },
+      {
+        "from": "Node-6",
+        "to": "Node-7"
+      }
+    ],
+    "result_node_count": 7,
+    "result_edge_count": 3
+  }
+}

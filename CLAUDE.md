@@ -6,16 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Use Xcode's toolchain — Command Line Tools lacks Swift Testing and SwiftData macros
-env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift build
-env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test
-env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
-env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
-env DEVELOPER_DIR=/Users/rodney/Downloads/Xcode-beta.app/Contents/Developer swift package resolve
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift build
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
+env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift package resolve
 ```
 
-Alternatively: `sudo xcode-select -s /Users/rodney/Downloads/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
+Alternatively: `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
 
-This path has moved before (was `/Applications/Xcode-beta.app` as of 2026-07-30) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
+This path has moved before (was `/Users/rodney/Downloads/Xcode-beta.app` as of 2026-08-xx; back to `/Applications/Xcode-beta.app` as of 2026-08-31) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
 
 ## Architecture
 
@@ -39,6 +39,17 @@ All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: 
 Sources/
   Matrix/          — Matrices/, Vectors/, Algorithms/, Protocols/, Types/, Operators.swift
   Graph/           — Models/{Graph,Node,Edge,Path}.swift, Extensions/{Adjacency,Centrality}.swift
+                     Extensions/  ← also the downstream popgraph-analysis ports (domain-neutral, so
+                                    here not in PopulationGenetics): GraphAsymmetries, AsymmetricWeights /
+                                    AsymmetricPopulationGraph, CongruenceTopology / TestCongruence,
+                                    Graph.subtractingEdges, GraphNeighborhood (undirected helpers);
+                                    RandomizeGraph + AsymmetryBandwidthTest / AsymmetryNetworkTest /
+                                    AsymmetrySignificance (seeded resampling, via Matrix's RMersenneTwister
+                                    which reproduces R's set.seed()/sample() bit-for-bit) —
+                                    numerically identical to gstudio >= 1.14 (the "mimic swift package"
+                                    release; see gstudio-source-is-canonical-reference memory). Paired
+                                    R↔Swift parity tests: gstudio tests/testthat/test-swift-parity.R and
+                                    Tests/GraphTests/AsymmetryResamplingTests.swift share graphs + seeds.
                      Layout/{Camera,Core,Simulation}/
                      Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
                                GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm

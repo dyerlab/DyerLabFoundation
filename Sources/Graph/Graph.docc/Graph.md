@@ -15,6 +15,17 @@ it the same way.
 - ``Node`` / ``Edge`` — the graph's vertices and connections.
 - ``Path`` — a path through the graph.
 
+### Population-graph analysis
+
+Ports of gstudio's downstream `popgraph` operations, numerically identical to the R implementations. Domain-neutral weighted-graph operations — `PopulationGenetics` builds the graphs these consume.
+
+- ``GraphAsymmetries(graph:bandwidth:scale:)`` — directional introgression weights and a per-edge asymmetry index from a local Gaussian kernel (`graph_asymmetries()`).
+- ``AsymmetricWeights(graph:perplexity:tolerance:maxIterations:)`` / ``AsymmetricPopulationGraph(graph:perplexity:tolerance:maxIterations:)`` — a t-SNE-style split of each edge's conditional genetic distance into directional shares (`asymmetric_weights()` / `asymmetric_popgraph()`).
+- ``CongruenceTopology(_:_:)`` / ``TestCongruence(_:_:)`` — the shared-edge topology of two graphs and a Pearson test between their distance structures (`congruence_topology()` / `test_congruence()`).
+- ``Graph/subtractingEdges(in:)`` — one graph's edges with another's removed (`-.popgraph`).
+- ``RandomizeGraph(graph:mode:seed:)`` — a `.full` or degree-preserving edge randomisation (`randomize_graph()`).
+- ``AsymmetryBandwidthTest(graph:permutations:seed:)`` / ``AsymmetryNetworkTest(graph:permutations:rewire:seed:)`` / ``AsymmetrySignificance(graph:mode:permutations:rewire:pendants:seed:)`` — the graph-only resampling nulls for edge asymmetry (`asymmetry_bandwidth()` / `asymmetry_network()` / `asymmetry_significance()`). Seeded via ``RMersenneTwister``, so output is bit-identical to R's `set.seed(seed); …`.
+
 ### Force-directed layout
 
 - ``LayoutConfiguration`` — configures the force-directed simulation.

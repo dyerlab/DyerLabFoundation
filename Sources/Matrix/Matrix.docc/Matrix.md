@@ -27,10 +27,12 @@ about graphs, charts, or genetics.
 - ``NullDistributionResult`` / ``PermutationTestResult`` — the null-distribution and permutation-test result types shared across every domain that needs significance testing.
 - ``AnalysisTag`` — an open tag identifying what a `NullDistributionResult` was computed for, so one result type serves every analysis.
 - ``SplitMix64`` — a fast, seedable PRNG used wherever reproducible randomization is needed (permutation tests, simulation).
+- ``RMersenneTwister`` — a Mersenne-Twister that reproduces R's `set.seed()` / `runif()` / `sample()` bit-for-bit, for exact-parity testing of resampling ports against R.
 
 ### Regression & probability
 
 - ``LinearModelFit`` — standardized linear-model fitting.
+- `pearsonCorrelation` / `studentTCDF` / `studentTTwoSidedPValue` / `regularizedIncompleteBeta` — Pearson correlation and the Student's t distribution behind it, matching R's `cor.test(method = "pearson")`.
 - ``SigmaSearchResult`` — result of a bandwidth/sigma search (used by t-SNE affinity tuning).
 - `tSNEAffinity` / `pairwiseTSNEAffinities` — t-SNE affinity calculation for embedding high-dimensional data.
 - `hypergeometricProbability` — hypergeometric probability calculations.
