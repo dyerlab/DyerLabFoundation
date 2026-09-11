@@ -43,6 +43,18 @@ public struct EdgeAsymmetrySignificance: Sendable, Equatable {
     public let ciLow: Double?
     /// Upper CI bound — always `nil` for permutation nulls.
     public let ciHigh: Double?
+
+    /// Initializes a new edge (or graph-level) asymmetry-significance row.
+    public init(from: String?, to: String?, delta: Double, statistic: Double,
+                pValue: Double, ciLow: Double?, ciHigh: Double?) {
+        self.from = from
+        self.to = to
+        self.delta = delta
+        self.statistic = statistic
+        self.pValue = pValue
+        self.ciLow = ciLow
+        self.ciHigh = ciHigh
+    }
 }
 
 /// Bandwidth-alignment permutation null for edge asymmetry — a port of

@@ -41,6 +41,33 @@ import Graph
 ///   correlation chi-square test — or `nil` if any underlying decomposition
 ///   (PCA/SVD) fails.
 public func PopulationGraph(x: Matrix, groups: [String], alpha: Double = 0.05, tol: Double = 1.0e-4) -> Graph? {
+    guard let core = popgraphCore(x: x, groups: groups, alpha: alpha, tol: tol) else { return nil }
+    return Graph(adjacency: core.D, weighted: true, nodeSize: core.nodeSize)
+}
+
+/// The full conditional-distance matrix under `alpha = 1` — gstudio's
+/// `popgraph(x, groups, alpha = 1)` followed by `to_matrix(mode = "edge weight")`.
+/// With `alpha = 1` the topology threshold retains every group pair (barring
+/// an exact-zero partial correlation), so this is the same distance matrix
+/// `PopulationGraph(x:groups:alpha:tol:)` thresholds down to a sparser graph,
+/// labeled by group name.
+///
+/// Used by the genotype-driven resampling ports (`asymmetry_permutation`,
+/// `asymmetry_jackknife`) which need to look up a re-estimated edge weight by
+/// group pair rather than build a `Graph`.
+///
+/// - Returns: The `K×K` labeled distance matrix (`rowNames`/`colNames` are the
+///   sorted group names), or `nil` under the same conditions as
+///   `PopulationGraph(x:groups:alpha:tol:)`.
+func PopulationGraphConditionalDistanceMatrix(x: Matrix, groups: [String], tol: Double = 1.0e-4) -> Matrix? {
+    popgraphCore(x: x, groups: groups, alpha: 1.0, tol: tol)?.D
+}
+
+/// The shared computation behind `PopulationGraph(x:groups:alpha:tol:)` and
+/// `PopulationGraphConditionalDistanceMatrix(x:groups:tol:)` — a direct port
+/// of gstudio's `popgraph()` up to (and including) its `alpha`-threshold step,
+/// stopping short of building the `Graph`.
+private func popgraphCore(x: Matrix, groups: [String], alpha: Double, tol: Double) -> (D: Matrix, sortedGroups: [String], nodeSize: [Int: Double])? {
     precondition(groups.count == x.rows, "groups must have one label per row of x")
 
     let N = Double(groups.count)
@@ -141,7 +168,7 @@ public func PopulationGraph(x: Matrix, groups: [String], alpha: Double = 0.05, t
         (index, (value / divisor) * 5.0 + 5.0)
     })
 
-    return Graph(adjacency: D, weighted: true, nodeSize: nodeSize)
+    return (D: D, sortedGroups: sortedGroups, nodeSize: nodeSize)
 }
 
 /// A matrix with `rows` copies of `v` as every row.

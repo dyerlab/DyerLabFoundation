@@ -63,6 +63,17 @@ Sources/
                      MatrixViews/    ← Matrix + Vector SwiftUI views
   PopulationGenetics/ — Genetic/, DataStore/, Persistence/, Simulation/, PopulationGraph/,
                      Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
+                     PopulationGraph/  ← also Phase 2b of the downstream popgraph-analysis port
+                                          (genotype-driven, so here rather than Graph's Extensions/):
+                                          AsymmetryPermutationTest / AsymmetryJackknifeTest / PermutePopgraph
+                                          ← asymmetry_permutation() / asymmetry_jackknife() / permute_popgraph(),
+                                          each re-estimating PopulationGraph() per draw via RMersenneTwister
+                                          (bit-exact R parity) + GraphAsymmetries (Graph). Requires gstudio
+                                          >= 1.14.1 — permute_popgraph()'s per-stratum resampling was fixed
+                                          2026-09-11 (see gstudio-source-is-canonical-reference memory) to plain
+                                          sample(replace=TRUE) instead of sampling::strata(method="srswr"), which
+                                          both mis-paired resampled rows with the original unsorted groups vector
+                                          on non-stratum-sorted input and wasn't RNG-parity-portable.
   DyerlabFoundation/ — DyerlabFoundation.swift (@_exported imports)
 Tests/
   MatrixTests/          GraphTests/          PresentationZenTests/
