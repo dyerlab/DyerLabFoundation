@@ -354,3 +354,57 @@ public func PRComp(_ X: Matrix) -> (sdev: Vector, rotation: Matrix, x: Matrix)? 
 
     return (sdev, rotation, x)
 }
+
+
+// MARK: - Symmetric Eigendecomposition
+
+
+/// Computes all eigenvalues and eigenvectors of a real symmetric matrix — the
+/// equivalent of R's `eigen(A, symmetric = TRUE)`.
+///
+/// Uses LAPACK's `dsyevd` (divide and conquer) via Accelerate. Only the upper
+/// triangle of `A` is read. As in R, eigenvalues are returned in **descending**
+/// order with the matching unit-length eigenvectors as the columns of
+/// `vectors`. Each eigenvector's sign is arbitrary (LAPACK's choice), as it is
+/// in R; callers needing reproducibility should use sign-invariant quantities.
+///
+/// - Parameter A: A square, symmetric matrix.
+/// - Returns: `(values, vectors)`, or `nil` if `A` is not square/non-empty or
+///   LAPACK fails.
+public func SymmetricEigendecomposition(_ A: Matrix) -> (values: Vector, vectors: Matrix)? {
+    guard A.rows == A.cols, A.rows > 0 else { return nil }
+    var n = Int32(A.rows)
+    var lda = n
+    var jobz: Int8 = 86   // 'V'
+    var uplo: Int8 = 85   // 'U'
+    var error = Int32(0)
+
+    // Column-major copy (A is symmetric, so its row-major storage reads the same).
+    var a = A.values
+    var w = Vector(repeating: 0.0, count: A.rows)
+
+    // Workspace query.
+    var workQuery = 0.0
+    var iworkQuery = Int32(0)
+    var lwork = Int32(-1)
+    var liwork = Int32(-1)
+    dsyevd_(&jobz, &uplo, &n, &a, &lda, &w, &workQuery, &lwork, &iworkQuery, &liwork, &error)
+    guard error == 0 else { return nil }
+
+    lwork = Int32(workQuery)
+    liwork = iworkQuery
+    var work = Vector(repeating: 0.0, count: Int(lwork))
+    var iwork = [Int32](repeating: 0, count: Int(liwork))
+    dsyevd_(&jobz, &uplo, &n, &a, &lda, &w, &work, &lwork, &iwork, &liwork, &error)
+    guard error == 0 else { return nil }
+
+    // LAPACK returns ascending values; eigenvector k is column k of the
+    // column-major `a`. Reverse to R's descending order.
+    let size = A.rows
+    let vectors = Matrix(size, size, 0.0)
+    for k in 0..<size {
+        let source = size - 1 - k
+        for i in 0..<size { vectors[i, k] = a[source * size + i] }
+    }
+    return (Vector(w.reversed()), vectors)
+}

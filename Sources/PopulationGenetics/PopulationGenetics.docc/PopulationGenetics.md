@@ -33,6 +33,8 @@ logic lives.
 - `genotypicRarefaction` / `allelicRarefaction` — individual-based resampling for diversity rarefaction.
 - ``ParentageDesign`` / ``MaternalFamily`` / `paternalGamete` — pollen-pool parentage analysis.
 - ``Outcrossing`` — Bayesian MCMC estimation of population mean outcrossing rate and inbreeding coefficient from maternal-family data, both multilocus (`t_m`, via `GenotypeMatrix.runOutcrossing(design:parameters:hasNullModel:)`) and single-locus (`t_s`, via `GenotypeMatrix.runSingleLocusOutcrossing(design:parameters:hasNullModel:)`).
+- ``PartitionedGeneticDistance(data:groups:gamma:)`` — directed partitioned conditional genetic distance among strata, built from genotypes via the Population Graph and Graph's genetic-gravity weights (`genetic_distance(mode = "pgd")`).
+- ``LocusSubsampleNull(genotypes:groups:lociPerSubset:subsets:gamma:seed:)`` — rebuilds the Population Graph from random subsets of polymorphic loci and records mean genetic-gravity `|Δ|` with the subset's polymorphism, an information-loss reference for the asymmetry index (`locus_subsample_null()`).
 - ``CorrelatedPaternity`` — Ritland's moment estimator for correlated paternity (`r_p`) and the effective number of pollen donors (`1/r_p`), via `GenotypeMatrix.correlatedPaternity(design:)` and `GenotypeMatrix.correlatedPaternityPerFamily(design:)`.
 
 ### Persistence & spatial

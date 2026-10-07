@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 # Generates R-reference fixtures for the genotype-driven resampling ports
-# (Phase 2b): asymmetry_permutation(), asymmetry_jackknife(), and
+# (Phase 2b): asymmetry_permutation(), asymmetry_ci(), and
 # permute_popgraph(), from Sources/PopulationGenetics/PopulationGraph/
-# {AsymmetryPermutation,AsymmetryJackknife,PermutePopgraph}.swift. Run with
-# gstudio >= 1.14.1 (permute_popgraph's per-stratum resampling fix) + igraph +
-# jsonlite.
+# {AsymmetryPermutation,AsymmetryCI,PermutePopgraph}.swift. Run with
+# gstudio >= 1.15.0 (null-centred location test, asymmetry_ci(), tidy column
+# names) + igraph + jsonlite.
 #
 # Reuses the same real datasets (arapat, cornus) and to_mv()/groups() pairing
 # already validated bit-identical to Swift's PopulationGraph() in
@@ -16,7 +16,7 @@ suppressPackageStartupMessages({
   library(jsonlite)
   library(gstudio)
 })
-stopifnot(packageVersion("gstudio") >= "1.14.1")
+stopifnot(packageVersion("gstudio") >= "1.15.0")
 
 fixture_dir <- commandArgs(trailingOnly = TRUE)[1]
 if (is.na(fixture_dir)) stop("pass the output Fixtures dir as arg 1")
@@ -24,8 +24,14 @@ if (is.na(fixture_dir)) stop("pass the output Fixtures dir as arg 1")
 sig_table <- function(df) {
   data.frame(from = as.character(df$from), to = as.character(df$to),
              delta = df$delta, statistic = df$statistic,
-             p_value = df$p_value, ci_low = df$ci_low, ci_high = df$ci_high,
-             stringsAsFactors = FALSE)
+             p_value = df$p.value, stringsAsFactors = FALSE)
+}
+
+ci_table <- function(df) {
+  data.frame(from = as.character(df$from), to = as.character(df$to),
+             delta = df$delta, boot_mean = df$boot_mean,
+             conf_low = df$conf.low, conf_high = df$conf.high,
+             edge_support = df$edge_support, stringsAsFactors = FALSE)
 }
 
 stability_table <- function(g) {
@@ -36,8 +42,8 @@ stability_table <- function(g) {
 }
 
 result <- list()
-for (spec in list(list(name = "cornus", nperm = 200, nboot = 80, seed_perm = 6061, seed_jack = 7071, seed_boot = 8081),
-                  list(name = "arapat", nperm = 60,  nboot = 40, seed_perm = 6062, seed_jack = 7072, seed_boot = 8082))) {
+for (spec in list(list(name = "cornus", nperm = 200, nboot = 80, seed_perm = 6061, seed_ci = 7071, seed_boot = 8081),
+                  list(name = "arapat", nperm = 60,  nboot = 40, seed_perm = 6062, seed_ci = 7072, seed_boot = 8082))) {
   name <- spec$name
   dataset <- get(data(list = name, package = "gstudio"))
   mv <- to_mv(dataset)
@@ -48,8 +54,8 @@ for (spec in list(list(name = "cornus", nperm = 200, nboot = 80, seed_perm = 606
   set.seed(spec$seed_perm)
   perm <- asymmetry_permutation(g, mv, groups, nperm = spec$nperm)
 
-  set.seed(spec$seed_jack)
-  jack <- asymmetry_jackknife(g, mv, groups, nperm = spec$nperm, conf = 0.95)
+  set.seed(spec$seed_ci)
+  ci <- asymmetry_ci(g, mv, groups, nboot = spec$nperm, conf = 0.95, pendants = "keep")
 
   set.seed(spec$seed_boot)
   boot <- permute_popgraph(mv, groups, nboot = spec$nboot)
@@ -58,7 +64,8 @@ for (spec in list(list(name = "cornus", nperm = 200, nboot = 80, seed_perm = 606
     nperm = spec$nperm,
     nboot = spec$nboot,
     permutation = list(seed = spec$seed_perm, rows = sig_table(perm)),
-    jackknife   = list(seed = spec$seed_jack, conf = 0.95, rows = sig_table(jack)),
+    ci          = list(seed = spec$seed_ci, conf = 0.95,
+                       nboot_failed = attr(ci, "nboot_failed"), rows = ci_table(ci)),
     permute_popgraph = list(seed = spec$seed_boot, rows = stability_table(boot))
   )
   cat(name, "done\n")

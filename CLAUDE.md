@@ -45,11 +45,29 @@ Sources/
                                     Graph.subtractingEdges, GraphNeighborhood (undirected helpers);
                                     RandomizeGraph + AsymmetryBandwidthTest / AsymmetryNetworkTest /
                                     AsymmetrySignificance (seeded resampling, via Matrix's RMersenneTwister
-                                    which reproduces R's set.seed()/sample() bit-for-bit) —
-                                    numerically identical to gstudio >= 1.14 (the "mimic swift package"
-                                    release; see gstudio-source-is-canonical-reference memory). Paired
-                                    R↔Swift parity tests: gstudio tests/testthat/test-swift-parity.R and
-                                    Tests/GraphTests/AsymmetryResamplingTests.swift share graphs + seeds.
+                                    which reproduces R's set.seed()/sample() bit-for-bit) — synced to
+                                    gstudio 1.15.0 (2026-10-06). Numerically identical to R except
+                                    RandomizeGraph(.degree): gstudio 1.15 switched to
+                                    igraph::rewire(keeping_degseq()), ported *functionally* (same
+                                    Maslov-Sneppen edge-swap chain, 10·E attempts, loops/multi-edges
+                                    rejected) rather than draw-for-draw — so it and AsymmetryNetworkTest
+                                    are tested by invariants + statistical agreement with R's null, not
+                                    exact identity. Paired R↔Swift fixtures: regenerate with
+                                    Tests/GraphTests/Fixtures/generate_downstream_fixtures.R; gstudio's
+                                    tests/testthat/test-swift-parity.R asserts the R side.
+                                    GeneticGravity.swift ← gstudio 1.15's genetic-gravity core:
+                                    NeighbourhoodWeights / GravityEdges / SourceSinkScores /
+                                    PartitionedGeneticDistance(Graph) (neighbourhood_weights(),
+                                    gravity_edges(), source_sink_scores(), pgd()) — deterministic,
+                                    matches R to 1e-10 (Fixtures/generate_gravity_fixtures.R).
+                                    SourceSinkTest / IsolationByGraphDistance /
+                                    DirectionalIsolationByGraphDistance ← source_sink_test(), ibgd()
+                                    (split by mode); Moran spectral randomization (msr_null()) lives in
+                                    Matrix as MoranSpectralRandomization. Seeded draws match R exactly:
+                                    each MSR replicate Σ s_k r_k v_k is invariant to eigenvector sign
+                                    (r_k = cor(z, v_k) flips with v_k), so only eigenvalue *order*
+                                    matters — exact while eigenvalues are distinct, distributional
+                                    within a repeated eigenvalue. gravity_field()/plotting are R-only.
                      Layout/{Camera,Core,Simulation}/
                      Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
                                GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm
@@ -65,11 +83,18 @@ Sources/
                      Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
                      PopulationGraph/  ← also Phase 2b of the downstream popgraph-analysis port
                                           (genotype-driven, so here rather than Graph's Extensions/):
-                                          AsymmetryPermutationTest / AsymmetryJackknifeTest / PermutePopgraph
-                                          ← asymmetry_permutation() / asymmetry_jackknife() / permute_popgraph(),
+                                          AsymmetryPermutationTest / AsymmetryCI / PermutePopgraph
+                                          ← asymmetry_permutation() / asymmetry_ci() (replaced
+                                          asymmetry_jackknife() in gstudio 1.15) / permute_popgraph(),
                                           each re-estimating PopulationGraph() per draw via RMersenneTwister
-                                          (bit-exact R parity) + GraphAsymmetries (Graph). Requires gstudio
-                                          >= 1.14.1 — permute_popgraph()'s per-stratum resampling was fixed
+                                          (bit-exact R parity) + GraphAsymmetries (Graph). Synced to gstudio
+                                          1.15.0 (null-centred location test, asymmetry_ci). Fixtures:
+                                          Tests/PopulationGeneticsTests/Fixtures/generate_asymmetry_fixtures.R.
+                                          PartitionedGeneticDistance(data:groups:gamma:) ←
+                                          genetic_distance(mode = "pgd"), verified end to end on gstudio's
+                                          `gravity` genotypes (Fixtures/gravity_genotypes.csv).
+                                          LocusSubsampleNull ← locus_subsample_null(), also exact.
+                                          Earlier: permute_popgraph()'s per-stratum resampling was fixed
                                           2026-09-11 (see gstudio-source-is-canonical-reference memory) to plain
                                           sample(replace=TRUE) instead of sampling::strata(method="srswr"), which
                                           both mis-paired resampled rows with the original unsorted groups vector

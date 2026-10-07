@@ -23,8 +23,20 @@ Ports of gstudio's downstream `popgraph` operations, numerically identical to th
 - ``AsymmetricWeights(graph:perplexity:tolerance:maxIterations:)`` / ``AsymmetricPopulationGraph(graph:perplexity:tolerance:maxIterations:)`` — a t-SNE-style split of each edge's conditional genetic distance into directional shares (`asymmetric_weights()` / `asymmetric_popgraph()`).
 - ``CongruenceTopology(_:_:)`` / ``TestCongruence(_:_:)`` — the shared-edge topology of two graphs and a Pearson test between their distance structures (`congruence_topology()` / `test_congruence()`).
 - ``Graph/subtractingEdges(in:)`` — one graph's edges with another's removed (`-.popgraph`).
-- ``RandomizeGraph(graph:mode:seed:)`` — a `.full` or degree-preserving edge randomisation (`randomize_graph()`).
-- ``AsymmetryBandwidthTest(graph:permutations:seed:)`` / ``AsymmetryNetworkTest(graph:permutations:rewire:seed:)`` / ``AsymmetrySignificance(graph:mode:permutations:rewire:pendants:seed:)`` — the graph-only resampling nulls for edge asymmetry (`asymmetry_bandwidth()` / `asymmetry_network()` / `asymmetry_significance()`). Seeded via ``RMersenneTwister``, so output is bit-identical to R's `set.seed(seed); …`.
+- ``RandomizeGraph(graph:mode:seed:)`` — a `.full` or degree-preserving (edge-swap) randomisation (`randomize_graph()`).
+- ``AsymmetryBandwidthTest(graph:permutations:returnNull:seed:)`` / ``AsymmetryNetworkTest(graph:permutations:rewire:returnNull:seed:)`` / ``AsymmetrySignificance(graph:mode:permutations:rewire:pendants:returnNull:seed:)`` — the graph-only resampling nulls for edge asymmetry (`asymmetry_bandwidth()` / `asymmetry_network()` / `asymmetry_significance(mode = "mechanism" | "existence")`). Seeded via `RMersenneTwister`: the bandwidth null and `.full` randomisation are bit-identical to R's `set.seed(seed); …`; `.degree` rewiring is a functional port of igraph's `rewire(keeping_degseq())`, statistically but not draw-for-draw equivalent.
+
+### Genetic gravity
+
+Ports of gstudio's genetic-gravity core (≥ 1.15), one sign convention throughout — higher = more of a source. Bandwidth `bᵢ = γ · sᵢ/kᵢ`: `γ = 0.5` (default) is degree-neutral, for inferring direction; `γ = 1` is the local mean, for describing connectivity; `γ = .infinity` is the flat, degree-only kernel.
+
+- ``NeighbourhoodWeights(graph:gamma:)`` — the neighbourhood-weight matrix `W[i, j] = w_{j|i}` (`neighbourhood_weights()`).
+- ``GravityEdges(graph:gamma:x:)`` — per-edge weights, the gravity asymmetry `Δ_{i→j} = w_{i|j} − w_{j|i}` and its degree-only term `Δ⁰` (`gravity_edges()`).
+- ``SourceSinkScores(graph:gamma:x:)`` — each population's gravity, source-sink balance and least-squares source-sink score `S`, with the degree diagnostics to report alongside any directional analysis (`source_sink_scores()`).
+- ``PartitionedGeneticDistanceGraph(graph:gamma:)`` / ``PartitionedGeneticDistance(graph:gamma:)`` — each edge's conditional genetic distance split into directed shares, as a directed graph or all-pairs directed distance matrix (`pgd()`).
+- ``SourceSinkTest(graph:x:gamma:permutations:null:interior:edgeMargin:returnNull:seed:)`` — Spearman `r(S, x)` between source-sink scores and a covariate, against a Moran spectral randomization null on the graph (default), a permutation of `S`, or a supplied adjacency (`source_sink_test()`).
+- ``IsolationByGraphDistance(graph:separation:permutations:seed:)`` — cGD against separation with a Mantel permutation test (`ibgd(mode = "cgd")`).
+- ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)`` — does directed pGD with forward/reverse slopes fit better than cGD? Reports `ΔR²` and the slope ratio; no p-value (`ibgd(mode = "pgd")`).
 
 ### Force-directed layout
 

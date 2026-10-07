@@ -20,7 +20,7 @@ import Graph
 import Foundation
 
 /// Fixed-topology permutation test for edge asymmetry — a port of gstudio's
-/// `asymmetry_permutation()`.
+/// `asymmetry_permutation()` (`asymmetry_significance(mode = "location")`).
 ///
 /// The observed adjacency is held fixed; individual-to-stratum labels are
 /// permuted, the full conditional-distance matrix is recomputed under the
@@ -32,6 +32,11 @@ import Foundation
 /// same `seed`, this reproduces R's
 /// `set.seed(seed); asymmetry_permutation(graph, data, groups, nperm)` exactly.
 ///
+/// With the topology fixed, each edge's null is centred on its topological
+/// component (roughly `1/kᵢ − 1/kⱼ`), not on zero, so the test is two-sided
+/// about the per-edge null mean: `statistic = Δ_obs − mean(null)` and
+/// `p = (1 + #{|null − mean| ≥ |statistic|}) / (1 + B)` (gstudio ≥ 1.14.5).
+///
 /// - Parameters:
 ///   - graph: The observed population graph (`PopulationGraph(x:groups:...)`),
 ///     which fixes both the edge set and each edge's `(from, to)` orientation.
@@ -40,32 +45,29 @@ import Foundation
 ///   - permutations: Number of label permutations (default `999`).
 ///   - tol: Tolerance passed through to the re-estimated distance matrix
 ///     (default `1.0e-4`, matching `PopulationGraph(x:groups:alpha:tol:)`).
+///   - returnNull: Keep each edge's null distribution on its row (default `false`).
 ///   - seed: RNG seed, equivalent to R's `set.seed(seed)`.
 /// - Returns: One row per undirected edge (``Graph/undirectedEdgeList()``
 ///   order), or `nil` if ``GraphAsymmetries(graph:bandwidth:scale:)`` cannot be
-///   computed for `graph`.
+///   computed for `graph` or `groups` lacks individuals for some graph node.
 ///
-/// - Note: Unlike gstudio, which has no `tryCatch` here and simply errors out
-///   of the whole call, a permutation whose re-estimated distance matrix or
-///   asymmetries cannot be computed (a numerically degenerate label draw) is
-///   skipped rather than aborting the run — the same convention
-///   ``AsymmetryNetworkTest(graph:permutations:rewire:seed:)`` uses for an
-///   unreachable rewired draw. The p-value denominator is the number of
-///   permutations that actually completed.
+/// - Note: As in gstudio, a permutation whose re-estimated distance matrix or
+///   asymmetries cannot be computed is dropped from the null; `B` is the number
+///   of permutations that completed.
 public func AsymmetryPermutationTest(graph: Graph,
                                      data: Matrix,
                                      groups: [String],
                                      permutations: Int = 999,
                                      tol: Double = 1.0e-4,
+                                     returnNull: Bool = false,
                                      seed: Int) -> [EdgeAsymmetrySignificance]? {
-    guard let observed = GraphAsymmetries(graph: graph) else { return nil }
+    guard groupsCoverGraph(graph, groups), let observed = GraphAsymmetries(graph: graph) else { return nil }
 
     let edgeList = graph.undirectedEdgeList()
     let observedDelta = observed.edges.map { $0.delta }
     let nodeNames = graph.nodes.map { $0.name }
 
-    var greaterOrEqual = [Int](repeating: 0, count: observedDelta.count)
-    var completed = 0
+    var nulls = [[Double]](repeating: [], count: observedDelta.count)
     var rng = RMersenneTwister(seed: seed)
 
     for _ in 0..<permutations {
@@ -83,21 +85,31 @@ public func AsymmetryPermutationTest(graph: Graph,
               let nullAsym = GraphAsymmetries(graph: Graph(nodes: nullNodes, edges: nullEdges)),
               nullAsym.edges.count == observedDelta.count else { continue }
 
-        completed += 1
-        for (index, edge) in nullAsym.edges.enumerated() where abs(edge.delta) >= abs(observedDelta[index]) {
-            greaterOrEqual[index] += 1
+        for (index, edge) in nullAsym.edges.enumerated() {
+            nulls[index].append(edge.delta)
         }
     }
 
-    // Add-one (biased-up) permutation p-value: (1 + #{|null| >= |obs|}) / (1 + B).
-    let denominator = 1.0 + Double(completed)
+    // Add-one (biased-up) permutation p-value, centred on each edge's null mean:
+    // (1 + #{|null - centre| >= |obs - centre|}) / (1 + B).
     return edgeList.indices.map { i in
-        EdgeAsymmetrySignificance(
+        let null = nulls[i]
+        let centre = null.isEmpty ? Double.nan : null.reduce(0, +) / Double(null.count)
+        let statistic = observedDelta[i] - centre
+        let exceedances = null.filter { abs($0 - centre) >= abs(statistic) }.count
+        return EdgeAsymmetrySignificance(
             from: edgeList[i].from, to: edgeList[i].to,
-            delta: observedDelta[i], statistic: observedDelta[i],
-            pValue: (1.0 + Double(greaterOrEqual[i])) / denominator,
-            ciLow: nil, ciHigh: nil)
+            delta: observedDelta[i], statistic: statistic,
+            pValue: (1.0 + Double(exceedances)) / (1.0 + Double(null.count)),
+            nullDistribution: returnNull ? null : nil)
     }
+}
+
+/// gstudio's `.validate_asymmetry_groups()`: every graph node must be a stratum
+/// in `groups`, or resampled graphs can never be matched to the observed edges.
+func groupsCoverGraph(_ graph: Graph, _ groups: [String]) -> Bool {
+    let strata = Set(groups)
+    return graph.nodes.allSatisfy { strata.contains($0.name) }
 }
 
 /// The value at `(row, col)` in a matrix with string `rowNames`/`colNames`, or

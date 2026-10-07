@@ -53,7 +53,7 @@ public func PopulationGraph(x: Matrix, groups: [String], alpha: Double = 0.05, t
 /// labeled by group name.
 ///
 /// Used by the genotype-driven resampling ports (`asymmetry_permutation`,
-/// `asymmetry_jackknife`) which need to look up a re-estimated edge weight by
+/// `asymmetry_ci`) which need to look up a re-estimated edge weight by
 /// group pair rather than build a `Graph`.
 ///
 /// - Returns: The `K×K` labeled distance matrix (`rowNames`/`colNames` are the

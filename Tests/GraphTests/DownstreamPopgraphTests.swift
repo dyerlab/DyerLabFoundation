@@ -41,11 +41,11 @@ private let fixtureTolerance = 1e-9
 private struct FEdge: Decodable { let from: String; let to: String; let weight: Double? }
 private struct FDirEdge: Decodable { let from: String; let to: String; let w_away: Double; let w_to: Double; let delta: Double }
 private struct FAsymWeight: Decodable {
-    let i: String; let j: String
+    let from: String; let to: String
     let pij: Double; let pji: Double; let cGD: Double
     let dij: Double; let dji: Double; let delta: Double
 }
-private struct FGraphAsym: Decodable { let bandwidth: [String: Double]; let edges: [FDirEdge] }
+private struct FGraphAsym: Decodable { let bandwidth: [String: Double?]; let edges: [FDirEdge] }
 private struct FAsymPopgraph: Decodable {
     let edges: [FEdge]; let edge_count: Int; let weight_sum: Double
 }
@@ -72,13 +72,19 @@ private struct FOpsMinus: Decodable {
 }
 private struct FSmallGraphAsym: Decodable {
     let nodes: [String]; let edges: [FEdge]
-    let graph_asymmetries: FGraphAsym
+    let graph_asymmetries: FGraphAsym?
+    let graph_asymmetries_flat: FGraphAsym?
+    let graph_asymmetries_gamma: FGraphAsym?
+    let bandwidth: Double?
     let asymmetric_weights: [FAsymWeight]?
     let asymmetric_popgraph: FAsymPopgraph?
 }
 private struct FSmall: Decodable {
     let triangle: FSmallGraphAsym
     let quad: FSmallGraphAsym
+    let isolated: FSmallGraphAsym
+    let underflow: FSmallGraphAsym
+    let hub: FSmallGraphAsym
     let congruence: FCongruence
     let ops_minus: FOpsMinus
 }
@@ -120,13 +126,21 @@ private func key(_ a: String, _ b: String) -> String {
 
 // MARK: - graph_asymmetries
 
-private func assertGraphAsymmetriesMatch(_ graph: Graph, _ fixture: FGraphAsym,
+private func assertGraphAsymmetriesMatch(_ graph: Graph, _ fixture: FGraphAsym?,
+                                         bandwidth: GraphBandwidth = .local, scale: Double = 1.0,
                                          label: String, tolerance: Double = fixtureTolerance) throws {
-    let result = try #require(GraphAsymmetries(graph: graph), "\(label): GraphAsymmetries returned nil")
+    let fixture = try #require(fixture, "\(label): missing fixture")
+    let result = try #require(GraphAsymmetries(graph: graph, bandwidth: bandwidth, scale: scale),
+                              "\(label): GraphAsymmetries returned nil")
 
     #expect(result.bandwidth.count == fixture.bandwidth.count, "\(label): bandwidth node count")
     for (name, expected) in fixture.bandwidth {
         let actual = try #require(result.bandwidth[name], "\(label): missing bandwidth for \(name)")
+        // R NA (isolated node) / Inf (flat kernel) arrive as JSON null.
+        guard let expected else {
+            #expect(!actual.isFinite, "\(label) bandwidth[\(name)]: \(actual) vs R NA/Inf")
+            continue
+        }
         #expect(abs(actual - expected) < tolerance, "\(label) bandwidth[\(name)]: \(actual) vs \(expected)")
     }
 
@@ -160,6 +174,37 @@ func graphAsymmetriesMatchRealR(_ name: String) throws {
                                     small.quad.graph_asymmetries, label: "quad")
 }
 
+/// gstudio 1.15: `scale = Inf` is the flat kernel (every weight `1/kᵢ`), and
+/// `gamma` is an alias for `scale`.
+@Test func graphAsymmetriesFlatKernelAndGammaMatchR() throws {
+    let small = try loadSmall()
+    let triangle = buildGraph(nodeNames: small.triangle.nodes, edges: small.triangle.edges)
+    try assertGraphAsymmetriesMatch(triangle, small.triangle.graph_asymmetries_flat,
+                                    scale: .infinity, label: "triangle flat")
+    try assertGraphAsymmetriesMatch(triangle, small.triangle.graph_asymmetries_gamma,
+                                    scale: 0.5, label: "triangle gamma 0.5")
+}
+
+/// gstudio 1.15: isolated nodes no longer abort `graph_asymmetries()`; their
+/// bandwidth is NA and they contribute no edges.
+@Test func graphAsymmetriesAllowsIsolatedNodes() throws {
+    let small = try loadSmall()
+    let graph = buildGraph(nodeNames: small.isolated.nodes, edges: small.isolated.edges)
+    try assertGraphAsymmetriesMatch(graph, small.isolated.graph_asymmetries, label: "isolated")
+    let weights = try #require(small.isolated.asymmetric_weights)
+    assertAsymmetricWeightsMatch(graph, weights, label: "isolated")
+}
+
+/// gstudio 1.15: when the plain Gaussian kernel underflows (tiny bandwidth), it
+/// falls back to log-sum-exp instead of returning NaN.
+@Test func graphAsymmetriesUnderflowFallbackMatchesR() throws {
+    let small = try loadSmall()
+    let graph = buildGraph(nodeNames: small.underflow.nodes, edges: small.underflow.edges)
+    let bandwidth = try #require(small.underflow.bandwidth)
+    try assertGraphAsymmetriesMatch(graph, small.underflow.graph_asymmetries,
+                                    bandwidth: .fixed(bandwidth), label: "underflow")
+}
+
 @Test func graphAsymmetriesRejectsInvalidBandwidth() throws {
     let small = try loadSmall()
     let graph = buildGraph(nodeNames: small.triangle.nodes, edges: small.triangle.edges)
@@ -190,25 +235,25 @@ private func assertAsymmetricWeightsMatch(_ graph: Graph, _ fixture: [FAsymWeigh
     #expect(result.count == fixture.count, "\(label): row count")
 
     var expectedByPair: [String: FAsymWeight] = [:]
-    for w in fixture { expectedByPair[key(w.i, w.j)] = w }
+    for w in fixture { expectedByPair[key(w.from, w.to)] = w }
 
     for w in result {
-        guard let exp = expectedByPair[key(w.i, w.j)] else {
-            Issue.record("\(label): unexpected edge \(w.i)-\(w.j)")
+        guard let exp = expectedByPair[key(w.from, w.to)] else {
+            Issue.record("\(label): unexpected edge \(w.from)-\(w.to)")
             continue
         }
-        let sameOrientation = exp.i == w.i
+        let sameOrientation = exp.from == w.from
         let (expPij, expPji) = sameOrientation ? (exp.pij, exp.pji) : (exp.pji, exp.pij)
         let (expDij, expDji) = sameOrientation ? (exp.dij, exp.dji) : (exp.dji, exp.dij)
         let expDelta = sameOrientation ? exp.delta : -exp.delta
-        #expect(abs(w.cGD - exp.cGD) < fixtureTolerance, "\(label) \(w.i)-\(w.j) cGD")
-        #expect(abs(w.pij - expPij) < fixtureTolerance, "\(label) \(w.i)-\(w.j) pij: \(w.pij) vs \(expPij)")
-        #expect(abs(w.pji - expPji) < fixtureTolerance, "\(label) \(w.i)-\(w.j) pji")
-        #expect(abs(w.dij - expDij) < fixtureTolerance, "\(label) \(w.i)-\(w.j) dij: \(w.dij) vs \(expDij)")
-        #expect(abs(w.dji - expDji) < fixtureTolerance, "\(label) \(w.i)-\(w.j) dji")
-        #expect(abs(w.delta - expDelta) < fixtureTolerance, "\(label) \(w.i)-\(w.j) delta")
+        #expect(abs(w.cGD - exp.cGD) < fixtureTolerance, "\(label) \(w.from)-\(w.to) cGD")
+        #expect(abs(w.pij - expPij) < fixtureTolerance, "\(label) \(w.from)-\(w.to) pij: \(w.pij) vs \(expPij)")
+        #expect(abs(w.pji - expPji) < fixtureTolerance, "\(label) \(w.from)-\(w.to) pji")
+        #expect(abs(w.dij - expDij) < fixtureTolerance, "\(label) \(w.from)-\(w.to) dij: \(w.dij) vs \(expDij)")
+        #expect(abs(w.dji - expDji) < fixtureTolerance, "\(label) \(w.from)-\(w.to) dji")
+        #expect(abs(w.delta - expDelta) < fixtureTolerance, "\(label) \(w.from)-\(w.to) delta")
         // Structural: shares partition the edge weight.
-        #expect(abs((w.dij + w.dji) - w.cGD) < 1e-9, "\(label) \(w.i)-\(w.j): dij+dji != cGD")
+        #expect(abs((w.dij + w.dji) - w.cGD) < 1e-9, "\(label) \(w.from)-\(w.to): dij+dji != cGD")
     }
 }
 
@@ -224,6 +269,17 @@ func asymmetricWeightsMatchRealR(_ name: String) throws {
     let quadWeights = try #require(small.quad.asymmetric_weights)
     assertAsymmetricWeightsMatch(buildGraph(nodeNames: small.quad.nodes, edges: small.quad.edges),
                                  quadWeights, label: "quad")
+}
+
+/// gstudio 1.15: a hub with more near-equal neighbour distances than
+/// `perplexity` used to drive sigma to underflow (`0/0`); the data-driven
+/// bracket, perplexity cap and stabilised kernel keep it finite.
+@Test func asymmetricWeightsNearEqualHubMatchesR() throws {
+    let small = try loadSmall()
+    let weights = try #require(small.hub.asymmetric_weights)
+    let graph = buildGraph(nodeNames: small.hub.nodes, edges: small.hub.edges)
+    assertAsymmetricWeightsMatch(graph, weights, label: "hub")
+    #expect(AsymmetricWeights(graph: graph).allSatisfy { $0.pij.isFinite && $0.pji.isFinite })
 }
 
 // MARK: - asymmetric_popgraph

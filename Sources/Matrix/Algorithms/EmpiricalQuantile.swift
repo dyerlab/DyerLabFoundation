@@ -14,7 +14,7 @@
 //
 //  R's default sample-quantile estimator (`stats::quantile(type = 7)`) —
 //  linear interpolation between order statistics. Added to support the
-//  resampling confidence intervals in `asymmetry_jackknife()`.
+//  resampling confidence intervals in `asymmetry_ci()` (formerly `asymmetry_jackknife()`).
 //
 
 import Foundation

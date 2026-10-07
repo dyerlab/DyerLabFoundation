@@ -22,7 +22,7 @@
 //  input wasn't already stratum-sorted, and not bit-exact-portable without
 //  reimplementing R's `rbinom`/`rmultinom` (BTPE). gstudio now resamples each
 //  stratum with a plain `sample(idx, size, replace = TRUE)` (the same idiom
-//  `asymmetry_jackknife()` already used), which is both correct for any input
+//  `asymmetry_ci()`, formerly `asymmetry_jackknife()`, already used), which is both correct for any input
 //  order and exactly reproducible here via `RMersenneTwister`.
 //
 
@@ -75,7 +75,7 @@ public struct EdgeStability: Sendable, Equatable {
 ///   of the whole call, a resample whose re-estimated graph cannot be
 ///   computed (a numerically degenerate bootstrap draw) is skipped rather
 ///   than aborting the run — the same convention
-///   ``AsymmetryJackknifeTest(graph:data:groups:permutations:confidence:tol:seed:)``
+///   ``AsymmetryCI(graph:data:groups:resamples:confidence:pendants:tol:seed:)``
 ///   uses. The probability denominator is the number of resamples that
 ///   actually completed.
 public func PermutePopgraph(data: Matrix,

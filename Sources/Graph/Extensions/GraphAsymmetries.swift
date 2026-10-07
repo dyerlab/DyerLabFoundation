@@ -73,27 +73,38 @@ public struct GraphAsymmetryResult: Sendable {
 ///     are collapsed to a single undirected edge.
 ///   - bandwidth: How to set each node's kernel bandwidth (default `.local`).
 ///   - scale: A positive multiplier applied to every node's bandwidth
-///     (default `1`), for bandwidth-sensitivity analysis.
+///     (default `1`), for bandwidth-sensitivity analysis — gstudio's `scale`, or
+///     its alias `gamma` (`bᵢ = γ · sᵢ/kᵢ`). `.infinity` gives the flat kernel
+///     (every neighbourhood weight `1/kᵢ`), at which `Δ` depends on degree alone.
 /// - Returns: A ``GraphAsymmetryResult``, or `nil` if `scale` is not positive,
-///   a `.perNode` map omits a node, or any resulting bandwidth is not finite
-///   and positive (which includes the degree-zero `0/0` case — matching
-///   gstudio, where `graph_asymmetries()` stops on such input).
+///   a `.perNode` map omits a node, or (for a finite `scale`) any *connected*
+///   node's bandwidth is not finite and positive — matching gstudio, where
+///   `graph_asymmetries()` stops on such input. Isolated nodes are allowed;
+///   their bandwidth is reported as `.nan` and they contribute no edges.
 public func GraphAsymmetries(graph: Graph,
                              bandwidth: GraphBandwidth = .local,
                              scale: Double = 1.0) -> GraphAsymmetryResult? {
 
-    guard scale.isFinite, scale > 0 else { return nil }
+    guard !scale.isNaN, scale > 0 else { return nil }
+    let flat = scale.isInfinite
 
     let names = graph.nodes.map { $0.name }
     let adjacency = graph.undirectedAdjacency()
+    let indexOf = Dictionary(uniqueKeysWithValues: names.enumerated().map { ($1, $0) })
 
     var b: [String: Double] = [:]
     for name in names {
+        let degree = adjacency[name]?.count ?? 0
         let base: Double
         switch bandwidth {
         case .local:
-            let degree = Double(adjacency[name]?.count ?? 0)
-            base = (adjacency[name]?.values.reduce(0, +) ?? 0.0) / degree
+            // R: ifelse(deg > 0, strength / deg, NA). Summed in ascending
+            // neighbour-index order: Dictionary iteration order is not stable
+            // across instances, and a reordered sum can differ in the last ULP.
+            let strength = (adjacency[name] ?? [:])
+                .sorted { (indexOf[$0.key] ?? 0) < (indexOf[$1.key] ?? 0) }
+                .reduce(0.0) { $0 + $1.value }
+            base = degree > 0 ? strength / Double(degree) : .nan
         case .fixed(let value):
             base = value
         case .perNode(let map):
@@ -101,12 +112,13 @@ public func GraphAsymmetries(graph: Graph,
             base = value
         }
         let value = base * scale
-        guard value.isFinite, value > 0 else { return nil }
+        if !flat && degree > 0 && !(value.isFinite && value > 0) { return nil }
         b[name] = value
     }
 
     return GraphAsymmetryResult(bandwidth: b,
-                                edges: directionalEdges(of: graph, bandwidth: b, adjacency: adjacency))
+                                edges: directionalEdges(of: graph, bandwidth: b, adjacency: adjacency,
+                                                        flat: flat))
 }
 
 /// The per-edge directional weights `(w_away, w_to, delta)` for an arbitrary
@@ -118,7 +130,8 @@ public func GraphAsymmetries(graph: Graph,
 /// null (gstudio's `.delta_with_bandwidth()`).
 func directionalEdges(of graph: Graph,
                       bandwidth b: [String: Double],
-                      adjacency: [String: [String: Double]]? = nil) -> [DirectionalEdge] {
+                      adjacency: [String: [String: Double]]? = nil,
+                      flat: Bool = false) -> [DirectionalEdge] {
     let adjacency = adjacency ?? graph.undirectedAdjacency()
 
     // Neighbours are visited in ascending node-index order and the kernel's
@@ -132,16 +145,27 @@ func directionalEdges(of graph: Graph,
     var kernel: [String: [String: Double]] = [:]
     for (name, neighbors) in adjacency {
         guard !neighbors.isEmpty, let bw = b[name] else { continue }
+        if flat {
+            let share = 1.0 / Double(neighbors.count)
+            kernel[name] = neighbors.mapValues { _ in share }
+            continue
+        }
         let bandwidthSquared = bw * bw
         let ordered = neighbors.sorted { (indexOf[$0.key] ?? 0) < (indexOf[$1.key] ?? 0) }
-        var unnormalized: [(String, Double)] = []
-        var total = 0.0
-        for (neighbor, weight) in ordered {
-            let k = exp(-(weight * weight) / (2.0 * bandwidthSquared))
-            unnormalized.append((neighbor, k))
-            total += k
+        let z = ordered.map { ($0.value * $0.value) / (2.0 * bandwidthSquared) }
+        var k = z.map { exp(-$0) }
+        var total = k.reduce(0, +)
+
+        // R falls back to log-sum-exp (minimum exponent subtracted) only when the
+        // plain kernel underflows, so ordinary results stay bit-identical.
+        let zMin = z.min() ?? 0.0
+        let underflow = !total.isFinite || total <= 0
+            || zip(z, k).contains { $0.0 == zMin && $0.1 == 0 }
+        if underflow {
+            k = z.map { exp(-($0 - zMin)) }
+            total = k.reduce(0, +)
         }
-        kernel[name] = Dictionary(uniqueKeysWithValues: unnormalized.map { ($0.0, $0.1 / total) })
+        kernel[name] = Dictionary(uniqueKeysWithValues: zip(ordered, k).map { ($0.0.key, $0.1 / total) })
     }
 
     return graph.undirectedEdgeList().map { edge -> DirectionalEdge in

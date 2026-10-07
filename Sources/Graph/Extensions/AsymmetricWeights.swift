@@ -22,10 +22,10 @@ import Foundation
 /// One undirected edge's directional decomposition, from
 /// ``AsymmetricWeights(graph:perplexity:tolerance:maxIterations:)``.
 public struct AsymmetricWeight: Sendable, Equatable {
-    /// First endpoint (``Graph/undirectedEdgeList()`` order).
-    public let i: String
-    /// Second endpoint.
-    public let j: String
+    /// First endpoint `i` (``Graph/undirectedEdgeList()`` order).
+    public let from: String
+    /// Second endpoint `j`.
+    public let to: String
     /// `p_{j|i}`: conditional probability of `j` given `i`, normalised across
     /// `i`'s neighbours.
     public let pij: Double
@@ -63,6 +63,7 @@ public func AsymmetricWeights(graph: Graph,
 
     let names = graph.nodes.map { $0.name }
     let adjacency = graph.undirectedAdjacency()
+    let indexOf = Dictionary(uniqueKeysWithValues: names.enumerated().map { ($1, $0) })
 
     // Directed conditional-probability lookup: prob[i][j] = p_{j|i}.
     var prob: [String: [String: Double]] = [:]
@@ -70,7 +71,9 @@ public func AsymmetricWeights(graph: Graph,
         let neighbors = adjacency[name] ?? [:]
         guard !neighbors.isEmpty else { continue }
 
-        let neighborNames = Array(neighbors.keys)
+        // Ascending neighbour-index order (igraph's), so the kernel sums are
+        // deterministic — Dictionary key order is not stable across instances.
+        let neighborNames = neighbors.keys.sorted { (indexOf[$0] ?? 0) < (indexOf[$1] ?? 0) }
         let distances = neighborNames.map { neighbors[$0]! }
 
         let p: [Double]
@@ -81,9 +84,7 @@ public func AsymmetricWeights(graph: Graph,
                                   targetPerplexity: perplexity,
                                   tolerance: tolerance,
                                   maxIterations: maxIterations)
-            let raw = distances.map { exp(-($0 * $0) / (2.0 * sigma * sigma)) }
-            let total = raw.reduce(0, +)
-            p = raw.map { $0 / total }
+            p = gaussianKernel(distances, sigma: sigma)
         }
 
         var row: [String: Double] = [:]
@@ -100,7 +101,7 @@ public func AsymmetricWeights(graph: Graph,
         let sum = pij + pji
         let dij = cGD * pij / sum
         let dji = cGD * pji / sum
-        return AsymmetricWeight(i: edge.from, j: edge.to,
+        return AsymmetricWeight(from: edge.from, to: edge.to,
                                 pij: pij, pji: pji, cGD: cGD,
                                 dij: dij, dji: dji, delta: dij - dji)
     }
@@ -143,7 +144,7 @@ public func AsymmetricPopulationGraph(graph: Graph,
 
     var edges: [Edge] = []
     for weight in weights {
-        guard let from = nodeByName[weight.i], let to = nodeByName[weight.j] else { continue }
+        guard let from = nodeByName[weight.from], let to = nodeByName[weight.to] else { continue }
         edges.append(Edge(fromNode: from, toNode: to, weight: weight.dij))
         edges.append(Edge(fromNode: to, toNode: from, weight: weight.dji))
     }
@@ -160,28 +161,45 @@ private func shannonEntropy(_ p: [Double]) -> Double {
     }
 }
 
+/// Normalised Gaussian kernel over `distances`. The smallest exponent is
+/// subtracted first so the terms cannot all underflow to zero (`0/0`) when
+/// `sigma` is small relative to the distances — e.g. a node with many
+/// near-equal neighbour distances.
+private func gaussianKernel(_ distances: [Double], sigma: Double) -> [Double] {
+    let z = distances.map { ($0 * $0) / (2.0 * sigma * sigma) }
+    let zMin = z.min() ?? 0.0
+    let raw = z.map { exp(-($0 - zMin)) }
+    let total = raw.reduce(0, +)
+    return raw.map { $0 / total }
+}
+
 /// Binary search for the Gaussian bandwidth `σ` whose neighbourhood
-/// distribution has perplexity `targetPerplexity`. A direct port of the
-/// `find_sigma()` closure inside gstudio's `asymmetric_weights()`: bounded
-/// search on `σ ∈ [1e-6, 10]`, returning the last midpoint evaluated.
+/// distribution has perplexity `targetPerplexity`. A port of the `find_sigma()`
+/// closure inside gstudio's `asymmetric_weights()` (≥ 1.15.0): the target is
+/// capped at `k − tolerance` for a node with `k` neighbours (`k` is the largest
+/// perplexity it can reach), and `σ` is bracketed from the data,
+/// `[max(1e-6, min d / 100), max(10, 10 · max d)]`. Returns the last midpoint
+/// evaluated.
 private func findSigma(distances: [Double],
                        targetPerplexity: Double,
                        tolerance: Double,
                        maxIterations: Int) -> Double {
-    if distances.count == 1 { return 1e-3 }
+    let k = distances.count
+    if k <= 1 { return 1e-3 }
 
-    var sigmaMin = 1e-6
-    var sigmaMax = 10.0
+    let effectiveTarget = min(targetPerplexity, Double(k) - tolerance)
+    let maxDistance = distances.max() ?? 0.0
+    let minPositive = distances.filter { $0 > 0 }.min() ?? 1.0
+
+    var sigmaMin = max(1e-6, minPositive / 100.0)
+    var sigmaMax = max(10.0, maxDistance * 10.0)
     var sigma = (sigmaMin + sigmaMax) / 2.0
 
     for _ in 0..<maxIterations {
         sigma = (sigmaMin + sigmaMax) / 2.0
-        let raw = distances.map { exp(-($0 * $0) / (2.0 * sigma * sigma)) }
-        let total = raw.reduce(0, +)
-        let p = raw.map { $0 / total }
-        let perplexity = pow(2.0, shannonEntropy(p))
-        if abs(perplexity - targetPerplexity) < tolerance { break }
-        if perplexity > targetPerplexity {
+        let perplexity = pow(2.0, shannonEntropy(gaussianKernel(distances, sigma: sigma)))
+        if abs(perplexity - effectiveTarget) < tolerance { break }
+        if perplexity > effectiveTarget {
             sigmaMax = sigma
         } else {
             sigmaMin = sigma

@@ -12,8 +12,10 @@
 //
 //  A port of gstudio's `randomize_graph()` — an edge-randomised copy of a
 //  graph, either fully (`.full`) or preserving the degree sequence (`.degree`).
-//  Uses ``RMersenneTwister`` so that, given the same seed and input graph, the
-//  output is identical to R's `set.seed(seed); randomize_graph(graph, mode)`.
+//  Uses ``RMersenneTwister``. `.full` reproduces R's
+//  `set.seed(seed); randomize_graph(graph, "full")` exactly; `.degree` is a
+//  functional (not RNG-exact) port of gstudio >= 1.15's
+//  `igraph::rewire(keeping_degseq())` edge-swap chain.
 //  See `~/Coding/gstudio/R/randomize_graph.R`.
 //
 
@@ -25,26 +27,29 @@ public enum GraphRandomization: Sendable {
     /// Shuffle which node pairs are connected, keeping the edge count. The
     /// result is unweighted and its degree sequence is not preserved.
     case full
-    /// Rewire endpoints so every node keeps its original degree. The result may
-    /// contain parallel edges (matching R, whose duplicate check is on directed
-    /// pairs).
+    /// Rewire by repeated degree-preserving edge swaps (`10 × edges` attempts),
+    /// rejecting any swap that would create a self-loop or a multi-edge. Every
+    /// node keeps its degree, the result is always a simple graph, and the
+    /// original vertex order is kept.
     case degree
 }
 
 /// Returns an edge-randomised copy of `graph` — a port of gstudio's
 /// `randomize_graph()`.
 ///
-/// With the same `seed` and input graph this reproduces R's
-/// `set.seed(seed); randomize_graph(graph, mode = "...")` exactly, because the
-/// sampling runs through ``RMersenneTwister``.
+/// With the same `seed` and input graph, `.full` reproduces R's
+/// `set.seed(seed); randomize_graph(graph, mode = "full")` exactly, because the
+/// sampling runs through ``RMersenneTwister``. `.degree` follows the same
+/// edge-swap chain as gstudio's `igraph::rewire(keeping_degseq())` but does not
+/// reproduce igraph's individual random draws.
 ///
 /// - Parameters:
-///   - graph: The graph to randomise. Node order is significant — it fixes the
-///     adjacency-matrix / edge-list order R's sampling consumes.
+///   - graph: The graph to randomise. Node order is significant for `.full` — it
+///     fixes the adjacency-matrix order R's sampling consumes.
 ///   - mode: `.degree` (default, preserves the degree sequence) or `.full`.
 ///   - seed: The RNG seed, equivalent to R's `set.seed(seed)`.
-/// - Returns: The randomised graph, or `nil` if `.degree` mode cannot find a
-///   valid rewiring within 10000 attempts (matching R's error).
+/// - Returns: The randomised graph. (Optional for source compatibility; neither
+///   mode currently fails.)
 public func RandomizeGraph(graph: Graph,
                            mode: GraphRandomization = .degree,
                            seed: Int) -> Graph? {
@@ -115,60 +120,60 @@ private func randomizeFull(_ graph: Graph, using rng: inout RMersenneTwister) ->
 // MARK: - .degree
 
 private func randomizeDegree(_ graph: Graph, using rng: inout RMersenneTwister) -> Graph? {
-    // R: e <- as_edgelist(graph); one (from, to) row per undirected edge in
-    // edge-id order.
-    let edgeList = graph.undirectedEdgeList()
-    guard !edgeList.isEmpty else { return Graph(nodes: [], edges: []) }
+    // R (gstudio >= 1.15): igraph::rewire(graph, keeping_degseq(loops = FALSE,
+    // niter = 10 * ecount)). A functional port of that degree-preserving
+    // edge-swap (Maslov-Sneppen) chain, not an RNG-exact one: the same seed does
+    // not reproduce igraph's draws, but the chain — and so the null it samples —
+    // is the same.
+    let names = graph.nodes.map { $0.name }
+    let indexOf = Dictionary(uniqueKeysWithValues: names.enumerated().map { ($1, $0) })
 
-    let v1 = edgeList.map { $0.from }.sorted()          // R: sort(e[,1]) — C-locale / ASCII
-    let v2 = rng.sample(edgeList.map { $0.to })          // R: v2 <- sample(e[,2])
+    // Edges as vertex-index pairs, lower index first (igraph's canonical
+    // undirected orientation). Swaps rewrite these slots in place, so edge order
+    // is preserved, as in igraph.
+    var edges: [(Int, Int)] = graph.undirectedEdgeList().compactMap { edge in
+        guard let a = indexOf[edge.from], let b = indexOf[edge.to] else { return nil }
+        return (min(a, b), max(a, b))
+    }
+    let edgeCount = edges.count
 
-    func invalid(_ pairs: [(String, String)]) -> Bool {
-        if pairs.contains(where: { $0.0 == $0.1 }) { return true }   // self-loop
-        var seen = Set<String>()
-        for (a, b) in pairs {
-            let key = "\(a)\u{1}\(b)"                                 // directed row, as R's duplicated()
-            if !seen.insert(key).inserted { return true }
+    func key(_ u: Int, _ v: Int) -> Int { min(u, v) * names.count + max(u, v) }
+    var present = Set(edges.map { key($0.0, $0.1) })
+
+    if edgeCount >= 2 {
+        for _ in 0..<(10 * edgeCount) {
+            // Two distinct edges, uniformly.
+            let first = rng.unifIndex(edgeCount)
+            var second = rng.unifIndex(edgeCount - 1)
+            if second >= first { second += 1 }
+
+            let (a, b) = edges[first]
+            var (c, d) = edges[second]
+            // Either pairing, (a,d)+(c,b) or (a,c)+(b,d), with equal probability.
+            if rng.unifRand() < 0.5 { swap(&c, &d) }
+
+            // Reject swaps that would create a self-loop or a multi-edge.
+            if a == d || c == b { continue }
+            if present.contains(key(a, d)) || present.contains(key(c, b)) { continue }
+
+            present.remove(key(a, b))
+            present.remove(key(c, d))
+            present.insert(key(a, d))
+            present.insert(key(c, b))
+            edges[first] = (min(a, d), max(a, d))
+            edges[second] = (min(c, b), max(c, b))
         }
-        return false
     }
 
-    var pairs = Array(zip(v1, v2))
-    var attempts = 0
-    while invalid(pairs) {
-        // R: new_edges <- cbind(v1, sample(v2, ...)) — each retry re-shuffles
-        // the SAME first-sampled v2, not the previous attempt's arrangement.
-        pairs = Array(zip(v1, rng.sample(v2)))
-        attempts += 1
-        if attempts > 10000 { return nil }
+    // Original vertex set and order; swapped edges carry no meaningful weight,
+    // so the result is a bare (unit-weight) topology, as in R.
+    let newNodes = graph.nodes.map { source -> Node in
+        let copy = Node(name: source.name, size: source.size, color: source.color,
+                        categoricalAttributes: source.categoricalAttributes,
+                        continuousAttributes: source.continuousAttributes)
+        if let coordinate = source.coordinate { copy.coordinate = coordinate }
+        return copy
     }
-
-    // R: graph_from_edgelist(new_edges, directed = FALSE) — vertices in order of
-    // first appearance; one edge per row (parallel edges allowed).
-    var order: [String] = []
-    var nodeByName: [String: Node] = [:]
-    func node(_ name: String) -> Node {
-        if let existing = nodeByName[name] { return existing }
-        let source = graph.node(name: name)
-        let created = Node(name: name, size: source?.size ?? 1.0, color: source?.color ?? .red,
-                           categoricalAttributes: source?.categoricalAttributes ?? [:],
-                           continuousAttributes: source?.continuousAttributes ?? [:])
-        if let coordinate = source?.coordinate { created.coordinate = coordinate }
-        nodeByName[name] = created
-        order.append(name)
-        return created
-    }
-
-    // Realise the vertex set (first-appearance order) before emitting edges so
-    // each edge's endpoints can be ordered by vertex index — matching igraph's
-    // canonical undirected representation (`as_edgelist` returns min-id first).
-    for (a, b) in pairs { _ = node(a); _ = node(b) }
-    let position = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
-
-    var edges: [Edge] = []
-    for (a, b) in pairs {
-        let (lo, hi) = position[a]! <= position[b]! ? (a, b) : (b, a)
-        edges.append(Edge(fromNode: nodeByName[lo]!, toNode: nodeByName[hi]!, weight: 1.0))
-    }
-    return Graph(nodes: order.map { nodeByName[$0]! }, edges: edges)
+    let newEdges = edges.map { Edge(fromNode: newNodes[$0.0], toNode: newNodes[$0.1], weight: 1.0) }
+    return Graph(nodes: newNodes, edges: newEdges)
 }

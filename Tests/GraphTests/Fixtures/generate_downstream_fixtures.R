@@ -5,9 +5,9 @@
 suppressPackageStartupMessages({
   library(igraph)
   library(jsonlite)
-  library(gstudio)   # requires gstudio >= 1.14 (the "mimic swift package" release)
+  library(gstudio)   # requires gstudio >= 1.15.0 (from/to + p.value columns, edge-swap rewiring)
 })
-stopifnot(packageVersion("gstudio") >= "1.14")
+stopifnot(packageVersion("gstudio") >= "1.15.0")
 
 fixture_dir <- commandArgs(trailingOnly = TRUE)[1]
 if (is.na(fixture_dir)) stop("pass the output Fixtures dir as arg 1")
@@ -28,8 +28,8 @@ edge_records <- function(g, extra = NULL) {
   df
 }
 
-asym_indices <- function(g) {
-  g2 <- graph_asymmetries(g)
+asym_indices <- function(g, ...) {
+  g2 <- graph_asymmetries(g, ...)
   b <- setNames(V(g2)$bandwidth, V(g2)$name)
   list(
     bandwidth = as.list(b),
@@ -43,7 +43,7 @@ asym_indices <- function(g) {
 
 asym_weights <- function(g) {
   w <- asymmetric_weights(g)
-  data.frame(i = w$i, j = w$j, pij = w$pij, pji = w$pji,
+  data.frame(from = w$from, to = w$to, pij = w$pij, pji = w$pji,
              cGD = w$cGD, dij = w$dij, dji = w$dji, delta = w$Delta,
              stringsAsFactors = FALSE)
 }
@@ -118,10 +118,39 @@ atlas_edges <- function(g) {
   data.frame(from = el[, 1], to = el[, 2], stringsAsFactors = FALSE)
 }
 
+# gstudio 1.15 edge cases: an isolated node, and a hub whose six neighbour
+# distances are near-equal (more than 'perplexity', which drove the old fixed
+# sigma bracket to underflow).
+iso_edges <- quad_edges
+g_iso <- make_graph(iso_edges, c("A", "B", "C", "D", "E"))
+
+hub_edges <- data.frame(
+  from = rep("H", 6), to = paste0("L", 1:6),
+  weight = c(1, 1, 1, 1, 1, 1 + 1e-7), stringsAsFactors = FALSE)
+hub_edges <- rbind(hub_edges, data.frame(from = c("L1", "L3"), to = c("L2", "L4"),
+                                         weight = c(0.3, 50), stringsAsFactors = FALSE))
+g_hub <- make_graph(hub_edges, c("H", paste0("L", 1:6)))
+
 small <- list(
   triangle = list(
     nodes = c("A", "B", "C"), edges = triangle_edges,
-    graph_asymmetries = asym_indices(g_tri)
+    graph_asymmetries = asym_indices(g_tri),
+    graph_asymmetries_flat = asym_indices(g_tri, scale = Inf),
+    graph_asymmetries_gamma = asym_indices(g_tri, gamma = 0.5)
+  ),
+  isolated = list(
+    nodes = c("A", "B", "C", "D", "E"), edges = iso_edges,
+    graph_asymmetries = asym_indices(g_iso),
+    asymmetric_weights = asym_weights(g_iso)
+  ),
+  underflow = list(
+    nodes = c("A", "B", "C", "D"), edges = quad_edges,
+    bandwidth = 0.005,
+    graph_asymmetries = asym_indices(g_quad, bandwidth = 0.005)
+  ),
+  hub = list(
+    nodes = c("H", paste0("L", 1:6)), edges = hub_edges,
+    asymmetric_weights = asym_weights(g_hub)
   ),
   quad = list(
     nodes = c("A", "B", "C", "D"), edges = quad_edges,
@@ -159,14 +188,17 @@ small <- list(
     result_node_count = vcount(e3), result_edge_count = ecount(e3)
   )
 )
-write_json(small, file.path(fixture_dir, "downstream_small.json"),
+write_json(small, file.path(fixture_dir, "downstream_small.json"), na = "null",
            auto_unbox = TRUE, digits = 17, pretty = TRUE)
 
 # ---------------------------------------------------------------------------
 # 3. Seeded resampling ops (Phase 2a). The Swift side uses RMersenneTwister,
-#    which reproduces R's set.seed()/sample() bit-for-bit, so every fixture
-#    here pins BOTH the input graph and the seed and the Swift test asserts
-#    exact identity. C collate so sort(e[,1]) matches Swift's ASCII sort.
+#    which reproduces R's set.seed()/sample() bit-for-bit, so the full-mode
+#    randomisation and the bandwidth null pin BOTH the input graph and the seed
+#    and the Swift test asserts exact identity. Degree-mode randomisation
+#    (igraph::rewire(keeping_degseq()) since gstudio 1.15) is ported
+#    functionally, not draw-for-draw: its fixtures record the R null
+#    distribution for a statistical comparison instead.
 # ---------------------------------------------------------------------------
 Sys.setlocale("LC_COLLATE", "C")
 
@@ -188,7 +220,7 @@ randomize_case <- function(g, mode, seed) {
 sig_table <- function(df) {
   data.frame(from = as.character(df$from), to = as.character(df$to),
              delta = df$delta, statistic = df$statistic,
-             p_value = df$p_value, stringsAsFactors = FALSE)
+             p_value = df$p.value, stringsAsFactors = FALSE)
 }
 
 # For the seeded ops we build the input graph directly from popgraph() so the
@@ -211,31 +243,18 @@ for (name in c("arapat", "cornus")) {
 
   nperm <- 200
   set.seed(4041); bw  <- asymmetry_bandwidth(g, nperm = nperm)
-  set.seed(5051); net <- asymmetry_network(g, nperm = nperm, rewire = "degree")
-
-  # Recompute the network null vector explicitly (same seed/algorithm) so the
-  # Swift test can compare the whole distribution, not just the p-value.
-  set.seed(5051)
-  g_obs <- graph_asymmetries(g); obs_stat <- mean(abs(E(g_obs)$delta))
-  w <- E(g)$weight; net_null <- numeric(nperm)
-  for (p in seq_len(nperm)) {
-    gr <- randomize_graph(g, mode = "degree")
-    if (is.null(V(gr)$name)) V(gr)$name <- as.character(seq_len(vcount(gr)))
-    ne <- ecount(gr)
-    E(gr)$weight <- sample(w, size = ne, replace = (length(w) != ne))
-    class(gr) <- c("igraph", "popgraph")
-    net_null[p] <- mean(abs(E(graph_asymmetries(gr))$delta))
-  }
+  set.seed(5051); net <- asymmetry_network(g, nperm = nperm, rewire = "degree",
+                                           return_null = TRUE)
 
   resampling[[name]] <- list(
     nodes = V(g)$name,
     edges = edges,
-    randomize_degree = randomize_case(g, "degree", 909),
     randomize_full   = randomize_case(g, "full",   919),
     asymmetry_bandwidth = list(seed = 4041, nperm = nperm, rows = sig_table(bw)),
     asymmetry_network   = list(seed = 5051, nperm = nperm, rewire = "degree",
-                               delta = net$delta, statistic = net$statistic,
-                               p_value = net$p_value, null = net_null)
+                               statistic = unname(net$statistic),
+                               p_value = net$p.value,
+                               null = net$null_distribution)
   )
 }
 
@@ -250,7 +269,6 @@ sg_edges <- directed_edge_df(sg)
 resampling$small <- list(
   node_names = V(sg)$name,
   edges = sg_edges,
-  randomize_degree = randomize_case(sg, "degree", 11),
   randomize_full   = randomize_case(sg, "full",   13)
 )
 
