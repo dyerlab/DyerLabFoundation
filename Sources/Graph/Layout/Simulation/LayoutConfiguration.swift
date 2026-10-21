@@ -14,10 +14,33 @@ import UIKit
 import AppKit
 #endif
 
-/// Configuration parameters for force-directed graph layout algorithms.
+/// A graph layout algorithm ``LayoutOrchestrator`` can run.
+public enum LayoutAlgorithm: String, CaseIterable, Identifiable, Sendable {
+    /// Force-directed: springs along edges, repulsion between every pair,
+    /// annealed by a cooling schedule.
+    case fruchtermanReingold
+
+    /// Stress layout: springs between every pair, sized to their
+    /// shortest-path distance (see ``KamadaKawaiSolver``). Tends to spread
+    /// clusters further apart, and matches R's `igraph::layout_with_kk()`.
+    case kamadaKawai
+
+    public var id: Self { self }
+
+    /// Human-readable name for pickers.
+    public var displayName: String {
+        switch self {
+        case .fruchtermanReingold: "Fruchterman–Reingold"
+        case .kamadaKawai: "Kamada–Kawai"
+        }
+    }
+}
+
+/// Configuration parameters for graph layout algorithms.
 ///
-/// Controls the behavior of the Fruchterman-Reingold layout algorithm, including
-/// force strengths, cooling schedule, physics parameters, and boundary constraints.
+/// Selects the algorithm (``algorithm``) and controls the behavior of the
+/// Fruchterman-Reingold layout, including force strengths, cooling schedule,
+/// physics parameters, and boundary constraints.
 ///
 /// ## Example
 /// ```swift
@@ -29,6 +52,36 @@ import AppKit
 /// let orchestrator = LayoutOrchestrator(graph: graph, config: config)
 /// ```
 public struct LayoutConfiguration {
+
+    // MARK: - Algorithm Selection
+
+    /// Which layout algorithm drives the simulation.
+    ///
+    /// Changing it on a running orchestrator takes effect on the next
+    /// ``LayoutOrchestrator/reset()``; use ``LayoutOrchestrator/setAlgorithm(_:)``
+    /// to switch and restart in one call.
+    ///
+    /// Default: `.fruchtermanReingold`
+    public var algorithm: LayoutAlgorithm = .fruchtermanReingold
+
+    /// How edge weights become distances under `.kamadaKawai`.
+    ///
+    /// The default matches gstudio's `layout = "kk"`. The force-directed
+    /// parameters below (temperature, damping, repulsion, …) do not apply to
+    /// Kamada–Kawai; `k` only sets its on-screen scale (the mean edge's ideal
+    /// length is drawn `k` units long).
+    ///
+    /// Default: `.flooredEdgeWeights(medianFraction: 0.25)`
+    public var kamadaKawaiWeighting: KamadaKawaiWeighting = .flooredEdgeWeights()
+
+    /// Kamada–Kawai move budget per node: a run takes this many × n
+    /// single-node moves (n per animation frame, so this is also the frame
+    /// count). igraph's and gstudio's default is 50. Larger graphs, or ones with
+    /// several components, may need more to come to rest — the orchestrator's
+    /// ``LayoutOrchestrator/settleOutcome`` suggests a value when they do.
+    ///
+    /// Default: 50
+    public var kamadaKawaiMovesPerNode: Int = 50
 
     // MARK: - Algorithm Parameters
 
@@ -78,9 +131,12 @@ public struct LayoutConfiguration {
 
     // MARK: - Simulation Parameters
 
-    /// Maximum number of iterations before auto-stopping.
+    /// Maximum number of force-directed steps before auto-stopping.
     ///
-    /// Simulation will stop after this many steps, even if not converged.
+    /// A backstop: layouts normally settle earlier, when motion falls below
+    /// ``settleThreshold``. Counted from the last start, reset or resume, and
+    /// only enforced when ``autoSettle`` is on. Kamada–Kawai uses its own
+    /// 50·n-move budget instead.
     ///
     /// Default: 1000
     public var maxIterations: Int = 1000
@@ -207,22 +263,25 @@ public struct LayoutConfiguration {
     /// Enable automatic settle detection and pause.
     ///
     /// When true, the simulation will automatically pause when the layout
-    /// has converged (kinetic energy below threshold).
+    /// has stopped visibly moving (see ``settleThreshold``) or has run
+    /// ``maxIterations`` steps.
     ///
     /// Default: true
     public var autoSettle: Bool = true
 
-    /// Kinetic energy threshold for settle detection.
+    /// Motion threshold for settle detection, in world units per frame.
     ///
-    /// Simulation settles when kineticEnergy < threshold.
-    /// Lower values require more precise convergence.
+    /// The layout settles once no single node moves farther than this in a frame
+    /// (for ``settleFrameCount`` frames in a row). It is measured on the most
+    /// mobile node, not averaged, so a region still rearranging keeps the layout
+    /// running. The goal is a readable topology, not sub-pixel precision.
     ///
-    /// Default: 0.01
-    public var settleThreshold: Float = 0.01
+    /// Default: 0.05
+    public var settleThreshold: Float = 0.05
 
     /// Number of consecutive frames below threshold to declare settled.
     ///
-    /// Prevents false positives from momentary dips in kinetic energy.
+    /// Prevents false positives from momentary pauses in motion.
     ///
     /// Default: 10
     public var settleFrameCount: Int = 10
@@ -262,7 +321,7 @@ public struct LayoutConfiguration {
         var config = LayoutConfiguration()
         config.k = 150.0  // Moderate spacing (was too tight)
         config.initialTemperature = 400.0  // Lower for faster convergence
-        config.maxIterations = 800  // More iterations for convergence
+        config.maxIterations = 2000  // Slower cooling settles later (lopho: ~830 steps)
         config.coolingFactor = 0.995  // Slower cooling for large graphs
         config.centerGravity = 1.0  // Strong center pull to prevent edge drift
         return config
@@ -294,6 +353,7 @@ public struct LayoutConfiguration {
         config.k = k
         config.initialTemperature = 500.0
         config.coolingFactor = 0.998  // Slower cooling — gives the system time to resolve disagreements before freezing
+        config.maxIterations = 2000  // Slower cooling settles later (lopho: ~860 steps)
         config.centerGravity = 1.0
         return config
     }

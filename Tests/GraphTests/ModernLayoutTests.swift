@@ -221,17 +221,17 @@ struct ModernLayoutTests {
     func settleDetector() {
         let detector = SettleDetector(threshold: 1.0, requiredFrames: 3)
 
-        #expect(detector.update(kineticEnergy: 0.5) == false)
-        #expect(detector.update(kineticEnergy: 0.5) == false)
-        #expect(detector.update(kineticEnergy: 0.5) == true, "Settles on the 3rd quiet frame")
+        #expect(detector.update(maxDisplacement: 0.5) == false)
+        #expect(detector.update(maxDisplacement: 0.5) == false)
+        #expect(detector.update(maxDisplacement: 0.5) == true, "Settles on the 3rd quiet frame")
     }
 
-    @Test("A spike in energy resets the settle counter")
+    @Test("A spike in motion resets the settle counter")
     func settleDetectorReset() {
         let detector = SettleDetector(threshold: 1.0, requiredFrames: 3)
-        _ = detector.update(kineticEnergy: 0.1)
-        _ = detector.update(kineticEnergy: 0.1)
-        #expect(detector.update(kineticEnergy: 100.0) == false, "Energy spike resets the counter")
+        _ = detector.update(maxDisplacement: 0.1)
+        _ = detector.update(maxDisplacement: 0.1)
+        #expect(detector.update(maxDisplacement: 100.0) == false, "A motion spike resets the counter")
         #expect(detector.settledFrameCount == 0)
     }
 

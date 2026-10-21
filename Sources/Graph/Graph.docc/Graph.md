@@ -38,11 +38,20 @@ Ports of gstudio's genetic-gravity core (≥ 1.15), one sign convention througho
 - ``IsolationByGraphDistance(graph:separation:permutations:seed:)`` — cGD against separation with a Mantel permutation test (`ibgd(mode = "cgd")`).
 - ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)`` — does directed pGD with forward/reverse slopes fit better than cGD? Reports `ΔR²` and the slope ratio; no p-value (`ibgd(mode = "pgd")`).
 
-### Force-directed layout
+### Layout
 
-- ``LayoutConfiguration`` — configures the force-directed simulation.
+- ``LayoutAlgorithm`` — Fruchterman–Reingold (force-directed) or Kamada–Kawai (stress), selected via
+  ``LayoutConfiguration/algorithm`` or switched live with ``LayoutOrchestrator/setAlgorithm(_:)``.
+- ``KamadaKawaiSolver`` / ``KamadaKawaiWeighting`` — a port of igraph's `layout_with_kk()`. It is usable headless
+  (`Graph.kamadaKawaiLayout(weighting:initial:maxIterations:)`) or animated by the orchestrator. The default
+  weighting matches gstudio's `layout = "kk"`.
+- ``LayoutConfiguration`` — selects the algorithm and configures the force-directed simulation.
 - ``LayoutOrchestrator`` / ``LayoutState`` — drives the simulation loop and holds its running state.
-- ``SettleDetector`` — detects when a layout simulation has converged.
+- ``SettleDetector`` — detects when a layout has stopped visibly moving (largest per-node move per frame below
+  ``LayoutConfiguration/settleThreshold``).
+- ``SettleOutcome`` / ``MotionTrend`` — whether a run came to rest or was cut off by its budget
+  (``LayoutOrchestrator/iterationBudget``) while still moving. In the second case it suggests a larger budget,
+  estimated from how fast motion was decaying on that graph; ``LayoutOrchestrator/continueRun(toBudget:)`` follows it.
 - ``EdgeState`` / ``EdgeStateManager`` — per-edge animation/visual state during layout.
 - ``Camera2D`` — a 2D viewport/camera for rendering a laid-out graph.
 

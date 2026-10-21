@@ -54,6 +54,29 @@ public struct GraphInspectorPanel: View {
 
             Divider()
 
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Layout")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Picker("Layout", selection: algorithm) {
+                    ForEach(LayoutAlgorithm.allCases) { algorithm in
+                        Text(algorithm.displayName).tag(algorithm)
+                    }
+                }
+                .labelsHidden()
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(budgetLabel)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Stepper(value: $orchestrator.iterationBudget, in: budgetRange, step: budgetStep) {
+                    Text("\(orchestrator.iterationBudget)")
+                        .monospacedDigit()
+                }
+                .help("Run length before the layout stops. If it stops while still moving, the control bar suggests a larger value.")
+            }
+
             Group {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Edge Width")
@@ -69,25 +92,28 @@ public struct GraphInspectorPanel: View {
                     Slider(value: $options.nodeSizeMultiplier, in: 0.1...10.0)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Repulsion: \(String(format: "%.1f", orchestrator.config.repulsionStrength))×")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Slider(value: $orchestrator.config.repulsionStrength, in: 0.1...3.0)
-                }
+                // Force sliders only drive Fruchterman–Reingold.
+                if orchestrator.config.algorithm == .fruchtermanReingold {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Repulsion: \(String(format: "%.1f", orchestrator.config.repulsionStrength))×")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Slider(value: $orchestrator.config.repulsionStrength, in: 0.1...3.0)
+                    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Attraction: \(String(format: "%.1f", orchestrator.config.attractionStrength))×")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Slider(value: $orchestrator.config.attractionStrength, in: 0.1...5.0)
-                }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Attraction: \(String(format: "%.1f", orchestrator.config.attractionStrength))×")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Slider(value: $orchestrator.config.attractionStrength, in: 0.1...5.0)
+                    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Gravity: \(String(format: "%.1f", orchestrator.config.centerGravity))×")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Slider(value: $orchestrator.config.centerGravity, in: 0.0...3.0)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Gravity: \(String(format: "%.1f", orchestrator.config.centerGravity))×")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Slider(value: $orchestrator.config.centerGravity, in: 0.0...3.0)
+                    }
                 }
             }
 
@@ -121,6 +147,21 @@ public struct GraphInspectorPanel: View {
         }
         .padding()
     }
+
+    /// Switching algorithm restarts the layout, so it goes through
+    /// `setAlgorithm(_:)` rather than writing `config.algorithm` directly.
+    private var algorithm: Binding<LayoutAlgorithm> {
+        Binding(get: { orchestrator.config.algorithm },
+                set: { orchestrator.setAlgorithm($0) })
+    }
+
+    private var isKamadaKawai: Bool { orchestrator.config.algorithm == .kamadaKawai }
+
+    private var budgetLabel: String { isKamadaKawai ? "Moves per Node" : "Max Iterations" }
+
+    private var budgetRange: ClosedRange<Int> { isKamadaKawai ? 10...5_000 : 100...100_000 }
+
+    private var budgetStep: Int { isKamadaKawai ? 10 : 100 }
 }
 
 // MARK: - Previews

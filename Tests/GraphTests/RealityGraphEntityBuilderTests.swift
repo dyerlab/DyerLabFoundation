@@ -42,7 +42,7 @@ struct RealityGraphEntityBuilderTests {
     @Test func attachPhysicsAddsComponentsAndOneJointPerEdge() {
         let graph = Graph.smallGraph
         let entities = RealityGraphEntityBuilder.makeNodeEntities(for: graph, options: RealityGraphOptions())
-        let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: entities, graph: graph, config: .default)
+        let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: entities, graph: graph)
 
         #expect(joints.count == graph.edges.count)
         for entity in entities {
@@ -52,19 +52,21 @@ struct RealityGraphEntityBuilderTests {
         }
     }
 
-    @Test func attachPhysicsJointDistanceLimitMatchesEdgeWeight() throws {
+    /// The rest length is the settled layout's edge length, not `weight × k`:
+    /// physics must start in equilibrium so the handoff doesn't snap the layout.
+    @Test func attachPhysicsJointRestsAtSettledEdgeLength() throws {
         let graph = Graph()
         graph.addNode(name: "A", size: 1.0, color: .red)
         graph.addNode(name: "B", size: 1.0, color: .blue)
         graph.addEdge(from: "A", to: "B", weight: 2.0, symmetric: false)
 
         let entities = RealityGraphEntityBuilder.makeNodeEntities(for: graph, options: RealityGraphOptions())
-        var config = LayoutConfiguration()
-        config.k = 50.0
-        let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: entities, graph: graph, config: config)
+        entities[0].position = SIMD3<Float>(0, 0, 0)
+        entities[1].position = SIMD3<Float>(30, 40, 0)   // 50 apart; weight × k would be 400
+        let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: entities, graph: graph)
 
         let joint = try #require(joints.first)
-        let expected = RealityGraphEntityBuilder.edgeDistanceLimit(idealLength: 2.0 * 50.0, tolerance: 0.05)
+        let expected = RealityGraphEntityBuilder.edgeDistanceLimit(idealLength: 50.0, tolerance: 0.05)
         #expect(joint.distanceLimit == expected)
     }
 

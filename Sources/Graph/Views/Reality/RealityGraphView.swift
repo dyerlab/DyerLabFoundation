@@ -150,7 +150,7 @@ public struct RealityGraphView: View {
             if !options.showPrecomputeAnimation {
                 RealityGraphEntityBuilder.syncPositions(nodeEntities, from: orchestrator.state)
             }
-            let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: nodeEntities, graph: orchestrator.graph, config: orchestrator.config)
+            let joints = RealityGraphEntityBuilder.attachPhysics(nodeEntities: nodeEntities, graph: orchestrator.graph)
             // A PhysicsDistanceJoint only actually simulates once it's part of a
             // PhysicsJointsComponent on a live entity — attachPhysics only builds
             // the joint values, it doesn't activate them.

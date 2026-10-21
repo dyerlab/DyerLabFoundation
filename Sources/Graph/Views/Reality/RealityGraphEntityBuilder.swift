@@ -99,8 +99,16 @@ enum RealityGraphEntityBuilder {
     /// `Graph.nodeIndices()` (O(1) per edge), not `node(id:)` + `firstIndex(of:)`.
     /// Callers are responsible for actually activating the returned joints (e.g.
     /// via a `PhysicsJointsComponent` on a shared ancestor entity).
+    ///
+    /// Each joint's rest length is the edge's length *in the settled layout*,
+    /// read from the entities' current positions — not a formula like
+    /// `weight × k`. A real distance-weighted graph can't satisfy every edge
+    /// length at once, so the precompute settles on a compromise; taking that
+    /// compromise as the rest state means physics starts in equilibrium (no snap
+    /// at handoff) and preserves whichever layout produced it, Fruchterman–Reingold
+    /// or Kamada–Kawai alike.
     @discardableResult
-    static func attachPhysics(nodeEntities: [Entity], graph: Graph, config: LayoutConfiguration) -> [PhysicsDistanceJoint] {
+    static func attachPhysics(nodeEntities: [Entity], graph: Graph) -> [PhysicsDistanceJoint] {
         for entity in nodeEntities {
             let radius = entity.components[NodeRadiusComponent.self]?.radius ?? 0.01
             entity.components.set(PhysicsBodyComponent(massProperties: .default, material: nil, mode: .dynamic))
@@ -114,11 +122,11 @@ enum RealityGraphEntityBuilder {
         for (edgeIndex, edge) in graph.edges.enumerated() {
             guard let i = nodeIndices[edge.fromNode], let j = nodeIndices[edge.toNode],
                   i < nodeEntities.count, j < nodeEntities.count else { continue }
-            let idealLength = Float(edge.weight) * Float(config.k)
+            let restLength = simd_distance(nodeEntities[i].position, nodeEntities[j].position)
             let pin0 = nodeEntities[i].pins.set(named: "edge\(edgeIndex).from", position: .zero)
             let pin1 = nodeEntities[j].pins.set(named: "edge\(edgeIndex).to", position: .zero)
             let joint = PhysicsDistanceJoint(pin0: pin0, pin1: pin1,
-                                              distanceLimit: edgeDistanceLimit(idealLength: idealLength, tolerance: 0.05))
+                                              distanceLimit: edgeDistanceLimit(idealLength: restLength, tolerance: 0.05))
             joints.append(joint)
         }
         return joints

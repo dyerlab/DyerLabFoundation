@@ -35,6 +35,17 @@ public class LayoutState {
     /// Target position for pinned nodes (set by drag gesture).
     public var pinnedTargets: [SIMD3<Float>]
 
+    // MARK: - Motion
+
+    /// Largest distance any single unpinned node moved in the most recent
+    /// integration step, in world units.
+    ///
+    /// This is the visible, temperature-scaled motion, unlike
+    /// ``kineticEnergy``, which uses raw velocities. Taking the maximum rather
+    /// than a sum means one still-rearranging region keeps the layout running
+    /// even when the rest of it has stopped.
+    public var maxDisplacement: Float = 0
+
     // MARK: - Constants
 
     /// Mass per node (constant for stability).

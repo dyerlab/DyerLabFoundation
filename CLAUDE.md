@@ -69,6 +69,12 @@ Sources/
                                     matters — exact while eigenvalues are distinct, distributional
                                     within a repeated eigenvalue. gravity_field()/plotting are R-only.
                      Layout/{Camera,Core,Simulation}/
+                             Core/KamadaKawai.swift ← igraph layout_with_kk() port (LayoutAlgorithm.kamadaKawai,
+                             selectable alongside Fruchterman–Reingold; gstudio's layout = "kk" is the default
+                             weighting). Exact R parity for the first 100 moves; on graphs still moving at 50·n
+                             moves, igraph's C FMA rounding sends it down a different but equally good path, so
+                             arapat is tested functionally (energy + per-component Procrustes). Fixtures:
+                             Tests/GraphTests/Fixtures/generate_layout_fixtures.R.
                      Views/  ← GraphLayoutView (composition root), GraphCanvasView, GraphControlPanel,
                                GraphInspectorPanel, GraphLayoutOptions, MapView, NodeInspectorForm
                                Reality/  ← RealityGraphView, RealityGraphEntityBuilder, RealityGraphOptions

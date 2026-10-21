@@ -42,11 +42,8 @@ public struct GraphControlPanel: View {
                 Label("Energy: \(String(format: "%.2f", orchestrator.kineticEnergy))", systemImage: "bolt.fill")
                     .font(.caption)
 
-                if orchestrator.isSettled {
-                    Label("Settled", systemImage: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
+                settleStatus
+                    .font(.caption)
 
                 Spacer()
             }
@@ -100,6 +97,31 @@ public struct GraphControlPanel: View {
 
                 Spacer()
             }
+        }
+    }
+
+    /// Whether the last run came to rest, or was cut off while still moving —
+    /// with a one-click continuation to the suggested budget when there is one.
+    @ViewBuilder
+    private var settleStatus: some View {
+        switch orchestrator.settleOutcome {
+        case .atRest:
+            Label("At rest", systemImage: "checkmark.circle.fill")
+                .foregroundColor(.green)
+        case .stoppedStillMoving(let motion, let suggested?):
+            Label("Still moving (\(String(format: "%.2f", motion))/frame)", systemImage: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+                .help("Stopped at the iteration budget before coming to rest. About \(suggested) should let it settle.")
+            Button("Continue to \(suggested)") {
+                orchestrator.continueRun(toBudget: suggested)
+            }
+            .buttonStyle(.bordered)
+        case .stoppedStillMoving(let motion, nil):
+            Label("Not converging (\(String(format: "%.2f", motion))/frame)", systemImage: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+                .help("Motion was not dying down when the budget ran out, so more iterations alone are unlikely to help. Try a slower cooling factor, a different k, or the other layout algorithm.")
+        case nil:
+            EmptyView()
         }
     }
 }

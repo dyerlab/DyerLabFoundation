@@ -17,6 +17,7 @@ import simd
 /// 3. Apply temperature scaling: v_scaled = v × temperatureFactor
 /// 4. Update positions: p = p + v_scaled × dt
 /// 5. Handle pinned nodes (override position & velocity)
+/// 6. Record the largest unpinned move in `state.maxDisplacement`
 ///
 /// - Parameters:
 ///   - state: Layout state (modified in-place)
@@ -33,6 +34,7 @@ public func integrate(
     let damping = Float(config.damping)
     let mass = state.mass
     let temperatureFactor = min(1.0, temperature / Float(config.initialTemperature))
+    var maxDisplacement: Float = 0
 
     for i in 0..<state.nodeCount {
         // Skip pinned nodes (they're handled separately)
@@ -50,8 +52,12 @@ public func integrate(
         let scaledVelocity = state.velocities[i] * temperatureFactor
 
         // Update position
-        state.positions[i] += scaledVelocity * dt
+        let displacement = scaledVelocity * dt
+        state.positions[i] += displacement
+        maxDisplacement = max(maxDisplacement, simd_length(displacement))
     }
+
+    state.maxDisplacement = maxDisplacement
 }
 
 /// Updates temperature using exponential cooling.
