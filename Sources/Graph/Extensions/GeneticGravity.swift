@@ -203,7 +203,7 @@ public struct SourceSinkResult: Sendable {
 ///
 /// `S` is the least-squares solution of `Sᵢ − Sⱼ ≈ Δ_{i→j}` over all edges
 /// (the Moore-Penrose solution of the graph Laplacian system `L S = balance`,
-/// via ``MoorePenroseInverse(_:tol:)``, as R's `MASS::ginv`), centred within
+/// via `MoorePenroseInverse(_:tol:)`, as R's `MASS::ginv`), centred within
 /// each connected component.
 ///
 /// - Parameters:

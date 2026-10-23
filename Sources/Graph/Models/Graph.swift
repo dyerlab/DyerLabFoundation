@@ -103,6 +103,8 @@ public class Graph: Identifiable, Hashable  {
     ///   - name: The node's label
     ///   - size: Visual size (used for rendering)
     ///   - color: Visual color (used for rendering)
+    ///   - categoricalAttributes: Open-ended string-valued attributes (e.g. `"Region": "1"`)
+    ///   - continuousAttributes: Open-ended real-valued attributes (e.g. `"elevation": 125.3`)
     public func addNode(name: String, size: Double, color: Color,
                          categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:] ) {
         nodes.append( Node(name: name, size: size, color: color,

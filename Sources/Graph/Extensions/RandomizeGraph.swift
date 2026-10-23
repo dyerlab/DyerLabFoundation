@@ -39,7 +39,7 @@ public enum GraphRandomization: Sendable {
 ///
 /// With the same `seed` and input graph, `.full` reproduces R's
 /// `set.seed(seed); randomize_graph(graph, mode = "full")` exactly, because the
-/// sampling runs through ``RMersenneTwister``. `.degree` follows the same
+/// sampling runs through `RMersenneTwister`. `.degree` follows the same
 /// edge-swap chain as gstudio's `igraph::rewire(keeping_degseq())` but does not
 /// reproduce igraph's individual random draws.
 ///
