@@ -10,8 +10,8 @@
 //  ImportedDataset.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -26,6 +26,12 @@ public struct ImportedDataset: Sendable {
     /// keyed by `Individual.id`. Empty for imports with no strata metadata.
     public var strata: [UUID: [StratumReference]]
 
+    /// Creates a dataset.
+    ///
+    /// - Parameters:
+    ///   - matrix: The genotype matrix.
+    ///   - parentage: The parentage design.
+    ///   - strata: Each individual's stratum lineage, keyed by `Individual.id` (default none).
     public init(matrix: GenotypeMatrix, parentage: ParentageDesign, strata: [UUID: [StratumReference]] = [:]) {
         self.matrix = matrix
         self.parentage = parentage

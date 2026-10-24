@@ -8,9 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopGenStore.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGenetics
 //
 //  Ergonomic query/mutation facade over the columnar storage model
 //  (`GenotypeMatrix` + `ProjectStore`), replacing the older UUID
@@ -32,6 +30,10 @@
 //  in-memory-only staging state. Unlike the old JSON-backed store, the
 //  columnar SQLite schema has no lineage columns — lineage does not persist
 //  across `save`/`load`.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import CoreLocation
@@ -91,6 +93,8 @@ public final class PopGenStore: ObservableObject {
     public init() {}
 
     /// Creates a store pre-populated from an imported/loaded dataset.
+    ///
+    /// - Parameter dataset: The dataset to copy individuals, loci, genotypes and strata from.
     public init(dataset: ImportedDataset) {
         let matrix = dataset.matrix
         individuals = matrix.individuals
@@ -138,7 +142,9 @@ public final class PopGenStore: ObservableObject {
         for j in loci.indices {
             switch markerTypes[j] {
             case .microsatellite:
-                columns.append(MultiallelicColumn(codebook: codebooks[j], left: leftAlleleIdx[j], right: rightAlleleIdx[j]))
+                columns.append(MultiallelicColumn(codebook: codebooks[j],
+                                                  left: leftAlleleIdx[j],
+                                                  right: rightAlleleIdx[j]))
             case .biallelicSNP:
                 let codes = zip(leftAlleleIdx[j], rightAlleleIdx[j]).map(Self.dosageCode)
                 columns.append(BiallelicColumn(codebook: codebooks[j], codes: codes))

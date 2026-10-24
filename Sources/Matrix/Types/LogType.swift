@@ -5,12 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  LogType.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Matrix
 //
 //  An open, extensible label for what kind of event a persisted log entry
 //  records (file I/O, a warning, an error, a documented assumption, ...).
@@ -22,6 +20,9 @@
 //  `static let`/`static func` extension, the same way `AnalysisTag` is
 //  extended (see `AMOVA.swift`'s `AnalysisTag.amovaPhiST`).
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 /// An open, string-backed label identifying the category of a persisted log
 /// entry. Built-in cases cover common needs; any module can mint its own
@@ -32,6 +33,8 @@ public struct LogType: Sendable, Equatable, Hashable, CustomStringConvertible {
     public let rawValue: String
 
     /// Creates a log type with the given label.
+    ///
+    /// - Parameter rawValue: The log type's label.
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }

@@ -10,8 +10,8 @@
 //  OutcrossingResult.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/23/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -60,7 +60,10 @@ extension Outcrossing {
             return (sortedT[lowerIdx], sortedT[upperIdx])
         }
 
-        /// A human-readable summary of the posterior: mean `t` and `F`, a 95% credible interval for `t`, and the inbreeding history distribution.
+        /// A human-readable summary of the posterior: mean `t` and `F`, a 95% credible interval for `t`, and the
+        /// inbreeding history distribution.
+        ///
+        /// - Returns: A multi-line plain-text report.
         public func summary() -> String {
             var s = "Outcrossing Analysis Summary\n"
             s += "=======================\n"
@@ -80,7 +83,8 @@ extension Outcrossing {
 
 extension GenotypeMatrix {
 
-    /// Estimates the multilocus population mean outcrossing rate (t_m) and inbreeding coefficient from maternal-family data.
+    /// Estimates the multilocus population mean outcrossing rate (t_m) and inbreeding coefficient from maternal-family
+    /// data.
     ///
     /// Runs the ``Outcrossing`` Metropolis-Hastings sampler over every locus
     /// jointly — see ``Outcrossing`` for how this compares to
@@ -96,7 +100,10 @@ extension GenotypeMatrix {
         parameters: Outcrossing.Parameters = Outcrossing.Parameters(),
         hasNullModel: [Bool]? = nil
     ) -> Outcrossing.Result {
-        let sampler = Outcrossing.Sampler(matrix: self, design: design, parameters: parameters, hasNullModel: hasNullModel)
+        let sampler = Outcrossing.Sampler(matrix: self,
+                                          design: design,
+                                          parameters: parameters,
+                                          hasNullModel: hasNullModel)
         let samples = sampler.run()
         return Outcrossing.Result(samples: samples)
     }
@@ -121,7 +128,11 @@ extension GenotypeMatrix {
         parameters: Outcrossing.Parameters = Outcrossing.Parameters(),
         hasNullModel: [Bool]? = nil
     ) -> Outcrossing.Result {
-        let sampler = Outcrossing.Sampler(matrix: self, design: design, parameters: parameters, hasNullModel: hasNullModel, loci: [locusIndex])
+        let sampler = Outcrossing.Sampler(matrix: self,
+                                          design: design,
+                                          parameters: parameters,
+                                          hasNullModel: hasNullModel,
+                                          loci: [locusIndex])
         let samples = sampler.run()
         return Outcrossing.Result(samples: samples)
     }

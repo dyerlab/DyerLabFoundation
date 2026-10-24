@@ -7,13 +7,17 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  SpatialUtilitiesTests.swift
+//  PresentationZenTests
 //
 //  Ported from PopulationGenetics' SpatialTests.swift: ConvexHull,
 //  DistanceBetween, the CLLocationCoordinate2D array helpers, and the
 //  MKCoordinateRegion / MKMapRect builders. The MapPlacard section of the
 //  original file is domain-specific (PopulationGenetics' own type) and
 //  stays there.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -36,7 +40,7 @@ struct SpatialUtilitiesTests {
 
     // MARK: - ConvexHull
 
-    @Test func testConvexHullOfSquareExcludesInteriorPoint() async throws {
+    @Test func convexHullOfSquareExcludesInteriorPoint() async throws {
         let corners = [
             CLLocationCoordinate2D(latitude: 0,  longitude: 0),
             CLLocationCoordinate2D(latitude: 0,  longitude: 10),
@@ -55,7 +59,7 @@ struct SpatialUtilitiesTests {
         #expect(!contains(hull.convexHull, interior))
     }
 
-    @Test func testConvexHullOfTriangleKeepsAllVertices() async throws {
+    @Test func convexHullOfTriangleKeepsAllVertices() async throws {
         let triangle = [
             CLLocationCoordinate2D(latitude: 0, longitude: 0),
             CLLocationCoordinate2D(latitude: 0, longitude: 4),
@@ -70,7 +74,7 @@ struct SpatialUtilitiesTests {
         }
     }
 
-    @Test func testConvexHullRequiresAtLeastThreePoints() async throws {
+    @Test func convexHullRequiresAtLeastThreePoints() async throws {
         let twoPoints = [
             CLLocationCoordinate2D(latitude: 0, longitude: 0),
             CLLocationCoordinate2D(latitude: 1, longitude: 1),
@@ -82,7 +86,7 @@ struct SpatialUtilitiesTests {
         #expect(hull.convexHull.isEmpty)
     }
 
-    @Test func testConvexHullPolygonMatchesPointCount() async throws {
+    @Test func convexHullPolygonMatchesPointCount() async throws {
         let pts = [
             CLLocationCoordinate2D(latitude: 0,  longitude: 0),
             CLLocationCoordinate2D(latitude: 0,  longitude: 6),
@@ -98,7 +102,7 @@ struct SpatialUtilitiesTests {
     /// Regression guard for the leftmost-index tie-break: when two points share
     /// the minimum longitude, the southern one (smaller latitude) must anchor the
     /// march so that both vertical-edge endpoints land on the hull.
-    @Test func testConvexHullHandlesSharedMinimumLongitude() async throws {
+    @Test func convexHullHandlesSharedMinimumLongitude() async throws {
         let pts = [
             CLLocationCoordinate2D(latitude: 0,  longitude: 0),   // shares min longitude
             CLLocationCoordinate2D(latitude: 10, longitude: 0),   // shares min longitude
@@ -115,30 +119,30 @@ struct SpatialUtilitiesTests {
 
     // MARK: - DistanceBetween
 
-    @Test func testDistanceBetweenIdenticalCoordinatesIsZero() async throws {
+    @Test func distanceBetweenIdenticalCoordinatesIsZero() async throws {
         let point = CLLocationCoordinate2D(latitude: 37.5407, longitude: -77.4360)
-        #expect(DistanceBetween(point, point) < 0.0001)
+        #expect(distanceBetween(point, point) < 0.0001)
     }
 
-    @Test func testDistanceBetweenOneDegreeAtEquator() async throws {
+    @Test func distanceBetweenOneDegreeAtEquator() async throws {
         let a = CLLocationCoordinate2D(latitude: 0, longitude: 0)
         let b = CLLocationCoordinate2D(latitude: 0, longitude: 1)
 
         // One degree of longitude at the equator is ~111 km.
-        let distance = DistanceBetween(a, b)
+        let distance = distanceBetween(a, b)
         #expect(distance > 100 && distance < 120)
     }
 
-    @Test func testDistanceBetweenIsSymmetric() async throws {
+    @Test func distanceBetweenIsSymmetric() async throws {
         let a = CLLocationCoordinate2D(latitude: 37.0, longitude: -77.0)
         let b = CLLocationCoordinate2D(latitude: 38.0, longitude: -78.0)
 
-        #expect(DistanceBetween(a, b) == DistanceBetween(b, a))
+        #expect(distanceBetween(a, b) == distanceBetween(b, a))
     }
 
     // MARK: - Array<CLLocationCoordinate2D> bounds & center
 
-    @Test func testCoordinateBounds() async throws {
+    @Test func coordinateBounds() async throws {
         let coords = [
             CLLocationCoordinate2D(latitude: 10,  longitude: 20),
             CLLocationCoordinate2D(latitude: 30,  longitude: 40),
@@ -152,7 +156,7 @@ struct SpatialUtilitiesTests {
         #expect(maxLat == 30)
     }
 
-    @Test func testCoordinateBoundsEmptyIsNaN() async throws {
+    @Test func coordinateBoundsEmptyIsNaN() async throws {
         let coords: [CLLocationCoordinate2D] = []
         let (minLon, maxLon, minLat, maxLat) = coords.bounds()
         #expect(minLon.isNaN)
@@ -161,7 +165,7 @@ struct SpatialUtilitiesTests {
         #expect(maxLat.isNaN)
     }
 
-    @Test func testCoordinateCenter() async throws {
+    @Test func coordinateCenter() async throws {
         let coords = [
             CLLocationCoordinate2D(latitude: 10,  longitude: 20),
             CLLocationCoordinate2D(latitude: 30,  longitude: 40),
@@ -173,19 +177,19 @@ struct SpatialUtilitiesTests {
         #expect(center.longitude == 20.0)  // (0 + 40) / 2
     }
 
-    @Test func testCoordinateCenterEmptyIsNil() async throws {
+    @Test func coordinateCenterEmptyIsNil() async throws {
         let coords: [CLLocationCoordinate2D] = []
         #expect(coords.center == nil)
     }
 
     // MARK: - MKCoordinateRegion(coordinates:)
 
-    @Test func testRegionFromEmptyCoordinatesIsNil() async throws {
+    @Test func regionFromEmptyCoordinatesIsNil() async throws {
         let region = MKCoordinateRegion(coordinates: [])
         #expect(region == nil)
     }
 
-    @Test func testRegionFromSingleCoordinate() async throws {
+    @Test func regionFromSingleCoordinate() async throws {
         let coord = CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4)
         let region = try #require(MKCoordinateRegion(coordinates: [coord]))
 
@@ -196,7 +200,7 @@ struct SpatialUtilitiesTests {
         #expect(region.span.longitudeDelta == 1)
     }
 
-    @Test func testRegionFromMultipleCoordinatesCoversRange() async throws {
+    @Test func regionFromMultipleCoordinatesCoversRange() async throws {
         let coords = [
             CLLocationCoordinate2D(latitude: 10, longitude: 20),
             CLLocationCoordinate2D(latitude: 30, longitude: 40),
@@ -210,7 +214,7 @@ struct SpatialUtilitiesTests {
         #expect(region.span.longitudeDelta == 20)
     }
 
-    @Test func testRegionWithBufferScalesSpan() async throws {
+    @Test func regionWithBufferScalesSpan() async throws {
         let region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
             span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 4)
@@ -226,7 +230,7 @@ struct SpatialUtilitiesTests {
 
     // MARK: - MKMapRect.fromCoordinateRegion
 
-    @Test func testMapRectFromRegionHasPositiveArea() async throws {
+    @Test func mapRectFromRegionHasPositiveArea() async throws {
         let region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4),
             span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)

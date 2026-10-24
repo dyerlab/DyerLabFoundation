@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  TemporalScatterPlot.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 2026-02-16.
+//  Created by Rodney Dyer on 2026.02.16.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -24,13 +23,21 @@ import SwiftUI
 /// Bind a date `x` role and a quantitative `y` role; bind a `label` role to
 /// annotate points.
 public struct TemporalScatterPlot: View {
+    /// The table to plot; bind a date `x` role and a quantitative `y` role (and optionally `label`).
     public var table: DataTable
+    /// The x-axis title.
     public var xLabel: String
+    /// The y-axis title.
     public var yLabel: String
+    /// The point color.
     public var pointColor: Color
+    /// The regression trendline's color.
     public var lineColor: Color
+    /// Whether to compute and draw a linear regression trendline (via `DateRegression(_:)`).
     public var showRegression: Bool
+    /// Whether to annotate the trendline with its fit statistics; ignored when `showRegression` is `false`.
     public var showStats: Bool
+    /// Whether to annotate each point with its `label`-role value.
     public var showAnnotations: Bool
 
     /// Creates a temporal scatter plot.
@@ -43,7 +50,7 @@ public struct TemporalScatterPlot: View {
     ///   - pointColor: The point color.
     ///   - lineColor: The regression trendline's color.
     ///   - showRegression: Whether to compute and draw a linear regression trendline
-    ///     (via `dateRegression(_:)`).
+    ///     (via `DateRegression(_:)`).
     ///   - showStats: Whether to annotate the trendline with its fit statistics; ignored
     ///     when `showRegression` is `false`.
     ///   - showAnnotations: Whether to annotate each point with its `label`-role value.
@@ -66,7 +73,7 @@ public struct TemporalScatterPlot: View {
     }
 
     private var regression: RegressionResult? {
-        showRegression ? dateRegression(table) : nil
+        showRegression ? DateRegression(table) : nil
     }
 
     @ChartContentBuilder
@@ -120,6 +127,8 @@ public struct TemporalScatterPlot: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     TemporalScatterPlot(.sampleTemporal, yLabel: "Score")

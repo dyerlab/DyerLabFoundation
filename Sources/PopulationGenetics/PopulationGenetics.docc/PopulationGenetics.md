@@ -29,8 +29,8 @@ logic lives.
 ### Analysis
 
 - ``GeneticDistanceMatrix`` / `geneticDistance` — Smouse & Peakall genetic distance.
-- ``AMOVA`` (a thin domain-vocabulary wrapper over `Matrix`'s `DistanceVarianceDecomposition`) — variance decomposition and permutation testing, including `pairwisePhiST` for pairwise Φ_ST between strata.
-- `genotypicRarefaction` / `allelicRarefaction` — individual-based resampling for diversity rarefaction.
+- ``AMOVA`` (a thin domain-vocabulary wrapper over `Matrix`'s `DistanceVarianceDecomposition`) — variance decomposition and permutation testing, including `PairwisePhiST` for pairwise Φ_ST between strata.
+- `GenotypicRarefaction` / `AllelicRarefaction` — individual-based resampling for diversity rarefaction.
 - ``ParentageDesign`` / ``MaternalFamily`` / `paternalGamete` — pollen-pool parentage analysis.
 - ``Outcrossing`` — Bayesian MCMC estimation of population mean outcrossing rate and inbreeding coefficient from maternal-family data, both multilocus (`t_m`, via `GenotypeMatrix.runOutcrossing(design:parameters:hasNullModel:)`) and single-locus (`t_s`, via `GenotypeMatrix.runSingleLocusOutcrossing(design:parameters:hasNullModel:)`).
 - ``PartitionedGeneticDistance(data:groups:gamma:)`` — directed partitioned conditional genetic distance among strata, built from genotypes via the Population Graph and Graph's genetic-gravity weights (`genetic_distance(mode = "pgd")`).
@@ -41,6 +41,8 @@ logic lives.
 
 - ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Five equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, and named generic matrices — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
 - ``DatasetSummary`` — a cheap `meta`-table classification of a `ProjectStore` file's contents (project identity plus which components are present) without decoding the full dataset.
-- ``PopulationGraphDataset`` — a population graph paired with its spatial layout.
+- ``PopulationGraphDataset`` — a persisted population graph with its per-node strata and node, edge and graph
+  values. The graph is held as a `Sendable` `GraphSnapshot`; call ``PopulationGraphDataset/makeGraph()`` for a live
+  `Graph`.
 - ``PlacardMapView`` / ``MapPlacard`` — MapKit-backed views for a population graph.
 - `pairwiseGreatCircleDistance` — spatial distance between sampling locations.

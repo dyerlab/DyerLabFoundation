@@ -22,8 +22,10 @@ this target.
 ### Matrix & Graph views
 
 - ``MatrixView`` / ``MatrixEditorView`` / ``VectorView`` — SwiftUI views and editors for `Matrix` and `Vector` values.
-- ``GraphLayoutView`` — renders a `Graph` using the force-directed layout engine from `Graph`.
-- ``MapView`` — a MapKit-backed spatial view, paired with ``ConvexHull`` for area-coverage display.
+- ``ConvexHull`` — the convex hull of a set of points, for area-coverage display.
+
+Graph rendering (`GraphLayoutView`, `MapView`) lives in the `Graph` target itself, alongside the layout engine
+that drives it.
 
 ### Analyses
 

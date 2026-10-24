@@ -7,12 +7,14 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataTable+Samples.swift
+//  PresentationZen
 //
 //  Deterministic sample tables used by chart previews and tests. They replace
 //  the legacy `DataPoint.defaultDataPoints` fixtures.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

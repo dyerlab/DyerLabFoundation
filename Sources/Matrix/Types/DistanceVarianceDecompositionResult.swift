@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  DistanceVarianceDecompositionResult.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.06.28.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 6/28/26.
 //
 
 /// One-level distance-based variance decomposition for a given partition.
@@ -43,6 +42,18 @@ public struct DistanceVarianceDecompositionResult: Sendable {
     /// than this type picking a side.
     public let varianceRatio: Double
 
+    /// Creates a result from precomputed components.
+    ///
+    /// - Parameters:
+    ///   - totalSS: Total sum of squares.
+    ///   - withinSS: Within-group sum of squares.
+    ///   - amongSS: Among-group sum of squares.
+    ///   - groupCount: Number of groups.
+    ///   - dfAmong: Among-group degrees of freedom.
+    ///   - dfWithin: Within-group degrees of freedom.
+    ///   - sigmaAmong: Among-group variance component.
+    ///   - sigmaWithin: Within-group variance component.
+    ///   - varianceRatio: σ²_Among / (σ²_Among + σ²_Within).
     public init(totalSS: Double, withinSS: Double, amongSS: Double,
                 groupCount: Int, dfAmong: Int, dfWithin: Int,
                 sigmaAmong: Double, sigmaWithin: Double, varianceRatio: Double) {

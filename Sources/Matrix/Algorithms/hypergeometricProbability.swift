@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  hypergeometricProbability.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Foundation
@@ -48,7 +47,10 @@ import Foundation
 ///     observedSuccesses: 1
 /// )
 /// ```
-public func hypergeometricProbability(populationSize: Int, successesInPopulation: Int, draws: Int, observedSuccesses: Int) -> Double {
+public func hypergeometricProbability(populationSize: Int,
+                                      successesInPopulation: Int,
+                                      draws: Int,
+                                      observedSuccesses: Int) -> Double {
 
     guard populationSize >= 0,
           successesInPopulation >= 0, successesInPopulation <= populationSize,

@@ -14,6 +14,9 @@
 //  permutation null for edge asymmetry. See
 //  `~/Coding/gstudio/R/asymmetry_permutation.R`.
 //
+//  Created by Rodney Dyer on 2026.09.11.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 import Graph
@@ -25,7 +28,7 @@ import Foundation
 /// The observed adjacency is held fixed; individual-to-stratum labels are
 /// permuted, the full conditional-distance matrix is recomputed under the
 /// permuted labels (`alpha = 1`, retaining every population pair via
-/// ``PopulationGraphConditionalDistanceMatrix(x:groups:tol:)``), and each
+/// `PopulationGraphConditionalDistanceMatrix(x:groups:tol:)`), and each
 /// OBSERVED edge reads its permuted weight from that matrix before `Δ` is
 /// recalculated. Because the edge set never changes across permutations,
 /// every retained edge gets a full, equally sized null distribution. With the
@@ -47,8 +50,8 @@ import Foundation
 ///     (default `1.0e-4`, matching `PopulationGraph(x:groups:alpha:tol:)`).
 ///   - returnNull: Keep each edge's null distribution on its row (default `false`).
 ///   - seed: RNG seed, equivalent to R's `set.seed(seed)`.
-/// - Returns: One row per undirected edge (``Graph/undirectedEdgeList()``
-///   order), or `nil` if ``GraphAsymmetries(graph:bandwidth:scale:)`` cannot be
+/// - Returns: One row per undirected edge (`Graph.undirectedEdgeList()`
+///   order), or `nil` if `GraphAsymmetries(graph:bandwidth:scale:)` cannot be
 ///   computed for `graph` or `groups` lacks individuals for some graph node.
 ///
 /// - Note: As in gstudio, a permutation whose re-estimated distance matrix or
@@ -107,6 +110,11 @@ public func AsymmetryPermutationTest(graph: Graph,
 
 /// gstudio's `.validate_asymmetry_groups()`: every graph node must be a stratum
 /// in `groups`, or resampled graphs can never be matched to the observed edges.
+///
+/// - Parameters:
+///   - graph: The observed graph.
+///   - groups: The stratum label of each individual.
+/// - Returns: `true` if every node name appears in `groups`.
 func groupsCoverGraph(_ graph: Graph, _ groups: [String]) -> Bool {
     let strata = Set(groups)
     return graph.nodes.allSatisfy { strata.contains($0.name) }
@@ -114,6 +122,12 @@ func groupsCoverGraph(_ graph: Graph, _ groups: [String]) -> Bool {
 
 /// The value at `(row, col)` in a matrix with string `rowNames`/`colNames`, or
 /// `nil` if either name is absent.
+///
+/// - Parameters:
+///   - matrix: A matrix with row and column names.
+///   - row: The row name.
+///   - col: The column name.
+/// - Returns: The value, or `nil`.
 func matrixValue(_ matrix: Matrix, _ row: String, _ col: String) -> Double? {
     guard let r = matrix.rowNames.firstIndex(of: row), let c = matrix.colNames.firstIndex(of: col) else { return nil }
     return matrix[r, c]
@@ -121,6 +135,11 @@ func matrixValue(_ matrix: Matrix, _ row: String, _ col: String) -> Double? {
 
 /// An order-independent key for an unordered node pair, for matching an edge
 /// across two edge lists regardless of endpoint orientation.
+///
+/// - Parameters:
+///   - a: One endpoint's name.
+///   - b: The other endpoint's name.
+/// - Returns: The same key for `(a, b)` and `(b, a)`.
 func unorderedEdgeKey(_ a: String, _ b: String) -> String {
     a <= b ? "\(a)\r\(b)" : "\(b)\r\(a)"
 }

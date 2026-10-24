@@ -1,6 +1,3 @@
-//
-//  CongruenceTopology.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,10 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  CongruenceTopology.swift
+//  Graph
+//
 //  Direct ports of gstudio's `congruence_topology()` and `test_congruence()` —
 //  the shared-edge topology of two graphs, and a Pearson correlation test
 //  between their shortest-path distance structures.
 //  See `~/Coding/gstudio/R/congruence_topology.R` and `test_congruence.R`.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -29,6 +32,11 @@ import Foundation
 ///
 /// Non-overlapping nodes are dropped silently (gstudio emits a warning); if the
 /// two node sets differ, interpret the result with care.
+///
+/// - Parameters:
+///   - graph1: The reference graph; node order and node properties come from it.
+///   - graph2: The graph to intersect with.
+/// - Returns: The shared-edge graph.
 public func CongruenceTopology(_ graph1: Graph, _ graph2: Graph) -> Graph {
     let names2 = Set(graph2.nodes.map { $0.name })
     let common = graph1.nodes.map { $0.name }.filter { names2.contains($0) }
@@ -78,6 +86,9 @@ public struct CongruenceTest: Sendable, Equatable {
 /// they share, then correlates the lower-triangle distances (dropping any pair
 /// unreachable in either graph) with a two-sided Pearson test.
 ///
+/// - Parameters:
+///   - graph1: The first graph.
+///   - graph2: The second graph.
 /// - Returns: A ``CongruenceTest``, or `nil` if the graphs share no nodes,
 ///   fewer than three node pairs are finite in both, or the correlation is
 ///   undefined (a constant distance vector).

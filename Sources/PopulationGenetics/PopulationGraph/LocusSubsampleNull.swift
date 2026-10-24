@@ -16,6 +16,9 @@
 //  information-loss reference for the asymmetry index. See
 //  `~/Coding/gstudio/R/locus_subsample_null.R`.
 //
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 import Graph
@@ -54,7 +57,7 @@ public struct LocusSubsampleDraw: Sendable, Equatable {
 /// polymorphic loci) and each of `subsets` replicates, `k` of them are drawn
 /// at random, the Population Graph is rebuilt from those loci alone
 /// (``PopulationGraph(x:groups:alpha:tol:)``), and its mean genetic-gravity
-/// `|Δ|` (``GravityEdges(graph:gamma:x:)``) is recorded with the subset's
+/// `|Δ|` (`GravityEdges(graph:gamma:x:)`) is recorded with the subset's
 /// polymorphism and heterozygosity. With the same `seed` the locus draws match
 /// R's `set.seed(seed); locus_subsample_null(x, ...)`.
 ///

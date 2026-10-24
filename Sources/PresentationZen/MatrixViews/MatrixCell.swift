@@ -5,10 +5,12 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
+//  MatrixCell.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 4/23/26.
+//  Created by Rodney Dyer on 2026.04.23.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -29,6 +31,7 @@ public struct MatrixCell: View {
 
     // MARK: - Constants
 
+    /// Layout and formatting constants.
     public struct Constants {
         /// Number of decimal places shown in every cell.
         public static let decimalPrecision: Int = 4

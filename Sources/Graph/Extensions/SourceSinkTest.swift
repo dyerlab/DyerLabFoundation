@@ -1,6 +1,3 @@
-//
-//  SourceSinkTest.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,11 +7,17 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  SourceSinkTest.swift
+//  Graph
+//
 //  A port of gstudio's `source_sink_test()` (>= 1.15): Spearman r(S, x) between
 //  genetic-gravity source-sink scores and a hypothesized covariate, against a
 //  Moran spectral randomization null on the graph's own topology (default), a
 //  plain permutation of S, or spectral randomization on a supplied adjacency.
 //  See `~/Coding/gstudio/R/source_sink_test.R`.
+//
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -156,6 +159,11 @@ public func SourceSinkTest(graph: Graph,
 
 /// gstudio's `.merge_ties()`: sorted values closer than `tolerance · max|z|` to
 /// their predecessor take the first value of their run.
+///
+/// - Parameters:
+///   - z: The values to merge; non-finite values are left alone.
+///   - tolerance: Relative tie tolerance (default `1e-10`).
+/// - Returns: `z` with near-ties collapsed, in the original order.
 func mergeNearTies(_ z: [Double], tolerance: Double = 1e-10) -> [Double] {
     let finite = z.indices.filter { z[$0].isFinite }
     guard finite.count >= 2 else { return z }

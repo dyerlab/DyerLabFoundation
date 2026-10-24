@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  ConvexHull.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
+//  Created by Rodney Dyer on 2021.08.23.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 8/23/21.
 //
 
 import Foundation
@@ -34,7 +33,7 @@ public class ConvexHull {
 
     /// The hull expressed as an `MKPolygon` overlay.
     public var polygon: MKPolygon {
-        return MKPolygon(coordinates: convexHull, count: convexHull.count)
+        MKPolygon(coordinates: convexHull, count: convexHull.count)
     }
 
     /// The turn direction of three consecutive hull points.
@@ -51,11 +50,11 @@ public class ConvexHull {
     ///
     /// - Parameter pts: The input coordinates. At least three non-collinear points
     ///   are required; otherwise `convexHull` remains empty.
-    public init( pts: [CLLocationCoordinate2D]) {
-        findHull(points: pts )
+    public init(pts: [CLLocationCoordinate2D]) {
+        findHull(points: pts)
     }
 
-    private func leftmostIndex( coords: [CLLocationCoordinate2D] ) -> Int {
+    private func leftmostIndex(coords: [CLLocationCoordinate2D]) -> Int {
         var mnIdx = 0
         for i in 1 ..< coords.count {
             if coords[i].longitude < coords[mnIdx].longitude {
@@ -75,9 +74,11 @@ public class ConvexHull {
         return dx * dx + dy * dy
     }
 
-
-    private func orientation(p: CLLocationCoordinate2D, q: CLLocationCoordinate2D, r: CLLocationCoordinate2D) -> ClockwiseOrientation {
-        let val = (q.latitude - p.latitude) * (r.longitude - q.longitude) - (q.longitude - p.longitude) * (r.latitude - q.latitude)
+    private func orientation(p: CLLocationCoordinate2D,
+                             q: CLLocationCoordinate2D,
+                             r: CLLocationCoordinate2D) -> ClockwiseOrientation {
+        let val = (q.latitude - p.latitude) * (r.longitude - q.longitude)
+            - (q.longitude - p.longitude) * (r.latitude - q.latitude)
         let epsilon = 1e-10
         if abs(val) < epsilon {
             return .colinear
@@ -88,11 +89,11 @@ public class ConvexHull {
         }
     }
 
-
     private func findHull(points: [CLLocationCoordinate2D]) {
         let n = points.count
+        // Fewer than three points has no hull; leave it empty rather than warn.
         guard n >= 3 else {
-            print("Warning: You must have at least 3 points to make a convex hull")
+            self.convexHull = []
             return
         }
 
@@ -122,8 +123,8 @@ public class ConvexHull {
             }
             p = q
             iterations += 1
+            // A gift-wrap pass visits each hull point once, so 2n steps means it's cycling.
             if iterations > n * 2 {
-                print("Hull computation did not converge, breaking loop after \(iterations) iterations.")
                 break
             }
         } while p != leftIdx
@@ -132,8 +133,6 @@ public class ConvexHull {
     }
 
 }
-
-
 
 extension ConvexHull: Hashable, Equatable {
 
@@ -144,7 +143,7 @@ extension ConvexHull: Hashable, Equatable {
     ///   - rhs: The right-hand hull.
     /// - Returns: `true` if both hulls have the same UUID.
     public static func == (lhs: ConvexHull, rhs: ConvexHull) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 
     /// Hashes the hull's `id` into the supplied hasher.
@@ -155,7 +154,6 @@ extension ConvexHull: Hashable, Equatable {
     }
 
 }
-
 
 extension ConvexHull: CustomStringConvertible {
     /// A human-readable listing of the hull vertices.

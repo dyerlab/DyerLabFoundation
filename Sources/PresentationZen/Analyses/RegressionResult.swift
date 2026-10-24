@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  RegressionResult.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 2026-02-16.
+//  Created by Rodney Dyer on 2026.02.16.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -29,15 +28,22 @@ import Matrix
 /// on demand for callers that want the standardized tabular form (e.g. to
 /// hand to `DataTableView` or a chart) instead of the raw scalars.
 ///
-/// by `dateRegression(_:)`; it's `nil` when a `RegressionResult` is built
+/// ``fit`` holds the full `LinearModelFit` when the result was produced
+/// by `DateRegression(_:)`; it's `nil` when a `RegressionResult` is built
 /// directly rather than fit from data. Pass it to `anovaTable(_:)` — or just
 /// pass this whole result to the `anovaTable(_:)` overload that accepts one.
 public struct RegressionResult: Sendable {
+    /// The fitted line's slope.
     public let slope: Double
+    /// The fitted line's value at `x = 0`.
     public let intercept: Double
+    /// The coefficient of determination.
     public let r2: Double
+    /// The fitted line's plot points, if any.
     public let fitted: [PlotRow]
+    /// The full `LinearModelFit` this result was derived from, or `nil` if it was built directly.
     public let fit: LinearModelFit?
+    /// Whether there are no fitted points.
     public var isEmpty: Bool { fitted.isEmpty }
 
     /// Creates a regression result.

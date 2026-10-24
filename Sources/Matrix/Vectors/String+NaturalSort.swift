@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  String+NaturalSort.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.13.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/13/26.
 //
 
 import Foundation
@@ -26,6 +25,9 @@ public extension String {
 
     /// Compares two strings treating embedded digit runs as numbers rather than
     /// character sequences, so `"9" < "12" < "88"` instead of `"12" < "88" < "9"`.
+    ///
+    /// - Parameter other: The string to compare against.
+    /// - Returns: The ordering of `self` relative to `other`.
     func naturalCompare(_ other: String) -> ComparisonResult {
         self.compare(other, options: [.numeric, .caseInsensitive])
     }
@@ -34,6 +36,8 @@ public extension String {
 public extension Sequence where Element == String {
 
     /// Sorts strings in natural (numeric-aware) order.
+    ///
+    /// - Returns: The strings in natural order.
     func naturalSorted() -> [String] {
         sorted { $0.naturalCompare($1) == .orderedAscending }
     }
@@ -42,6 +46,9 @@ public extension Sequence where Element == String {
 public extension Sequence {
 
     /// Sorts elements by a `String` key path in natural (numeric-aware) order.
+    ///
+    /// - Parameter keyPath: The string property to sort by.
+    /// - Returns: The elements in natural order of their keys.
     func naturalSorted(by keyPath: KeyPath<Element, String>) -> [Element] {
         sorted { $0[keyPath: keyPath].naturalCompare($1[keyPath: keyPath]) == .orderedAscending }
     }

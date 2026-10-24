@@ -8,13 +8,14 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopulationImportTests.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGeneticsTests
 //
 //  Verifies importPopulationTable against the bundled ExampleDataset.arapatPopulations
 //  (arapat.csv), and importMicrosatTable (via a PopulationImportLayout-adjacent
 //  GenotypeImportLayout) against ExampleDataset.cornusFamilies (cornus.csv).
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

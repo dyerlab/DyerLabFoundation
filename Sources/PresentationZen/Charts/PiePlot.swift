@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  PiePlot.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 2/17/24.
+//  Created by Rodney Dyer on 2024.02.17.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -20,12 +20,20 @@ import Charts
 /// A pie/donut chart. The `y` role is each slice's magnitude; the `label` role
 /// names the slice (and drives the color scale).
 public struct PiePlot: View {
+    /// The table to plot; bind slice magnitude to `y` and slice name to `label`.
     public var table: DataTable
+    /// An optional title drawn at the chart's center.
     public var title: String
+    /// The donut hole's radius, as a fraction of the outer radius (`0` for a full pie).
     public var innerRadius: Double
+    /// Whether to draw a legend mapping slice names to colors.
     public var showLegend: Bool
+    /// Whether to annotate each slice with its formatted value.
     public var showValues: Bool
+    /// The `String(format:)` pattern used for `showValues` annotations.
     public var valueFormat: String
+    /// An optional explicit slice-name-to-color mapping; slices without an entry fall back to the chart's default
+    /// color scale.
     public var colors: [String: Color]?
 
     /// Creates a pie/donut chart.
@@ -94,6 +102,8 @@ public struct PiePlot: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     PiePlot(DataTable(numbers: ["count": [30, 20, 15, 35]],

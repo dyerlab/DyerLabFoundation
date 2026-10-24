@@ -10,9 +10,6 @@
 //  AMOVA.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/14/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
-//
 //  Domain vocabulary layered onto Matrix's DistanceVarianceDecomposition —
 //  the distance-based random-effects variance decomposition population
 //  genetics calls AMOVA. The computation itself lives in Matrix precisely
@@ -21,11 +18,18 @@
 //  `DistanceVarianceDecompositionResult.varianceRatio` and `AnalysisTag`
 //  (Matrix): the foundation stays domain-neutral, every field picks its own
 //  vocabulary as an extension.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 
+/// Analysis of molecular variance: the population-genetics name for `DistanceVarianceDecomposition`.
 public typealias AMOVA = DistanceVarianceDecomposition
+/// The result of an ``AMOVA``.
 public typealias AMOVAResult = DistanceVarianceDecompositionResult
+/// A progress snapshot from an ``AMOVA`` permutation test.
 public typealias AMOVAPermutationProgress = DistanceVarianceDecompositionProgress
 
 extension AMOVAResult {
@@ -45,6 +49,9 @@ extension AnalysisTag {
     /// Unlike `.amovaPhiST`, this encodes real data (`type`) into the tag's
     /// `rawValue` — different diversity metrics need distinguishable tags,
     /// so a single constant wouldn't do.
+    ///
+    /// - Parameter type: The diversity metric being rarefied.
+    /// - Returns: A tag such as `rarefaction.A`.
     public static func rarefaction(_ type: DiversityType) -> AnalysisTag {
         AnalysisTag("rarefaction.\(type)")
     }

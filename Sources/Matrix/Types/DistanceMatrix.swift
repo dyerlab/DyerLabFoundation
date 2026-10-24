@@ -5,34 +5,14 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  DistanceMatrix.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.13.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Created by Rodney Dyer on 7/13/26.
-//
-
-/// Identifies what a `DistanceMatrix<Kind>` measures and how it's labeled
-/// when exported — see `DataTable(pairwise:)`.
-public protocol PairwiseMeasure {
-    /// Column name used when this measure is exported as one column of a
-    /// combined pairwise table.
-    static var columnName: String { get }
-}
-
-/// Type-erased read access to any `DistanceMatrix<Kind>`, so matrices of
-/// different measures (Φ_ST, great-circle distance, relatedness, genetic
-/// structure, ...) can be joined into one combined export without the join
-/// site needing to know every concrete `Kind` up front. See
-/// `DataTable(pairwise:)`.
-public protocol PairwiseMatrix: Sendable {
-    var groupNames: [String] { get }
-    var columnName: String { get }
-    subscript(_ i: Int, _ j: Int) -> Double { get }
-}
 
 /// A symmetric matrix of a pairwise measure among named groups (typically
 /// strata), stored as its upper triangle.
@@ -65,6 +45,11 @@ public struct DistanceMatrix<Kind: PairwiseMeasure>: PairwiseMatrix, Sendable, E
     }
 
     /// Symmetric read/write access by row/column index; the diagonal always returns 0.
+    ///
+    /// - Parameters:
+    ///   - i: Row index.
+    ///   - j: Column index.
+    /// - Returns: The distance between groups `i` and `j`.
     public subscript(_ i: Int, _ j: Int) -> Double {
         get { storage[i, j] }
         set { storage[i, j] = newValue }
@@ -72,6 +57,9 @@ public struct DistanceMatrix<Kind: PairwiseMeasure>: PairwiseMatrix, Sendable, E
 
     /// Symmetric read access by group name.
     ///
+    /// - Parameters:
+    ///   - name1: The first group's name.
+    ///   - name2: The second group's name.
     /// - Returns: The value, or `nil` if either name isn't in `groupNames`.
     public subscript(_ name1: String, _ name2: String) -> Double? {
         guard let i = groupNames.firstIndex(of: name1), let j = groupNames.firstIndex(of: name2) else { return nil }
@@ -82,6 +70,8 @@ public struct DistanceMatrix<Kind: PairwiseMeasure>: PairwiseMatrix, Sendable, E
     public var columnName: String { Kind.columnName }
 
     /// A dense N×N representation (symmetric, zero diagonal).
+    ///
+    /// - Returns: The distances as nested row arrays.
     public func dense() -> [[Double]] {
         storage.dense()
     }

@@ -17,6 +17,9 @@
 //  network. Ported for numerical identity with the R implementation; see
 //  `~/Coding/gstudio/R/popgraph.R` for the reference.
 //
+//  Created by Rodney Dyer on 2026.08.26.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import Matrix
@@ -56,6 +59,10 @@ public func PopulationGraph(x: Matrix, groups: [String], alpha: Double = 0.05, t
 /// `asymmetry_ci`) which need to look up a re-estimated edge weight by
 /// group pair rather than build a `Graph`.
 ///
+/// - Parameters:
+///   - x: An N×P numeric matrix (N individuals, P variables).
+///   - groups: The population/stratum label for each of `x`'s `N` rows.
+///   - tol: Tolerance for retaining rotated/discriminant variables (default `1.0e-4`).
 /// - Returns: The `K×K` labeled distance matrix (`rowNames`/`colNames` are the
 ///   sorted group names), or `nil` under the same conditions as
 ///   `PopulationGraph(x:groups:alpha:tol:)`.
@@ -67,7 +74,10 @@ func PopulationGraphConditionalDistanceMatrix(x: Matrix, groups: [String], tol: 
 /// `PopulationGraphConditionalDistanceMatrix(x:groups:tol:)` — a direct port
 /// of gstudio's `popgraph()` up to (and including) its `alpha`-threshold step,
 /// stopping short of building the `Graph`.
-private func popgraphCore(x: Matrix, groups: [String], alpha: Double, tol: Double) -> (D: Matrix, sortedGroups: [String], nodeSize: [Int: Double])? {
+private func popgraphCore(x: Matrix,
+                          groups: [String],
+                          alpha: Double,
+                          tol: Double) -> (D: Matrix, sortedGroups: [String], nodeSize: [Int: Double])? {
     precondition(groups.count == x.rows, "groups must have one label per row of x")
 
     let N = Double(groups.count)
@@ -75,7 +85,7 @@ private func popgraphCore(x: Matrix, groups: [String], alpha: Double, tol: Doubl
     let K = sortedGroups.count
     let counts = sortedGroups.map { group in Double(groups.filter { $0 == group }.count) }
     let priors = counts.map { $0 / N }
-    let critVal = ChiSquareQuantileOneDF(1.0 - alpha)
+    let critVal = chiSquareQuantileOneDF(1.0 - alpha)
 
     // mv <- pcfit$x[, pcfit$sdev > tol]
     guard let pcfit = PRComp(x) else { return nil }

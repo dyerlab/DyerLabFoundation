@@ -10,12 +10,14 @@
 //  AMOVA+GeneticDistance.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 extension AMOVA {
     /// Builds an AMOVA directly from a genetic distance matrix.
+    ///
+    /// - Parameter distance: Pairwise squared genetic distances among individuals.
     public init(distance: GeneticDistanceMatrix) {
         self.init(squaredDistances: distance.dense())
     }

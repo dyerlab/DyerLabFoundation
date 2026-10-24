@@ -7,13 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataTable+Transforms.swift
+//  PresentationZen
 //
 //  Data shaping expressed as DataTable -> DataTable operations, so the charts
 //  stay dumb renderers. Numeric binning delegates to `Vector` in the Matrix
 //  target; the table layer only handles role plumbing.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -25,8 +27,11 @@ import TabularData
 /// Replaces the legacy `BoxPlotPoint`.
 public struct BoxSummary: Identifiable, Hashable, Sendable {
     public var id: String { category }
+    /// The category name; also this instance's `id`.
     public let category: String
+    /// The category's median value.
     public let median: Double
+    /// The category's standard deviation.
     public let sd: Double
 
     /// Creates a box summary.
@@ -185,6 +190,8 @@ public extension DataTable {
 private extension DataTable {
     /// An empty table that still carries `x`/`y` roles, so downstream charts
     /// resolve to zero rows instead of crashing on a missing role.
+    ///
+    /// - Returns: A zero-row table with `x` and `y` columns bound to their roles.
     static func emptyXY() -> DataTable {
         DataTable(numbers: ["x": [], "y": []], roles: [.x: "x", .y: "y"])
     }

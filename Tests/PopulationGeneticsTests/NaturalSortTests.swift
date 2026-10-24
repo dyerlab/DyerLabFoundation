@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  NaturalSortTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Rodney Dyer on 7/13/26.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

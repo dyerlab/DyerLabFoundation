@@ -7,9 +7,13 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  StringNaturalSortTests.swift
+//  MatrixTests
 //
 //  Ported from PopulationGenetics' NaturalSortTests.swift.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

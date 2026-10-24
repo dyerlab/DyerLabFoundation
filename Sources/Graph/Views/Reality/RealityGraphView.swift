@@ -1,6 +1,3 @@
-//
-//  RealityGraphView.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  RealityGraphView.swift
+//  Graph
 //
 //  RealityKit-based graph visualization, the long-term replacement for
 //  GraphCanvasView across iOS/macOS/visionOS (GraphCanvasView is not removed
@@ -18,6 +16,9 @@
 //  project note). Two-step design: LayoutOrchestrator computes a headless
 //  precompute layout (unmodified, no rendering dependency), then this view
 //  hands live rendering/interaction to RealityKit's own physics.
+//
+//  Created by Rodney Dyer on 2026.08.09.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Combine
@@ -144,7 +145,9 @@ public struct RealityGraphView: View {
         if options.showPrecomputeAnimation {
             RealityGraphEntityBuilder.syncPositions(nodeEntities, from: orchestrator.state)
         }
-        RealityGraphEntityBuilder.syncEdgeTransforms(edgeEntities, graph: orchestrator.graph, nodeEntities: nodeEntities)
+        RealityGraphEntityBuilder.syncEdgeTransforms(edgeEntities,
+                                                     graph: orchestrator.graph,
+                                                     nodeEntities: nodeEntities)
 
         if orchestrator.isSettled {
             if !options.showPrecomputeAnimation {

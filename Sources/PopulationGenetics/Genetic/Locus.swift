@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Locus.swift
+//  PopulationGenetics
 //
-//
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -70,7 +71,6 @@ public struct Locus: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
-
 extension Locus: Comparable {
 
     /// Compares two loci for sorting purposes.
@@ -101,6 +101,6 @@ extension Locus: Equatable {
     ///   - rhs: The right-hand locus.
     /// - Returns: `true` if both loci have the same UUID.
     public static func == (lhs: Locus, rhs: Locus) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }

@@ -1,9 +1,20 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  GraphResultsLogPersistenceTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Round-trip tests for the `.graph`, `.results`, and `.log` components
 //  layered onto a ProjectStore file.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import CoreLocation
@@ -27,7 +38,10 @@ struct GraphResultsLogPersistenceTests {
 
     private func makeGraph() -> Graph {
         let g = Graph()
-        g.addNode(name: "A", size: 1.0, color: .red, coordinate: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4))
+        g.addNode(name: "A",
+                  size: 1.0,
+                  color: .red,
+                  coordinate: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4))
         g.addNode(name: "B", size: 2.0, color: .blue)
         g.addNode(name: "C", size: 3.0, color: .green)
         g.addEdge(from: "A", to: "B", weight: 4.2, symmetric: false)
@@ -56,13 +70,14 @@ struct GraphResultsLogPersistenceTests {
         let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
+        let reloadedGraph = dataset.makeGraph()
         await reader.close()
 
-        #expect(dataset.graph.nodes.count == original.nodes.count)
-        #expect(dataset.graph.edges.count == original.edges.count)
+        #expect(reloadedGraph.nodes.count == original.nodes.count)
+        #expect(reloadedGraph.edges.count == original.edges.count)
 
         for node in original.nodes {
-            let reloaded = dataset.graph.node(id: node.id)
+            let reloaded = reloadedGraph.node(id: node.id)
             #expect(reloaded != nil)
             #expect(reloaded?.name == node.name)
             #expect(reloaded?.size == node.size)
@@ -71,7 +86,7 @@ struct GraphResultsLogPersistenceTests {
         }
 
         for edge in original.edges {
-            let reloaded = dataset.graph.edges.first(where: { $0.id == edge.id })
+            let reloaded = reloadedGraph.edges.first(where: { $0.id == edge.id })
             #expect(reloaded != nil)
             #expect(reloaded?.fromNode == edge.fromNode)
             #expect(reloaded?.toNode == edge.toNode)
@@ -107,6 +122,7 @@ struct GraphResultsLogPersistenceTests {
         let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
+        let reloadedGraph = dataset.makeGraph()
         await reader.close()
 
         let reloadedStrata = dataset.nodeStrata[nodeA.id] ?? []
@@ -118,7 +134,7 @@ struct GraphResultsLogPersistenceTests {
         #expect(dataset.nodeValues[nodeA.id]?.first?.kind == .extrinsic)
         #expect(dataset.nodeValues[nodeB.id] == nil)
 
-        let reloadedEdgeAB = dataset.graph.edges.first(where: { $0.id == edgeAB.id })!
+        let reloadedEdgeAB = reloadedGraph.edges.first(where: { $0.id == edgeAB.id })!
         #expect(dataset.edgeValues[reloadedEdgeAB.id]?.first?.name == "bootstrap_support")
         #expect(dataset.edgeValues[reloadedEdgeAB.id]?.first?.kind == .intrinsic)
 
@@ -177,11 +193,12 @@ struct GraphResultsLogPersistenceTests {
         let reader = ProjectStore()
         try await reader.open(at: url, mode: .readOnly)
         let dataset = try await reader.readGraph()
+        let reloadedGraph = dataset.makeGraph()
         await reader.close()
 
-        #expect(dataset.graph.nodes.count == 1)
-        #expect(dataset.graph.nodes.first?.name == "solo")
-        #expect(dataset.graph.edges.isEmpty)
+        #expect(reloadedGraph.nodes.count == 1)
+        #expect(reloadedGraph.nodes.first?.name == "solo")
+        #expect(reloadedGraph.edges.isEmpty)
     }
 
     // MARK: - Results / images

@@ -1,8 +1,17 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  ContigMap.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/25/25.
+//  Created by Rodney Dyer on 2025.06.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -17,7 +26,7 @@ struct ContigMap: View {
 
     private var scaleMin: Double {
         if let locus = loci.first {
-            return Double( locus.location )
+            return Double(locus.location)
         } else {
             return 0.0
         }
@@ -25,7 +34,7 @@ struct ContigMap: View {
 
     private var scaleMax: Double {
         if let locus = loci.last {
-            return Double( locus.location )
+            return Double(locus.location)
         } else {
             return 1.0
         }
@@ -35,13 +44,15 @@ struct ContigMap: View {
         VStack {
             Spacer()
 
-
         }
     }
 }
 
 #if DEBUG
+
+// MARK: - Previews
+
 #Preview {
-    ContigMap( loci: PopulationGeneticsPreviewData.exampleLoci )
+    ContigMap(loci: PopulationGeneticsPreviewData.exampleLoci)
 }
 #endif

@@ -16,6 +16,9 @@
 //  parentage vs. non-parentage, SNP vs. microsatellite, graph-only vs.
 //  genetic-data) without paying for `readDataset()`.
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 
@@ -24,6 +27,9 @@ extension ProjectStore {
     /// Reads the file's `meta`-table classification: project identity
     /// (always present), plus whichever component classifications are
     /// available given what this file was created with.
+    ///
+    /// - Returns: The project's identity and per-component classification.
+    /// - Throws: ``PersistenceError/notOpen`` or ``PersistenceError/sqliteError(code:message:)``.
     public func readSummary() async throws -> DatasetSummary {
         let connection = try requireConnection()
         var values: [String: String] = [:]

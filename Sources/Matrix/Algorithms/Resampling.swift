@@ -5,14 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  Resampling.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/14/26.
+//  Matrix
 //
 //  Two shared resampling engines behind any "observed value vs. an
 //  empirical null/comparison distribution" analysis. Both are closure-based
@@ -24,11 +20,14 @@
 //  engines stay ignorant of that, deliberately, since only the caller knows
 //  the relationship between its own units and its statistic.
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 /// Namespace for the two shared resampling engines. A caseless enum rather
 /// than top-level functions: `Matrix` is both this package's module name
 /// and a type it exports (`Matrices/Matrix.swift`), so an unqualified
-/// top-level `permutationTest` would be unreachable-by-qualification from
+/// top-level `PermutationTest` would be unreachable-by-qualification from
 /// call sites that also define their own same-named method (as
 /// `DistanceVarianceDecomposition.permutationTest` does) — there'd be no
 /// way to write `Matrix.permutationTest(...)` to disambiguate, since that

@@ -7,7 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Rodney Dyer on 7/4/26.
+//  ANOVATableTests.swift
+//  PresentationZenTests
+//
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -72,7 +75,7 @@ struct ANOVATableTests {
         let table = DataTable(numbers: ["v": (0..<5).map { Double($0) * 2.0 }],
                               dates: ["d": (0..<5).map { base.addingTimeInterval(Double($0) * 86_400) }],
                               roles: [.x: "d", .y: "v"])
-        let result = try #require(dateRegression(table))
+        let result = try #require(DateRegression(table))
         let anova = try #require(anovaTable(result))
 
         #expect(anova.stringColumn("source") == ["Model", "Residual", "Total"])
@@ -88,7 +91,7 @@ struct ANOVATableTests {
     @Test("PermutationTestResult overload adds a p column, NaN off the Model row")
     func permutationOverloadAddsPColumn() throws {
         let X = Matrix.DesignMatrix(strata: ["A", "A", "A", "B", "B"])
-        let result = try #require(permutationTest(designMatrix: X, response: [1, 2, 3, 10, 12], permutations: 99))
+        let result = try #require(PermutationTest(designMatrix: X, response: [1, 2, 3, 10, 12], permutations: 99))
 
         let anova = anovaTable(result)
         #expect(anova.stringColumn("source") == ["Model", "Residual", "Total"])
@@ -101,7 +104,7 @@ struct ANOVATableTests {
     @Test("nullDistributionTable has one row per permutation with a y-bound msA column")
     func nullDistributionTableShape() throws {
         let X = Matrix.DesignMatrix(strata: ["A", "A", "A", "B", "B"])
-        let result = try #require(permutationTest(designMatrix: X, response: [1, 2, 3, 10, 12], permutations: 99))
+        let result = try #require(PermutationTest(designMatrix: X, response: [1, 2, 3, 10, 12], permutations: 99))
 
         let table = nullDistributionTable(result)
         #expect(table.rowCount == 99)

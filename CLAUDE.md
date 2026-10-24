@@ -6,16 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Use Xcode's toolchain — Command Line Tools lacks Swift Testing and SwiftData macros
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift build
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter MatrixTests
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test --filter GraphTests
-env DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift package resolve
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter MatrixTests
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --filter GraphTests
+env DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift package resolve
 ```
 
-Alternatively: `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` once, then plain `swift build` / `swift test`.
+Alternatively: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once, then plain `swift build` / `swift test`.
 
-This path has moved before (was `/Users/rodney/Downloads/Xcode-beta.app` as of 2026-08-xx; back to `/Applications/Xcode-beta.app` as of 2026-08-31) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
+This path has moved before (was `/Users/rodney/Downloads/Xcode-beta.app` as of 2026-08-xx; back to `/Applications/Xcode-beta.app` as of 2026-08-31; Xcode-beta gone and release `/Applications/Xcode.app` used as of 2026-10-23) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
 
 ## Architecture
 
@@ -163,16 +163,36 @@ and checking the diagnostics file was empty). There is no `swift-docc-plugin` de
 only needed for CLI-driven `swift package generate-documentation`/hosting; Xcode's own "Build Documentation" and
 the `xcrun docc convert` verification method above don't need it.
 
-A pre-existing, unrelated issue surfaced during that verification: six DocC symbol-link warnings in
-`PresentationZen/Analyses/{anovaTable,RegressionResult,DateRegression,hypergeometricScenarios}.swift`'s doc
-comments (references to `LinearModelFit`/`PermutationTestResult`/`hypergeometricProbability` that don't resolve).
-Not touched as of 2026-07-15 — flagged for a future pass.
+All five catalogs convert with zero diagnostics as of 2026-10-23 (the six old `PresentationZen/Analyses` link
+warnings are gone). To re-verify: `swift package dump-symbol-graph --minimum-access-level public`, copy
+`.build/out/symbolgraph/<Target>.symbols.json` plus its `<Target>@*.symbols.json` extension graphs into a
+per-target directory, then `xcrun docc convert Sources/<Target>/<Target>.docc --additional-symbol-graph-dir <dir>
+--diagnostics-file <file>`.
 
 ### Design document
 
 `DyerLabFoundation-Consolidation.md` in the repo root is the original design brief — read it before making structural changes to targets or the Package.swift manifest.
 
 ### Downstream consumers
+
+**Swift Coding Protocol compliance pass (2026-10-23)** — the package was brought in line with the "Swift Coding
+Protocol" note (Bear). That pass included these source-breaking renames, which every consumer must absorb:
+- Matrix: `permutationTest(designMatrix:response:permutations:)` → `PermutationTest(...)` (the
+  `Resampling`/`DistanceVarianceDecomposition` methods named `permutationTest` are unchanged);
+  `StandardNormalQuantile`/`ChiSquareQuantileOneDF`/`EmpiricalQuantile` → lowerCamelCase.
+- PresentationZen: `dateRegression` → `DateRegression`; `LoadFromAsset`/`DistanceBetween` → `loadFromAsset`/
+  `distanceBetween`.
+- PopulationGenetics: `rarefaction`/`genotypicRarefaction`/`allelicRarefaction`/`pairwisePhiST` → UpperCamelCase;
+  `GenotypePlaccard` → `GenotypePlacard`; the `leftLingage:` label → `leftLineage:`.
+- `PopulationGraphDataset.graph` is now a `Sendable` `GraphSnapshot` (Graph) instead of a live `Graph` — call
+  `dataset.makeGraph()`. `ProjectStore.writeGraph` still accepts a `Graph` through a `nonisolated` overload that
+  snapshots it on the caller's actor. `Graph`/`Node`/`Edge` deliberately stay non-`Sendable` reference types;
+  `GraphSnapshot` is the boundary type, just as `Data` is for `Matrix`.
+- `PopulationGeneticsPreviewData` is now `@MainActor`.
+- `MapView` (Graph) gained a public `init(graph:lineWidth:nodeScaling:)`. Before this it had no public
+  initializer and couldn't be constructed outside the module.
+
+Linguistics (Matrix + PresentationZen) is affected by the Matrix and PresentationZen renames above.
 
 - **PopulationGenetics** — no longer a separate downstream consumer; folded into this repo as of 2026-07-14 (see above). The standalone `github.com/dyerlab/PopulationGenetics` repo is legacy.
 - **Linguistics** — uses `Matrix` + `PresentationZen`; resolves `dyerlabfoundation` off `branch: "main"`, not a version tag. Migration to consume newer foundation APIs deferred, but a broken `main` here breaks this too — land nontrivial foundation changes on a feature branch and verify against real downstream consumers before merging. The platform-floor bump to iOS 18/macOS 15/visionOS 2 for `RealityGraphView` (2026-08-09) raises this for the *whole package*, including `Matrix`/`PresentationZen` — Linguistics tracks `main` directly, so it inherits this floor immediately with no opt-out. Confirmed compatible across all downstream artifacts/projects (2026-08-09) — sole-developer setup, verified directly rather than through a feature-branch check.

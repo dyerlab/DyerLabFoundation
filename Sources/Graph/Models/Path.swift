@@ -1,6 +1,3 @@
-//  
-//  Path.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,9 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Path.swift
+//  Graph
 //
-//  Created by Rodney Dyer on 5/21/25.
+//  Created by Rodney Dyer on 2025.05.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -47,23 +46,28 @@ public struct Path: Identifiable, Hashable, CustomStringConvertible {
 
     /// Total distance along the path (sum of edge weights).
     public var distance: Double
-    
-    public init(source: Node, destination: Node ) {
+
+    /// Creates an empty path between two nodes, with no sequence and zero distance.
+    ///
+    /// - Parameters:
+    ///   - source: The starting node.
+    ///   - destination: The ending node.
+    public init(source: Node, destination: Node) {
         self.id = UUID()
         self.source = source
         self.destination = destination
         self.sequence = []
         self.distance = 0.0
     }
-    
+
     public static func == (lhs: Path, rhs: Path) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     public var description: String {
         var ret = "\(source.name) -> \(destination.name); dist=\(distance); path = "
         for node in sequence {
@@ -75,5 +79,5 @@ public struct Path: Identifiable, Hashable, CustomStringConvertible {
         }
         return ret
     }
-    
+
 }

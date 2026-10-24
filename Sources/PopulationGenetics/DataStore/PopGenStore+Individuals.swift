@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopGenStore+Individuals.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -20,6 +21,8 @@ import Foundation
 public extension PopGenStore {
 
     /// Fetches all individuals from the store, sorted naturally by name.
+    ///
+    /// - Returns: Every individual, in natural name order.
     func fetchIndividuals() -> [Individual] {
         individuals.naturalSorted(by: \.name)
     }
@@ -52,6 +55,9 @@ public extension PopGenStore {
     }
 
     /// Retrieves a specific individual by their unique identifier.
+    ///
+    /// - Parameter id: The individual's identifier.
+    /// - Returns: The individual, or `nil` if it isn't in this store.
     func getIndividual(id: UUID) -> Individual? {
         guard let ordinal = individualOrdinal[id] else { return nil }
         return individuals[ordinal]
@@ -62,6 +68,8 @@ public extension PopGenStore {
     /// No-op if `individual.id` isn't already present — this replaces metadata
     /// at an existing ordinal, it does not insert a new row (use `addIndividual`
     /// for that, since a new row requires extending every locus's columns).
+    ///
+    /// - Parameter individual: The updated individual, matched by `id`.
     func updateIndividual(_ individual: Individual) {
         guard let ordinal = individualOrdinal[individual.id] else { return }
         individuals[ordinal] = individual
@@ -71,6 +79,8 @@ public extension PopGenStore {
     ///
     /// O(locusCount + individualCount): removes this individual's row from every
     /// locus's columns and rebuilds the ordinal index for the individuals that shift.
+    ///
+    /// - Parameter id: The individual's identifier; an unknown id does nothing.
     func deleteIndividual(id: UUID) {
         guard let ordinal = individualOrdinal[id] else { return }
 

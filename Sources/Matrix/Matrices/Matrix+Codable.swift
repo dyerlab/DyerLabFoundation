@@ -5,10 +5,12 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
+//  Matrix+Codable.swift
+//  Matrix
 //
-//  Created by Rodney Dyer on 4/23/26.
+//  Created by Rodney Dyer on 2026.04.23.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -25,6 +27,9 @@ extension Matrix: Codable {
     }
 
     /// Encodes the matrix as a flat `[Double]` array plus row and column name arrays.
+    ///
+    /// - Parameter encoder: The encoder to write to.
+    /// - Throws: Any error the encoder's keyed container throws.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(Array(values), forKey: .values)
@@ -33,6 +38,9 @@ extension Matrix: Codable {
     }
 
     /// Reconstructs a matrix from its flat value array and dimension names.
+    ///
+    /// - Parameter decoder: The decoder to read from.
+    /// - Throws: `DecodingError` if a key is missing or holds the wrong type.
     public convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let decodedValues   = try container.decode([Double].self,   forKey: .values)
@@ -44,7 +52,6 @@ extension Matrix: Codable {
     }
 
 }
-
 
 // MARK: - Nested-array helpers
 

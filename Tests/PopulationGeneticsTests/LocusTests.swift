@@ -7,23 +7,23 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  LocusTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Claude Code on 1/13/26.
+//  Created by Rodney Dyer on 2026.01.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
 import Matrix
 @testable import PopulationGenetics
 
+@MainActor
 struct LocusTests {
 
     // MARK: - Initialization Tests
 
-    @Test func testLocusInitialization() async throws {
+    @Test func locusInitialization() async throws {
         let locus = Locus(name: "TestLocus", location: 12345, contig: "2")
 
         #expect(locus.name == "TestLocus")
@@ -32,7 +32,7 @@ struct LocusTests {
         #expect(locus.alleleProvenance == .observed)
     }
 
-    @Test func testLocusInitializationWithDefaults() async throws {
+    @Test func locusInitializationWithDefaults() async throws {
         let locus = Locus(name: "TestLocus")
 
         #expect(locus.name == "TestLocus")
@@ -40,7 +40,7 @@ struct LocusTests {
         #expect(locus.contig == "")
     }
 
-    @Test func testLocusInitializationWithRefAltPlaceholderProvenance() async throws {
+    @Test func locusInitializationWithRefAltPlaceholderProvenance() async throws {
         let locus = Locus(name: "SNP_1", contig: "dDocent_Contig_16", alleleProvenance: .refAltPlaceholder)
 
         #expect(locus.alleleProvenance == .refAltPlaceholder)
@@ -48,7 +48,7 @@ struct LocusTests {
 
     // MARK: - Genotype Frequencies Tests (via DataStore)
 
-    @Test func testGenotypeFrequenciesProperty() async throws {
+    @Test func genotypeFrequenciesProperty() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let locus = dataStore.getLocus(named: "LTRS")
@@ -61,7 +61,7 @@ struct LocusTests {
         #expect(!frequencies.alleles.isEmpty)
     }
 
-    @Test func testGenotypeFrequenciesWithMultipleAlleles() async throws {
+    @Test func genotypeFrequenciesWithMultipleAlleles() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let locus = dataStore.getLocus(named: "MP20")
@@ -76,7 +76,7 @@ struct LocusTests {
 
     // MARK: - Sorting Tests
 
-    @Test func testLocusSortingByContig() async throws {
+    @Test func locusSortingByContig() async throws {
         let locus1 = Locus(name: "Locus1", location: 100, contig: "1")
         let locus2 = Locus(name: "Locus2", location: 200, contig: "2")
 
@@ -84,7 +84,7 @@ struct LocusTests {
         #expect(!(locus2 < locus1))
     }
 
-    @Test func testLocusSortingByLocation() async throws {
+    @Test func locusSortingByLocation() async throws {
         let locus1 = Locus(name: "Locus1", location: 100, contig: "1")
         let locus2 = Locus(name: "Locus2", location: 200, contig: "1")
 
@@ -92,7 +92,7 @@ struct LocusTests {
         #expect(!(locus2 < locus1))
     }
 
-    @Test func testLocusSortingPrioritizesContig() async throws {
+    @Test func locusSortingPrioritizesContig() async throws {
         let locus1 = Locus(name: "Locus1", location: 300, contig: "1")
         let locus2 = Locus(name: "Locus2", location: 100, contig: "2")
 
@@ -100,7 +100,7 @@ struct LocusTests {
         #expect(locus1 < locus2)
     }
 
-    @Test func testLocusArraySorting() async throws {
+    @Test func locusArraySorting() async throws {
         let locus1 = Locus(name: "C", location: 300, contig: "2")
         let locus2 = Locus(name: "A", location: 100, contig: "1")
         let locus3 = Locus(name: "B", location: 200, contig: "1")
@@ -112,7 +112,7 @@ struct LocusTests {
         #expect(sorted[2] == locus1) // contig 2, location 300
     }
 
-    @Test func testLocusArraySortingUsesNaturalNotLexicographicContigOrder() async throws {
+    @Test func locusArraySortingUsesNaturalNotLexicographicContigOrder() async throws {
         // Real contig names from ExampleData/phylog.012.pos. Plain lexicographic string
         // comparison would order these "Contig_105" < "Contig_16" < "Contig_2" <
         // "Contig_9" (comparing character-by-character); natural sort must not.
@@ -128,7 +128,7 @@ struct LocusTests {
 
     // MARK: - Equality Tests
 
-    @Test func testLocusEquality() async throws {
+    @Test func locusEquality() async throws {
         let locus1 = Locus(name: "TestLocus")
         let locus2 = Locus(name: "TestLocus")
 
@@ -136,7 +136,7 @@ struct LocusTests {
         #expect(locus1 != locus2)
     }
 
-    @Test func testLocusSelfEquality() async throws {
+    @Test func locusSelfEquality() async throws {
         let locus = Locus(name: "TestLocus")
 
         #expect(locus == locus)
@@ -144,7 +144,7 @@ struct LocusTests {
 
     // MARK: - Integration Tests with Real Data
 
-    @Test func testRealDataLocusHasGenotypes() async throws {
+    @Test func realDataLocusHasGenotypes() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let loci = dataStore.getAllLoci()
@@ -156,7 +156,7 @@ struct LocusTests {
         }
     }
 
-    @Test func testRealDataLocusSorting() async throws {
+    @Test func realDataLocusSorting() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let loci = dataStore.getAllLoci()
@@ -177,7 +177,7 @@ struct LocusTests {
         }
     }
 
-    @Test func testRealDataLocusFrequencies() async throws {
+    @Test func realDataLocusFrequencies() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let loci = dataStore.getAllLoci()
@@ -196,7 +196,7 @@ struct LocusTests {
         }
     }
 
-    @Test func testLocusWithNoGenotypes() async throws {
+    @Test func locusWithNoGenotypes() async throws {
         let store = PopGenStore()
         let locus = store.addLocus(name: "EmptyLocus")
 

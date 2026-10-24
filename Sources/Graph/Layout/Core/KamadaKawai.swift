@@ -1,34 +1,23 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  KamadaKawai.swift
-//  DyerLabFoundation
+//  Graph
 //
 //  Kamada–Kawai stress layout, ported from igraph's igraph_layout_kamada_kawai().
+//
+//  Created by Rodney Dyer on 2026.10.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
 import Foundation
-
-/// How edge weights become the graph-theoretic distances Kamada–Kawai tries to
-/// reproduce as Euclidean distances.
-public enum KamadaKawaiWeighting: Sendable, Equatable {
-    /// Every edge has length 1, so distances are hop counts.
-    case unweighted
-
-    /// Edge weights are used as edge lengths as-is.
-    case edgeWeights
-
-    /// Edge weights plus `medianFraction × median(weight)`, which is what
-    /// gstudio's `.layout_function("kk")` passes to `igraph::layout_with_kk()`.
-    /// The floor stops near-zero genetic distances from collapsing nodes onto
-    /// each other. `0.25` matches gstudio.
-    case flooredEdgeWeights(medianFraction: Double = 0.25)
-}
-
-/// Errors thrown while setting up a Kamada–Kawai layout.
-public enum KamadaKawaiError: Error, Equatable {
-    /// igraph requires strictly positive edge lengths.
-    case nonPositiveWeight(Double)
-}
 
 /// Kamada–Kawai layout solver: a line-for-line port of igraph's 2D
 /// `igraph_layout_kamada_kawai()`, which R's `igraph::layout_with_kk()` calls,
@@ -180,6 +169,13 @@ public struct KamadaKawaiSolver: Sendable {
     /// Creates a solver for `graph`, deriving distances from its undirected
     /// edge weights.
     ///
+    /// - Parameters:
+    ///   - graph: The graph to lay out.
+    ///   - weighting: How edge weights become spring lengths.
+    ///   - initial: Starting positions; `nil` uses igraph's circle.
+    ///   - maxIterations: Move budget; `nil` uses `50·n`.
+    ///   - epsilon: Early-stop threshold on the squared gradient.
+    ///   - kkconst: Spring constant; `nil` uses `max(n, 1)`.
     /// - Throws: ``KamadaKawaiError/nonPositiveWeight(_:)`` if a resulting edge
     ///   length is zero or negative.
     public init(graph: Graph,
@@ -194,11 +190,19 @@ public struct KamadaKawaiSolver: Sendable {
     }
 
     /// Current position of one node.
+    ///
+    /// - Parameter node: The node's index.
+    /// - Returns: The node's position in layout units.
     public func position(_ node: Int) -> SIMD2<Double> {
         SIMD2(x[node], y[node])
     }
 
     /// Spring rest length between two nodes, in layout units.
+    ///
+    /// - Parameters:
+    ///   - i: The first node's index.
+    ///   - j: The second node's index.
+    /// - Returns: The rest length.
     public func idealLength(_ i: Int, _ j: Int) -> Double {
         lij[i * nodeCount + j]
     }
@@ -276,6 +280,10 @@ public struct KamadaKawaiSolver: Sendable {
 
     /// Moves a node directly, keeping the gradients consistent. Used to follow
     /// a node being dragged.
+    ///
+    /// - Parameters:
+    ///   - node: The node's index; out-of-range indices are ignored.
+    ///   - position: The new position.
     public mutating func move(_ node: Int, to position: SIMD2<Double>) {
         guard node >= 0, node < nodeCount, position != SIMD2(x[node], y[node]) else { return }
         relocate(node, to: position)
@@ -283,6 +291,8 @@ public struct KamadaKawaiSolver: Sendable {
 
     /// Grants a fresh move budget, continuing from the current positions
     /// (igraph's `use_seed = true`).
+    ///
+    /// - Parameter moves: The new budget; `nil` uses `50·n`.
     public mutating func extendBudget(_ moves: Int? = nil) {
         iteration = 0
         maxIterations = moves ?? 50 * nodeCount
@@ -327,6 +337,13 @@ public extension Graph {
     ///
     /// With the default ``KamadaKawaiWeighting/flooredEdgeWeights(medianFraction:)``
     /// this matches gstudio's `layout = "kk"`.
+    ///
+    /// - Parameters:
+    ///   - weighting: How edge weights become spring lengths.
+    ///   - initial: Starting positions; `nil` uses igraph's circle.
+    ///   - maxIterations: Move budget; `nil` uses `50·n`.
+    /// - Returns: One position per node.
+    /// - Throws: ``KamadaKawaiError/nonPositiveWeight(_:)`` if an edge length is zero or negative.
     func kamadaKawaiLayout(weighting: KamadaKawaiWeighting = .flooredEdgeWeights(),
                            initial: [SIMD2<Double>]? = nil,
                            maxIterations: Int? = nil) throws -> [SIMD2<Double>] {
@@ -337,6 +354,10 @@ public extension Graph {
     }
 
     /// All-pairs shortest-path distances under a Kamada–Kawai weighting.
+    ///
+    /// - Parameter weighting: How edge weights become spring lengths.
+    /// - Returns: An `n × n` distance matrix in node order.
+    /// - Throws: ``KamadaKawaiError/nonPositiveWeight(_:)`` if an edge length is zero or negative.
     internal func kamadaKawaiDistances(weighting: KamadaKawaiWeighting) throws -> Matrix {
         let edgeList = undirectedEdgeList()
         let lengths: [Double]

@@ -10,8 +10,8 @@
 //  GeneticDistanceMatrix.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -64,7 +64,7 @@ public struct GeneticDistanceMatrix: Sendable, Equatable {
 
     /// Extracts the distances among an arbitrary subset of individuals into a
     /// new, smaller matrix — e.g. pulling out just the individuals belonging
-    /// to a pair of strata for pairwise Φ_ST (see `pairwisePhiST`), without
+    /// to a pair of strata for pairwise Φ_ST (see `PairwisePhiST`), without
     /// recomputing anything from genotypes. Storage is a packed upper
     /// triangle addressed by computed offset, so `indices` need not be
     /// contiguous or sorted — a scattered gather costs the same as a
@@ -81,6 +81,8 @@ public struct GeneticDistanceMatrix: Sendable, Equatable {
     }
 
     /// A dense N×N representation (symmetric, zero diagonal), e.g. for AMOVA.
+    ///
+    /// - Returns: The distances as nested row arrays.
     public func dense() -> [[Double]] {
         storage.dense()
     }

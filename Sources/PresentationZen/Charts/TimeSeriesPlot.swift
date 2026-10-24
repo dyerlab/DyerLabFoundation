@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  TimeSeriesPlot.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 2024-04-03.
+//  Created by Rodney Dyer on 2024.04.03.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -23,11 +23,17 @@ import SwiftUI
 /// temporal axis, a numeric column renders an ordinal one. Binding a `series`
 /// role with two or more groups colors the points and shows a legend.
 public struct TimeSeriesPlot: View {
+    /// The table to plot; bind a date or numeric `x` role and a quantitative `y` role (and optionally `series`).
     public var table: DataTable
+    /// The y-axis title.
     public var yLabel: String
+    /// The x-axis title; when empty, inferred from `table`'s `x` column kind ("Date" or "Ordinal").
     public var xLabel: String
+    /// The point color when no `series` role is bound (or only one group).
     public var soloColor: Color
+    /// The dashed connecting-line color.
     public var lineColor: Color
+    /// Whether to draw y-axis tick marks and labels.
     public var yAxisTicksVisible: Bool
 
     /// Creates a time series plot.
@@ -127,6 +133,8 @@ public struct TimeSeriesPlot: View {
             }
     }
 }
+
+// MARK: - Previews
 
 #Preview("Date") {
     TimeSeriesPlot(.sampleTemporal, yLabel: "Y-Axis Data")

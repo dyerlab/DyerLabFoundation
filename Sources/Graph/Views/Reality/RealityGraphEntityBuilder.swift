@@ -1,6 +1,3 @@
-//
-//  RealityGraphEntityBuilder.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,13 +7,17 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  RealityGraphEntityBuilder.swift
+//  Graph
 //
 //  Platform-agnostic RealityKit entity construction shared by RealityGraphView's
 //  visionOS and iOS/macOS variants. Nothing here depends on which RealityView
 //  content type is hosting these entities — only entity/component/scene-graph
 //  APIs, which are identical across platforms; the platform split lives entirely
 //  in RealityGraphView itself.
+//
+//  Created by Rodney Dyer on 2026.08.09.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import RealityKit
@@ -40,6 +41,11 @@ enum RealityGraphEntityBuilder {
     /// Creates one `ModelEntity` per `graph.nodes` entry (same order — callers
     /// pair these up with `Graph.nodeIndices()` for edge wiring), sized/colored
     /// from each `Node`, with no physics or interaction components yet.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph whose nodes to build.
+    ///   - options: Supplies the node size multiplier.
+    /// - Returns: One entity per node, in node order.
     static func makeNodeEntities(for graph: Graph, options: RealityGraphOptions) -> [Entity] {
         graph.nodes.map { node in
             let radius = max(Float(node.size * options.nodeSizeMultiplier), 0.001)
@@ -54,6 +60,10 @@ enum RealityGraphEntityBuilder {
 
     /// Positions each node entity from `LayoutState.positions` — the precompute-phase
     /// visual, before physics takes ownership of position.
+    ///
+    /// - Parameters:
+    ///   - entities: Node entities, in node order.
+    ///   - state: The layout whose positions to copy.
     static func syncPositions(_ entities: [Entity], from state: LayoutState) {
         for index in entities.indices where index < state.positions.count {
             entities[index].position = state.positions[index]
@@ -64,6 +74,11 @@ enum RealityGraphEntityBuilder {
     /// order — pair with `syncEdgeTransforms` using this same array). RealityKit
     /// has no built-in line primitive, so edges need actual mesh geometry, unlike
     /// `GraphCanvasView`'s cheap immediate-mode line drawing.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph whose edges to build.
+    ///   - options: Supplies the edge thickness.
+    /// - Returns: One entity per edge, in edge order.
     static func makeEdgeEntities(for graph: Graph, options: RealityGraphOptions) -> [Entity] {
         let material = SimpleMaterial(color: platformColor(from: .gray), isMetallic: false)
         return graph.edges.map { _ in
@@ -75,6 +90,11 @@ enum RealityGraphEntityBuilder {
     /// Repositions/reorients each edge entity between its two node entities.
     /// `edgeEntities` and `graph.edges` must be the same length and order (as
     /// produced by a corresponding entity-creation pass, not built here).
+    ///
+    /// - Parameters:
+    ///   - edgeEntities: Edge entities, in edge order.
+    ///   - graph: The graph the entities were built from.
+    ///   - nodeEntities: Node entities, in node order.
     static func syncEdgeTransforms(_ edgeEntities: [Entity], graph: Graph, nodeEntities: [Entity]) {
         let nodeIndices = graph.nodeIndices()
         for (edgeIndex, edge) in graph.edges.enumerated() where edgeIndex < edgeEntities.count {
@@ -107,6 +127,11 @@ enum RealityGraphEntityBuilder {
     /// compromise as the rest state means physics starts in equilibrium (no snap
     /// at handoff) and preserves whichever layout produced it, Fruchterman–Reingold
     /// or Kamada–Kawai alike.
+    ///
+    /// - Parameters:
+    ///   - nodeEntities: Node entities from `makeNodeEntities`, in node order.
+    ///   - graph: The graph the entities were built from.
+    /// - Returns: One joint per resolvable edge.
     @discardableResult
     static func attachPhysics(nodeEntities: [Entity], graph: Graph) -> [PhysicsDistanceJoint] {
         for entity in nodeEntities {
@@ -126,7 +151,8 @@ enum RealityGraphEntityBuilder {
             let pin0 = nodeEntities[i].pins.set(named: "edge\(edgeIndex).from", position: .zero)
             let pin1 = nodeEntities[j].pins.set(named: "edge\(edgeIndex).to", position: .zero)
             let joint = PhysicsDistanceJoint(pin0: pin0, pin1: pin1,
-                                              distanceLimit: edgeDistanceLimit(idealLength: restLength, tolerance: 0.05))
+                                              distanceLimit: edgeDistanceLimit(idealLength: restLength,
+                                                                               tolerance: 0.05))
             joints.append(joint)
         }
         return joints
@@ -136,6 +162,11 @@ enum RealityGraphEntityBuilder {
     /// small band around `idealLength` (rather than a single fixed value) so the
     /// joint has a little spring-like give instead of behaving as a rigid rod.
     /// Pure function — no RealityKit dependency, trivially unit-testable.
+    ///
+    /// - Parameters:
+    ///   - idealLength: The edge's rest length.
+    ///   - tolerance: Fractional give either side of `idealLength`.
+    /// - Returns: The allowed joint-distance range.
     static func edgeDistanceLimit(idealLength: Float, tolerance: Float) -> ClosedRange<Float> {
         let lower = idealLength * (1 - tolerance)
         let upper = idealLength * (1 + tolerance)

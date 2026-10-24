@@ -7,11 +7,12 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //  FiguresTablesTests.swift
+//  PresentationZenTests
 //
+//  Created by Rodney Dyer on 2026.02.24.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Created by Rodney Dyer on 2026-02-24.
 
 import Foundation
 import Testing
@@ -50,7 +51,7 @@ struct BoxSummaryTests {
     }
 }
 
-@Suite("dateRegression")
+@Suite("DateRegression")
 struct DateRegressionTests {
 
     private func table(_ pairs: [(Date, Double)]) -> DataTable {
@@ -61,20 +62,20 @@ struct DateRegressionTests {
 
     @Test("returns nil for fewer than 2 dated points")
     func tooFewPoints() {
-        #expect(dateRegression(table([(.now, 1.0)])) == nil)
+        #expect(DateRegression(table([(.now, 1.0)])) == nil)
     }
 
     @Test("returns nil when the x role is not a date column")
     func noDateRole() {
         let t = DataTable(numbers: ["x": [1, 2], "y": [1, 2]], roles: [.x: "x", .y: "y"])
-        #expect(dateRegression(t) == nil)
+        #expect(DateRegression(t) == nil)
     }
 
     @Test("fits positive slope to a linearly ascending series")
     func positiveTrend() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
         let t = table((0..<5).map { (base.addingTimeInterval(Double($0) * 86_400), Double($0) * 2.0) })
-        let result = try #require(dateRegression(t))
+        let result = try #require(DateRegression(t))
         #expect(result.slope > 0)
         #expect(result.r2 > 0.99)
         #expect(result.fitted.count == 5)
@@ -84,7 +85,7 @@ struct DateRegressionTests {
     func negativeTrend() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
         let t = table((0..<5).map { (base.addingTimeInterval(Double($0) * 86_400), Double(4 - $0) * 3.0) })
-        let result = try #require(dateRegression(t))
+        let result = try #require(DateRegression(t))
         #expect(result.slope < 0)
     }
 
@@ -92,7 +93,7 @@ struct DateRegressionTests {
     func duplicateDates() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
         let t = table([(base, 10.0), (base, 20.0), (base.addingTimeInterval(86_400), 30.0)])
-        let result = try #require(dateRegression(t))
+        let result = try #require(DateRegression(t))
         #expect(result.fitted.count == 2)   // two unique dates
         #expect(abs(result.fitted[0].y - 15.0) < 0.0001)
     }
@@ -101,7 +102,7 @@ struct DateRegressionTests {
     func flatSeries() throws {
         let base = Date(timeIntervalSinceReferenceDate: 0)
         let t = table((0..<4).map { (base.addingTimeInterval(Double($0) * 86_400), 5.0) })
-        let result = try #require(dateRegression(t))
+        let result = try #require(DateRegression(t))
         #expect(abs(result.slope) < 0.0001)
         #expect(result.r2.isNaN)
     }

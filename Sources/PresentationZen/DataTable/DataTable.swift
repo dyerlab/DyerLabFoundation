@@ -7,14 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataTable.swift
+//  PresentationZen
 //
 //  A typed, columnar container for plottable data built on Apple's
 //  `TabularData.DataFrame`, plus a mapping of plot roles to column names.
 //  Charts consume a `DataTable`; the numeric core (`Matrix`/`Vector`)
 //  round-trips through it.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -42,6 +44,10 @@ public struct DataTable {
     public internal(set) var roles: [DataColumnRole: String]
 
     /// Creates a table from a data frame and an optional role mapping.
+    ///
+    /// - Parameters:
+    ///   - frame: The backing data frame.
+    ///   - roles: An optional initial role mapping.
     public init(frame: DataFrame, roles: [DataColumnRole: String] = [:]) {
         self.frame = frame
         self.roles = roles
@@ -51,6 +57,12 @@ public struct DataTable {
     ///
     /// Columns are appended in a stable order: numbers, then dates, then
     /// strings, each alphabetised by name for determinism.
+    ///
+    /// - Parameters:
+    ///   - numbers: Numeric columns by name.
+    ///   - dates: Date columns by name.
+    ///   - strings: String columns by name.
+    ///   - roles: An optional initial role mapping.
     public init(numbers: [String: [Double]],
                 dates:   [String: [Date]]   = [:],
                 strings: [String: [String]] = [:],
@@ -75,6 +87,9 @@ public struct DataTable {
     public var columnNames: [String] { frame.columns.map(\.name) }
 
     /// The value kind of a named column, or `nil` if absent or unsupported.
+    ///
+    /// - Parameter columnName: The column to inspect.
+    /// - Returns: The column's kind, or `nil`.
     public func kind(of columnName: String) -> ColumnKind? {
         guard let column = frame.columns.first(where: { $0.name == columnName }) else { return nil }
         let type = column.wrappedElementType
@@ -91,6 +106,9 @@ extension DataTable {
 
     /// Reads a numeric column (Double/Int/Float) as `[Double?]`, preserving
     /// row order and `nil` (missing) entries.
+    ///
+    /// - Parameter name: The column to read.
+    /// - Returns: The values, or an empty array if the column is absent or not numeric.
     func numericColumn(_ name: String) -> [Double?] {
         guard let column = frame.columns.first(where: { $0.name == name }) else { return [] }
         let type = column.wrappedElementType
@@ -102,6 +120,9 @@ extension DataTable {
 
     /// Reads any column as `[String?]`, converting non-string kinds via their
     /// natural description. Used for the `series` and `label` roles.
+    ///
+    /// - Parameter name: The column to read.
+    /// - Returns: The values as strings, or an empty array if the column is absent or of an unsupported type.
     func stringColumn(_ name: String) -> [String?] {
         guard let column = frame.columns.first(where: { $0.name == name }) else { return [] }
         let type = column.wrappedElementType
@@ -114,6 +135,9 @@ extension DataTable {
     }
 
     /// Reads a column as `[PlotValue?]` according to its kind.
+    ///
+    /// - Parameter name: The column to read.
+    /// - Returns: The values, or an empty array if the column is absent or of an unsupported type.
     func plotValues(_ name: String) -> [PlotValue?] {
         switch kind(of: name) {
         case .number:   return numericColumn(name).map { $0.map(PlotValue.number) }

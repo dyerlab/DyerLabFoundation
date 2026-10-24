@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  KamadaKawaiTests.swift
-//  Graph
+//  GraphTests
 //
 //  Validates KamadaKawaiSolver against igraph::layout_with_kk() and gstudio's
 //  layout = "kk". Fixtures/layout_fixtures.json was produced by
@@ -17,6 +17,9 @@
 //    - a weighted graph with a second component (max-distance fill);
 //    - the arapat / cornus population graphs through gstudio's median-floored
 //      "kk" layout function.
+//
+//  Created by Rodney Dyer on 2026.10.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

@@ -13,6 +13,9 @@
 //  The read path: reconstructs in-memory `GenotypeMatrix`/`ParentageDesign`
 //  values from the rows written by `ProjectStore+Encoding`.
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 
@@ -103,6 +106,11 @@ extension ProjectStore {
 
     /// Reads each individual's hierarchical stratum lineage. Mirrors
     /// `readNodeStrata` (`ProjectStore+GraphDecoding.swift`).
+    ///
+    /// - Parameter connection: The open connection to read from.
+    /// - Returns: Each individual's strata keyed by `Individual.id`.
+    /// - Throws: ``PersistenceError/corruptData(_:)`` for an unknown individual ordinal or invalid UUID, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` if a query fails.
     func readIndividualStrata(connection: SQLiteConnection) throws -> [UUID: [StratumReference]] {
         let individuals = try readIndividuals(connection: connection)
         let stmt = try connection.prepare("""

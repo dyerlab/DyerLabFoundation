@@ -8,12 +8,13 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopGenStore+Persistence.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGenetics
 //
 //  SQLite-backed persistence via ProjectStore. Unlike the old JSON store,
 //  this does not round-trip allele lineage (see PopGenStore.swift header).
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -26,6 +27,15 @@ public extension PopGenStore {
     /// graph/results/log/matrices data it holds) or creates it with just the
     /// `.geneticData` component otherwise — never destroys the file, unlike
     /// the old behavior of recreating it from scratch on every save.
+    ///
+    /// - Parameters:
+    ///   - url: The project file's location.
+    ///   - projectName: The project name, used only when creating the file.
+    ///   - species: The species, used only when creating the file.
+    ///   - description: A description, used only when creating the file.
+    ///   - parentage: The parentage design to store with the genotypes, if any.
+    /// - Throws: A ``PersistenceError`` if the file can't be opened or created, has no `.geneticData`
+    ///   component, or a SQLite write fails.
     func save(to url: URL, projectName: String, species: String? = nil, description: String? = nil,
               parentage: ParentageDesign? = nil) async throws {
         let store = ProjectStore()
@@ -36,6 +46,11 @@ public extension PopGenStore {
     }
 
     /// Loads a store from a SQLite file at `url`.
+    ///
+    /// - Parameter url: The project file's location.
+    /// - Returns: A store holding the file's genetic data.
+    /// - Throws: A ``PersistenceError`` if the file can't be opened, has no `.geneticData` component,
+    ///   or holds invalid data.
     static func load(from url: URL) async throws -> PopGenStore {
         let dataset = try await ProjectStore.load(from: url)
         return PopGenStore(dataset: dataset)

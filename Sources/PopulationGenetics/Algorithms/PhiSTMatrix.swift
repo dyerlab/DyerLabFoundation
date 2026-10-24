@@ -10,14 +10,15 @@
 //  PhiSTMatrix.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
 
-/// Marks a `DistanceMatrix` as holding pairwise Φ_ST estimates. See `pairwisePhiST`.
+/// Marks a `DistanceMatrix` as holding pairwise Φ_ST estimates. See `PairwisePhiST`.
 public enum PhiSTKind: PairwiseMeasure {
+    /// The column name used for Φ_ST in combined exports.
     public static let columnName = "PhiST"
 }
 

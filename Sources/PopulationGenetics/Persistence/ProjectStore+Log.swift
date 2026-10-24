@@ -16,6 +16,9 @@
 //  project's data. Mirrors `ProjectStore+Results.swift`'s shape (ordinal PK
 //  for insertion order, uuid for stable identity).
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import PresentationZen
@@ -24,6 +27,10 @@ import Matrix
 extension ProjectStore {
 
     /// Appends one log entry. Entries are never updated in place; each call adds a new row.
+    ///
+    /// - Parameter entry: The entry to append.
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.log` component, ``PersistenceError/notOpen``, or ``PersistenceError/sqliteError(code:message:)``.
     public func appendLog(_ entry: LogEntry) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.log, "log")
@@ -44,6 +51,11 @@ extension ProjectStore {
     }
 
     /// All log entries, in the order they were added.
+    ///
+    /// - Returns: The stored entries.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.log` component,
+    ///   ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` for an unreadable row, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func logEntries() async throws -> [LogEntry] {
         try requireComponent(.log, "log")
         let connection = try requireConnection()

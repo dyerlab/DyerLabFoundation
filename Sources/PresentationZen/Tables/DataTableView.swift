@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataTableView.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 2/10/24.
+//  Created by Rodney Dyer on 2024.02.10.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -21,9 +21,13 @@ import TabularData
 /// column names; cells are formatted by kind (numbers via `formatString`,
 /// dates abbreviated, strings verbatim).
 public struct DataTableView: View {
+    /// The table to display.
     public var table: DataTable
+    /// The `String(format:)` pattern used for numeric columns.
     public var formatString: String
+    /// The minimum width of each column.
     public var minColWidth: Double
+    /// An optional caption drawn below the grid.
     public var caption: String?
 
     private var inScrollView: Bool
@@ -129,6 +133,8 @@ public struct DataTableView: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     DataTableView(.sampleScatter, caption: "Scatter Sample")

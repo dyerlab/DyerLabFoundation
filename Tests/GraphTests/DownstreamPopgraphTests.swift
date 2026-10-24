@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DownstreamPopgraphTests.swift
-//  Graph
+//  GraphTests
 //
 //  Validates the downstream population-graph operations ported from gstudio
 //  1.14 (the "mimic swift package" release) for numerical identity against
@@ -29,6 +29,9 @@
 //      what the Swift side constructs; and
 //    - the small hand-built graphs from gstudio's own test files.
 //
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Testing
 import Foundation
@@ -39,7 +42,13 @@ private let fixtureTolerance = 1e-9
 // MARK: - Fixture decoding
 
 private struct FEdge: Decodable { let from: String; let to: String; let weight: Double? }
-private struct FDirEdge: Decodable { let from: String; let to: String; let w_away: Double; let w_to: Double; let delta: Double }
+private struct FDirEdge: Decodable {
+    let from: String
+    let to: String
+    let w_away: Double
+    let w_to: Double
+    let delta: Double
+}
 private struct FAsymWeight: Decodable {
     let from: String; let to: String
     let pij: Double; let pji: Double; let cGD: Double
@@ -56,7 +65,12 @@ private struct FRealDataset: Decodable {
     let asymmetric_weights: [FAsymWeight]
     let asymmetric_popgraph: FAsymPopgraph
 }
-private struct FTestCongruence: Decodable { let estimate: Double; let statistic: Double; let df: Int; let p_value: Double }
+private struct FTestCongruence: Decodable {
+    let estimate: Double
+    let statistic: Double
+    let df: Int
+    let p_value: Double
+}
 private struct FCongruence: Decodable {
     let graph1_edges: [FEdge]; let graph2_edges: [FEdge]
     let graph1_nodes: [String]; let graph2_nodes: [String]
@@ -151,10 +165,12 @@ private func assertGraphAsymmetriesMatch(_ graph: Graph, _ fixture: FGraphAsym?,
     }
     #expect(result.edges.count == fixture.edges.count, "\(label): directional edge count")
     for edge in result.edges {
-        let exp = try #require(expectedByPair[key(edge.from, edge.to)], "\(label): unexpected edge \(edge.from)-\(edge.to)")
+        let exp = try #require(expectedByPair[key(edge.from, edge.to)],
+                               "\(label): unexpected edge \(edge.from)-\(edge.to)")
         // Align orientation: if the fixture's `from` differs, swap away/to.
         let (expAway, expTo) = exp.from == edge.from ? (exp.away, exp.to) : (exp.to, exp.away)
-        #expect(abs(edge.wAway - expAway) < tolerance, "\(label) \(edge.from)->\(edge.to) w_away: \(edge.wAway) vs \(expAway)")
+        #expect(abs(edge.wAway - expAway) < tolerance,
+                "\(label) \(edge.from)->\(edge.to) w_away: \(edge.wAway) vs \(expAway)")
         #expect(abs(edge.wTo - expTo) < tolerance, "\(label) \(edge.from)->\(edge.to) w_to: \(edge.wTo) vs \(expTo)")
     }
 }
@@ -302,7 +318,8 @@ private func assertAsymmetricPopulationGraphMatches(_ graph: Graph, _ fixture: F
         guard let expWeight = expected["\(from)\u{1}\(to)"] else {
             Issue.record("\(label): unexpected directed edge \(from)->\(to)"); continue
         }
-        #expect(abs(edge.weight - expWeight) < fixtureTolerance, "\(label) \(from)->\(to): \(edge.weight) vs \(expWeight)")
+        #expect(abs(edge.weight - expWeight) < fixtureTolerance,
+                "\(label) \(from)->\(to): \(edge.weight) vs \(expWeight)")
     }
     #expect(abs(actualSum - fixture.weight_sum) < 1e-8, "\(label): total weight \(actualSum) vs \(fixture.weight_sum)")
 }
@@ -348,7 +365,7 @@ func asymmetricPopulationGraphMatchesRealR(_ name: String) throws {
 
 // MARK: - test_congruence
 
-@Test func testCongruenceMatchesRCorTest() throws {
+@Test func congruenceMatchesRCorTest() throws {
     let c = try loadSmall().congruence
     let g1 = buildGraph(nodeNames: c.graph1_nodes, edges: c.graph1_edges)
     let g2 = buildGraph(nodeNames: c.graph2_nodes, edges: c.graph2_edges)
@@ -363,9 +380,11 @@ func asymmetricPopulationGraphMatchesRealR(_ name: String) throws {
             "p: \(result.pValue) vs \(c.test_congruence.p_value)")
 }
 
-@Test func testCongruenceNilWhenNoSharedNodes() {
-    let g1 = buildGraph(nodeNames: ["A", "B", "C"], edges: [FEdge(from: "A", to: "B", weight: 1), FEdge(from: "B", to: "C", weight: 1)])
-    let g2 = buildGraph(nodeNames: ["X", "Y", "Z"], edges: [FEdge(from: "X", to: "Y", weight: 1), FEdge(from: "Y", to: "Z", weight: 1)])
+@Test func congruenceNilWhenNoSharedNodes() {
+    let g1 = buildGraph(nodeNames: ["A", "B", "C"],
+                        edges: [FEdge(from: "A", to: "B", weight: 1), FEdge(from: "B", to: "C", weight: 1)])
+    let g2 = buildGraph(nodeNames: ["X", "Y", "Z"],
+                        edges: [FEdge(from: "X", to: "Y", weight: 1), FEdge(from: "Y", to: "Z", weight: 1)])
     #expect(TestCongruence(g1, g2) == nil)
 }
 

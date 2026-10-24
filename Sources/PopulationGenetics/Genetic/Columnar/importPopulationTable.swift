@@ -10,8 +10,8 @@
 //  importPopulationTable.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -42,6 +42,14 @@ public struct PopulationImportLayout: Sendable {
     public var alleleSeparator: Character
 
     /// Creates a layout configuration, all parameters optional with sensible defaults.
+    ///
+    /// - Parameters:
+    ///   - strataColumns: Stratum column headers, outer to inner (default `["Population"]`).
+    ///   - nameColumn: Individual-name column, or `nil` to synthesize names.
+    ///   - latitudeColumn: Latitude column, if any.
+    ///   - longitudeColumn: Longitude column, if any.
+    ///   - locusColumns: Explicit locus columns, or `nil` to use every non-metadata column.
+    ///   - alleleSeparator: The character between the two alleles of a genotype (default `":"`).
     public init(
         strataColumns: [String] = ["Population"],
         nameColumn: String? = nil,
@@ -67,6 +75,8 @@ public struct PopulationImportLayout: Sendable {
 ///   - csv: The raw CSV text (header row required).
 ///   - layout: Column-role configuration.
 /// - Returns: The parsed matrix and each individual's stratum lineage.
+/// - Throws: ``GenotypeImportError/emptyInput``, ``GenotypeImportError/missingColumn(_:)`` or
+///   ``GenotypeImportError/malformedGenotype(locus:row:value:)``.
 public func importPopulationTable(csv: String, layout: PopulationImportLayout = .init()) throws -> ImportedDataset {
 
     let grid = csvToMatrix(raw: csv)
@@ -88,7 +98,8 @@ public func importPopulationTable(csv: String, layout: PopulationImportLayout = 
     let latIdx = try layout.latitudeColumn.map { try require($0) }
     let lonIdx = try layout.longitudeColumn.map { try require($0) }
 
-    let metadata = Set(layout.strataColumns + [layout.nameColumn, layout.latitudeColumn, layout.longitudeColumn].compactMap { $0 })
+    let optionalColumns = [layout.nameColumn, layout.latitudeColumn, layout.longitudeColumn].compactMap { $0 }
+    let metadata = Set(layout.strataColumns + optionalColumns)
     let locusNames: [String]
     if let explicit = layout.locusColumns {
         for name in explicit where columnIndex[name] == nil { throw GenotypeImportError.missingColumn(name) }

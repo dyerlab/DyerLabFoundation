@@ -16,6 +16,9 @@
 //  Graph's `PartitionedGeneticDistance(graph:gamma:)`. See
 //  `~/Coding/gstudio/R/dist_pgd.R`.
 //
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 import Graph

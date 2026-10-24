@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  IndividualTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Claude Code on 1/13/26.
+//  Created by Rodney Dyer on 2026.01.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -20,11 +19,12 @@ import CoreLocation
 import Matrix
 @testable import PopulationGenetics
 
+@MainActor
 struct IndividualTests {
 
     // MARK: - Initialization Tests
 
-    @Test func testIndividualInitialization() async throws {
+    @Test func individualInitialization() async throws {
         let ind = Individual(name: "Test001", latitude: 37.7749, longitude: -122.4194)
 
         #expect(ind.name == "Test001")
@@ -32,7 +32,7 @@ struct IndividualTests {
         #expect(ind.longitude == -122.4194)
     }
 
-    @Test func testIndividualInitializationWithoutCoordinates() async throws {
+    @Test func individualInitializationWithoutCoordinates() async throws {
         let ind = Individual(name: "Test002")
 
         #expect(ind.name == "Test002")
@@ -42,17 +42,17 @@ struct IndividualTests {
 
     // MARK: - Spatial Property Tests
 
-    @Test func testIsSpatialWithCoordinates() async throws {
+    @Test func isSpatialWithCoordinates() async throws {
         let ind = Individual(name: "Test003", latitude: 37.7749, longitude: -122.4194)
         #expect(ind.isSpatial == true)
     }
 
-    @Test func testIsSpatialWithoutCoordinates() async throws {
+    @Test func isSpatialWithoutCoordinates() async throws {
         let ind = Individual(name: "Test004")
         #expect(ind.isSpatial == false)
     }
 
-    @Test func testIsSpatialWithPartialCoordinates() async throws {
+    @Test func isSpatialWithPartialCoordinates() async throws {
         let ind1 = Individual(name: "Test005", latitude: 37.7749, longitude: nil)
         #expect(ind1.isSpatial == false)
 
@@ -60,7 +60,7 @@ struct IndividualTests {
         #expect(ind2.isSpatial == false)
     }
 
-    @Test func testCoordinateProperty() async throws {
+    @Test func coordinateProperty() async throws {
         let ind = Individual(name: "Test007", latitude: 37.7749, longitude: -122.4194)
 
         let coord = ind.coordinate
@@ -69,14 +69,14 @@ struct IndividualTests {
         #expect(coord!.longitude == -122.4194)
     }
 
-    @Test func testCoordinatePropertyWithoutCoordinates() async throws {
+    @Test func coordinatePropertyWithoutCoordinates() async throws {
         let ind = Individual(name: "Test008")
         #expect(ind.coordinate == nil)
     }
 
     // MARK: - Genotype Retrieval Tests (via PopGenStore)
 
-    @Test func testGetGenotypeByName() async throws {
+    @Test func getGenotypeByName() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -91,7 +91,7 @@ struct IndividualTests {
         }
     }
 
-    @Test func testGetGenotypeNonexistentLocus() async throws {
+    @Test func getGenotypeNonexistentLocus() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -104,7 +104,7 @@ struct IndividualTests {
 
     // MARK: - Locus Names Tests
 
-    @Test func testLocusNames() async throws {
+    @Test func locusNames() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -121,7 +121,7 @@ struct IndividualTests {
 
     // MARK: - Mating Tests (via PopGenStore)
 
-    @Test func testMatingProducesOffspring() async throws {
+    @Test func matingProducesOffspring() async throws {
         let store = PopGenStore()
         store.addLocus(name: "TestLocus")
         let mother = store.addIndividual(name: "Mom", latitude: 37.0, longitude: -122.0)
@@ -137,7 +137,7 @@ struct IndividualTests {
         #expect(store.getGenotype(for: offspring, locusName: "TestLocus")?.isEmpty == false)
     }
 
-    @Test func testMatingInheritsGenotypes() async throws {
+    @Test func matingInheritsGenotypes() async throws {
         let testStore = PopGenStore()
 
         testStore.addLocus(name: "TestLocus")
@@ -163,7 +163,7 @@ struct IndividualTests {
 
     // MARK: - Parentage Assignment Tests (via PopGenStore)
 
-    @Test func testPullParentAssignsLineage() async throws {
+    @Test func pullParentAssignsLineage() async throws {
         let testStore = PopGenStore()
 
         testStore.addLocus(name: "TestLocus")
@@ -184,7 +184,7 @@ struct IndividualTests {
                offGeno!.rightLineage != Genotype.UnknownLineage)
     }
 
-    @Test func testPullParentWithFather() async throws {
+    @Test func pullParentWithFather() async throws {
         let testStore = PopGenStore()
 
         testStore.addLocus(name: "TestLocus")
@@ -207,7 +207,7 @@ struct IndividualTests {
 
     // MARK: - Integration Tests with Real Data
 
-    @Test func testRealDataIndividualHasValidGenotypes() async throws {
+    @Test func realDataIndividualHasValidGenotypes() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -219,7 +219,7 @@ struct IndividualTests {
         #expect(!genotypes.isEmpty)
     }
 
-    @Test func testRealDataIndividualSpatialProperties() async throws {
+    @Test func realDataIndividualSpatialProperties() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()

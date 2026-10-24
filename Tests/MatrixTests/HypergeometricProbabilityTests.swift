@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  HypergeometricProbabilityTests.swift
-//  DyerLabFoundation
+//  MatrixTests
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Testing
@@ -73,8 +72,17 @@ struct HypergeometricProbabilityTests {
 
     @Test
     func invalidPopulationReturnsNaN() {
-        #expect(hypergeometricProbability(populationSize: 10, successesInPopulation: 11, draws: 5, observedSuccesses: 1).isNaN)
-        #expect(hypergeometricProbability(populationSize: 10, successesInPopulation: 3, draws: 11, observedSuccesses: 1).isNaN)
-        #expect(hypergeometricProbability(populationSize: -1, successesInPopulation: 0, draws: 0, observedSuccesses: 0).isNaN)
+        #expect(hypergeometricProbability(populationSize: 10,
+                                          successesInPopulation: 11,
+                                          draws: 5,
+                                          observedSuccesses: 1).isNaN)
+        #expect(hypergeometricProbability(populationSize: 10,
+                                          successesInPopulation: 3,
+                                          draws: 11,
+                                          observedSuccesses: 1).isNaN)
+        #expect(hypergeometricProbability(populationSize: -1,
+                                          successesInPopulation: 0,
+                                          draws: 0,
+                                          observedSuccesses: 0).isNaN)
     }
 }

@@ -7,13 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataTable+Matrix.swift
+//  PresentationZen
 //
 //  The bridge between the numeric core (`Matrix`/`Vector`) and the table.
 //  This is what closes the loop: CSV -> DataTable -> Matrix -> PCA/t-SNE ->
 //  DataTable -> chart.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -43,6 +45,10 @@ public extension DataTable {
     }
 
     /// Builds a single-column table from a vector, bound to the `y` role.
+    ///
+    /// - Parameters:
+    ///   - vector: The column's values.
+    ///   - name: The column's name (default `"value"`).
     init(vector: Vector, name: String = "value") {
         var df = DataFrame()
         df.append(column: Column(name: name, contents: vector))
@@ -53,6 +59,9 @@ public extension DataTable {
     ///
     /// Use for statistics and binning where only the valid observations
     /// matter. Returns an empty vector for non-numeric or absent columns.
+    ///
+    /// - Parameter name: The column to extract.
+    /// - Returns: The column's non-missing values, in row order.
     func column(_ name: String) -> Vector {
         numericColumn(name).compactMap { $0 }
     }
@@ -65,6 +74,7 @@ public extension DataTable {
     ///
     /// - Parameter columns: The columns to include, in order. When `nil`,
     ///   every numeric column is used (in column order).
+    /// - Returns: A `rowCount × columns.count` matrix, or an empty `0 × 0` matrix if there are no rows or columns.
     func asMatrix(_ columns: [String]? = nil) -> Matrix {
         let names = columns ?? columnNames.filter { kind(of: $0) == .number }
         let rows = rowCount

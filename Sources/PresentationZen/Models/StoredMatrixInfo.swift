@@ -5,10 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  StoredMatrixInfo.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
 //  Metadata for a named `Matrix` attached to a project (a derived Fst
 //  distance matrix, PCA loadings, ...) — distinct from a genetic marker
@@ -17,6 +17,9 @@
 //  the payload is fetched/stored separately as `Data` (via `Matrix`'s
 //  existing `Codable` conformance) and only this metadata travels with it.
 //  Sits next to `AnalysisResult`, whose shape this mirrors minus a body.
+//
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

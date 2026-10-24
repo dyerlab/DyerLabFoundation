@@ -10,9 +10,6 @@
 //  MissingDataStrategy.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
-//
 //  A single locus's pairwise distance is well-defined for missing/haploid
 //  calls: `smousePeakallDistance` simply excludes that pair from that locus.
 //  The ambiguity appears once you SUM across loci (`geneticDistance(overLoci:)`)
@@ -22,6 +19,9 @@
 //  close. `MissingDataStrategy` is how the caller resolves that ambiguity;
 //  there is no single universally-correct answer, so it's exposed rather than
 //  picked silently.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// How `geneticDistance(overLoci:strategy:)` handles individual pairs that

@@ -7,14 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  PlotValue.swift
+//  PresentationZen
 //
 //  The typed value of a positional (x) encoding. A plottable position is
 //  always exactly one of three kinds — quantitative, temporal, or
 //  categorical — so the kind travels *with* the value instead of being
 //  inferred from which field happens to be populated.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

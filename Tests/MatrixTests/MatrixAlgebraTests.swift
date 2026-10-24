@@ -1,6 +1,3 @@
-//
-//  MatrixAlgebraTests.swift
-//  Tests macOS
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,7 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Claude Code on 1/11/26.
+//  MatrixAlgebraTests.swift
+//  MatrixTests
+//
+//  Created by Rodney Dyer on 2026.01.11.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -20,7 +20,7 @@ import Testing
 
 struct MatrixAlgebraTests {
 
-    @Test func testGeneralizedInverse() {
+    @Test func generalizedInverse() {
         // Test with a simple invertible 2x2 matrix
         let M = Matrix(2, 2, Vector([4.0, 7.0, 2.0, 6.0]))
         let Minv = GeneralizedInverse(M)
@@ -41,7 +41,7 @@ struct MatrixAlgebraTests {
         #expect(abs(I[1,0]) < tolerance)
     }
 
-    @Test func testGeneralizedInverse3x3() {
+    @Test func generalizedInverse3x3() {
         // Test with a 3x3 matrix
         let M = Matrix(3, 3, Vector([1.0, 2.0, 3.0, 0.0, 1.0, 4.0, 5.0, 6.0, 0.0]))
         let Minv = GeneralizedInverse(M)
@@ -54,7 +54,7 @@ struct MatrixAlgebraTests {
         #expect(abs(I[2,2] - 1.0) < tolerance)
     }
 
-    @Test func testGeneralizedInverseNonSquare() {
+    @Test func generalizedInverseNonSquare() {
         // Non-square matrices should return empty matrix
         let M = Matrix(2, 3, 1.0)
         let Minv = GeneralizedInverse(M)
@@ -63,7 +63,7 @@ struct MatrixAlgebraTests {
         #expect(Minv.cols == 0)
     }
 
-    @Test func testGeneralizedInverseSingularReturnsEmpty() {
+    @Test func generalizedInverseSingularReturnsEmpty() {
         // A singular (rank-deficient) matrix has no inverse: LU factorization
         // hits a zero pivot, so the contract is to return an empty 0×0 matrix
         // rather than NaN-filled garbage. Row 2 = 2 × Row 1 ⇒ singular.
@@ -74,7 +74,7 @@ struct MatrixAlgebraTests {
         #expect(Minv.cols == 0)
     }
 
-    @Test func testDominantEigenvectorDegenerateReturnsNil() {
+    @Test func dominantEigenvectorDegenerateReturnsNil() {
         // Non-square input is rejected up front.
         #expect(DominantEigenvector(A: Matrix(2, 3, 1.0)) == nil)
 
@@ -83,7 +83,7 @@ struct MatrixAlgebraTests {
         #expect(DominantEigenvector(A: Matrix(2, 2, 0.0)) == nil)
     }
 
-    @Test func testSingularValueDecomposition() {
+    @Test func singularValueDecomposition() {
         // Test SVD on a simple matrix
         let A = Matrix(3, 2, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
 
@@ -118,7 +118,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testSVDSquareMatrix() throws {
+    @Test func sVDSquareMatrix() throws {
         // A = [[3,1],[1,3]] is symmetric positive-definite with eigenvalues 4 and 2,
         // so its singular values are exactly 4 and 2.
         let A = Matrix(2, 2, Vector([3.0, 1.0, 1.0, 3.0]))
@@ -155,7 +155,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testPCRotation() {
+    @Test func pCRotation() {
         // Test PCA on a simple dataset
         // Create a data matrix with some variance
         let X = Matrix(4, 2, Vector([1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0]))
@@ -181,7 +181,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testPRComp() {
+    @Test func pRComp() {
         // Test prcomp equivalent function
         let X = Matrix(5, 3, Vector([
             2.5, 2.4, 1.0,
@@ -230,7 +230,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testMatrixCenter() {
+    @Test func matrixCenter() {
         let M = Matrix(3, 2, Vector([1.0, 4.0, 2.0, 5.0, 3.0, 6.0]))
         M.center()
 
@@ -243,7 +243,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testDominantEigenvector() {
+    @Test func dominantEigenvector() {
         // Test with a simple symmetric matrix
         let A = Matrix(3, 3, Vector([4.0, 1.0, 1.0, 1.0, 4.0, 1.0, 1.0, 1.0, 4.0]))
 
@@ -259,7 +259,7 @@ struct MatrixAlgebraTests {
         #expect(abs(magnitude - 1.0) < 0.0001, "Eigenvector should be normalized")
     }
 
-    @Test func testDiagonalMatrix() {
+    @Test func diagonalMatrix() {
         let diagonal = Vector([1.0, 2.0, 3.0, 4.0])
         let D = Matrix.DiagonalMatrix(diagonal: diagonal)
 
@@ -281,7 +281,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testSubmatrix() {
+    @Test func submatrix() {
         let M = Matrix(4, 4, Vector([
             1.0, 2.0, 3.0, 4.0,
             5.0, 6.0, 7.0, 8.0,
@@ -310,8 +310,8 @@ struct MatrixAlgebraTests {
             (0.999, 10.827566170662731),
         ]
         for c in cases {
-            #expect(isApprox(ChiSquareQuantileOneDF(c.p), c.expected, tolerance: 1e-8),
-                    "p=\(c.p): got \(ChiSquareQuantileOneDF(c.p)), expected \(c.expected)")
+            #expect(isApprox(chiSquareQuantileOneDF(c.p), c.expected, tolerance: 1e-8),
+                    "p=\(c.p): got \(chiSquareQuantileOneDF(c.p)), expected \(c.expected)")
         }
     }
 
@@ -348,7 +348,7 @@ struct MatrixAlgebraTests {
         }
     }
 
-    @Test func testGetRowGetCol() {
+    @Test func getRowGetCol() {
         let M = Matrix(3, 3, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]))
 
         let row1 = M.getRow(r: 1)

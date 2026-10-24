@@ -7,12 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  DistanceMatrixTests.swift
+//  MatrixTests
 //
 //  Local test-only PairwiseMeasure conformers stand in for what
 //  PopulationGenetics tested with its own domain markers (PhiSTKind,
 //  GreatCircleKind) — the type-isolation property under test doesn't
 //  depend on what those markers mean, only that they're distinct types.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

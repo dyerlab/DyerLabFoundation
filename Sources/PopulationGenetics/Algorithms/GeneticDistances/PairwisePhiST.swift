@@ -10,8 +10,8 @@
 //  PairwisePhiST.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -47,7 +47,7 @@ import Matrix
 ///   - strata: One stratum label per individual in `distance`; `strata.count`
 ///     must equal `distance.count`.
 /// - Returns: A `PhiSTMatrix` over `strata`'s distinct values, naturally sorted.
-public func pairwisePhiST(distance: GeneticDistanceMatrix, strata: [String]) -> PhiSTMatrix {
+public func PairwisePhiST(distance: GeneticDistanceMatrix, strata: [String]) -> PhiSTMatrix {
     precondition(strata.count == distance.count,
                  "pairwisePhiST: strata.count (\(strata.count)) must equal distance.count (\(distance.count))")
 

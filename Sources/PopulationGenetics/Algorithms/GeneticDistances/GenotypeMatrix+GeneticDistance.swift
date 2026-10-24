@@ -10,8 +10,8 @@
 //  GenotypeMatrix+GeneticDistance.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 extension GenotypeMatrix {
@@ -20,6 +20,9 @@ extension GenotypeMatrix {
     /// a missing/haploid call at this locus is simply excluded (left at
     /// `0.0`) — unambiguous for one locus, but see `MissingDataStrategy` for
     /// why summing several loci's worth of this isn't.
+    ///
+    /// - Parameter locusIndex: The locus ordinal.
+    /// - Returns: The `N × N` squared-distance matrix for that locus.
     public func locusDistance(atLocus locusIndex: Int) -> GeneticDistanceMatrix {
         smousePeakallDistance(column: columns[locusIndex])
     }
@@ -32,6 +35,7 @@ extension GenotypeMatrix {
     ///     — see `MissingDataStrategy`. Defaults to `.rescaleToTotalLoci`,
     ///     which reduces to a plain unnormalized sum whenever no pair has any
     ///     missing data (the common case for a mostly-complete panel).
+    /// - Returns: The `N × N` summed squared-distance matrix.
     public func geneticDistance<Loci: Sequence>(
         overLoci loci: Loci, strategy: MissingDataStrategy = .rescaleToTotalLoci
     ) -> GeneticDistanceMatrix
@@ -66,6 +70,7 @@ extension GenotypeMatrix {
     ///
     /// - Parameter strategy: How to handle pairs not scored at every locus —
     ///   see `MissingDataStrategy`. Defaults to `.rescaleToTotalLoci`.
+    /// - Returns: The `N × N` summed squared-distance matrix.
     public func geneticDistance(strategy: MissingDataStrategy = .rescaleToTotalLoci) -> GeneticDistanceMatrix {
         geneticDistance(overLoci: 0..<locusCount, strategy: strategy)
     }

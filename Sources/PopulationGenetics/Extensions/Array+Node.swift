@@ -8,15 +8,16 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Array+Node.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/20/25.
+//  Created by Rodney Dyer on 2025.06.20.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
+
 import Foundation
 import Graph
 import Matrix
 import PresentationZen
-
 
 /// Extensions for arrays of `Node` objects to compute spatial distance matrices.
 public extension Array where Element == Node {
@@ -25,7 +26,7 @@ public extension Array where Element == Node {
     ///
     /// This property calculates geographic distances using the haversine formula
     /// for nodes with valid coordinates. Distances are measured in the same units
-    /// returned by the `DistanceBetween` function (typically kilometers or meters).
+    /// returned by the `distanceBetween` function (typically kilometers or meters).
     ///
     /// Nodes without coordinates receive a distance of infinity.
     ///
@@ -38,7 +39,7 @@ public extension Array where Element == Node {
             if let coord1 = self[i].coordinate {
                 for j in i ..< N {
                     if let coord2 = self[j].coordinate {
-                        let dist = DistanceBetween( coord1, coord2 )
+                        let dist = distanceBetween(coord1, coord2)
                         ret[i,j] = dist
                         ret[j,i] = dist
                     }

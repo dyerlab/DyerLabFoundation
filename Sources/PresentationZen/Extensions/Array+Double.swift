@@ -7,30 +7,34 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  Array+Double.swift
+//  PresentationZen
 //
-//
-//  Created by Rodney Dyer on 4/4/24.
+//  Created by Rodney Dyer on 2024.04.04.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
 
-
 public extension Array where Element == Double {
-    
+
     /// Sum of the elements in the aray
+    ///
+    /// - Returns: The sum, or `0` for an empty array.
     func sum() -> Double {
-        return self.reduce(0, +)
+        self.reduce(0, +)
     }
-    
+
     /// Mean of the values
+    ///
+    /// - Returns: The arithmetic mean, or `.nan` for an empty array.
     func mean() -> Double {
-        return self.sum() / Double(self.count)
+        self.sum() / Double(self.count)
     }
-    
+
     /// Median of the arrays values
+    ///
+    /// - Returns: The median, or `.nan` for an empty array.
     func median() -> Double {
         guard !self.isEmpty else { return .nan }
         let vals = self.sorted()
@@ -42,6 +46,9 @@ public extension Array where Element == Double {
     }
 
     /// The `p`-quantile (`0...1`), linearly interpolated between order statistics.
+    ///
+    /// - Parameter p: The quantile, in `0...1`.
+    /// - Returns: The interpolated quantile, or `.nan` for an empty array.
     func quantile(_ p: Double) -> Double {
         guard !self.isEmpty else { return .nan }
         let vals = self.sorted()
@@ -55,13 +62,15 @@ public extension Array where Element == Double {
     }
 
     /// The sample standard deviation
+    ///
+    /// - Returns: The standard deviation, or `.nan` with fewer than two values.
     func sd() -> Double {
         guard self.count > 1 else { return .nan }
         let mean = self.mean()
         let v = self.reduce(0, { $0 + ($1-mean)*($1-mean) })
         return sqrt(v / (Double(self.count) - 1))
     }
-    
+
     /// Take double and return dictionary of counts
     var discretize: [Double: Int] {
         var ret = [Double: Int]()
@@ -70,5 +79,5 @@ public extension Array where Element == Double {
         }
         return ret
     }
-    
+
 }

@@ -1,6 +1,3 @@
-//
-//  GraphLayoutOptions.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  GraphLayoutOptions.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2026.08.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -37,6 +38,14 @@ public struct GraphLayoutOptions: Equatable {
     /// Multiplier applied to each node's `size` when drawing.
     public var nodeSizeMultiplier: Double
 
+    /// Creates display options.
+    ///
+    /// - Parameters:
+    ///   - showControls: Whether the bottom control panel is visible.
+    ///   - showInspector: Whether the right-side inspector is visible.
+    ///   - showLabels: Whether node name labels are drawn.
+    ///   - edgeLineWidth: Line width used to stroke edges.
+    ///   - nodeSizeMultiplier: Multiplier applied to each node's `size`.
     public init(showControls: Bool = true, showInspector: Bool = true, showLabels: Bool = true,
                 edgeLineWidth: Double = 1.0, nodeSizeMultiplier: Double = 1.0) {
         self.showControls = showControls

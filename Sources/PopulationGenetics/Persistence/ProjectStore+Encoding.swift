@@ -12,10 +12,13 @@
 //
 //  Read/write access to the `.geneticData` component: turns in-memory
 //  `GenotypeMatrix`/`ParentageDesign` values into rows in the schema defined
-//  by `GeneticDataSQLiteSchema.swift`. Each helper prepares one statement and
+//  by `GeneticDataSchemaComponent.swift`. Each helper prepares one statement and
 //  reuses it across the row loop (reset + rebind) rather than re-preparing
 //  SQL text per row, which matters once locus counts run into the
 //  tens/hundreds of thousands.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -25,6 +28,14 @@ extension ProjectStore {
     /// Writes the full genetic dataset into the currently open connection in
     /// one transaction, replacing any previously-written genetic data.
     /// Leaves every other component (graph/results/log/matrices) untouched.
+    ///
+    /// - Parameters:
+    ///   - matrix: The genotypes to store.
+    ///   - parentage: The parentage design, if any.
+    ///   - strata: Each individual's stratum lineage, keyed by `Individual.id`.
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.geneticData` component, ``PersistenceError/notOpen``, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` if a write fails (the transaction is rolled back).
     public func writeGeneticData(matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
                                   strata: [UUID: [StratumReference]] = [:]) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
@@ -47,12 +58,20 @@ extension ProjectStore {
     }
 
     /// Reconstructs the `GenotypeMatrix` from the currently open connection.
+    ///
+    /// - Returns: The stored genotype matrix.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.geneticData` component,
+    ///   ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` for unreadable rows, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func readGeneticData() async throws -> GenotypeMatrix {
         try requireComponent(.geneticData, "geneticData")
         return try decodeMatrix(connection: try requireConnection())
     }
 
     /// Reconstructs the `ParentageDesign`, or `nil` if no families were stored.
+    ///
+    /// - Returns: The stored parentage design, or `nil` if there are no families.
+    /// - Throws: The same errors as ``readGeneticData()``.
     public func readParentage() async throws -> ParentageDesign? {
         try requireComponent(.geneticData, "geneticData")
         return try decodeParentage(connection: try requireConnection())
@@ -60,6 +79,9 @@ extension ProjectStore {
 
     /// Reconstructs each individual's hierarchical stratum lineage, keyed by
     /// `Individual.id`. Empty if no strata were stored.
+    ///
+    /// - Returns: Each individual's strata keyed by `Individual.id`.
+    /// - Throws: The same errors as ``readGeneticData()``.
     public func readIndividualStrata() async throws -> [UUID: [StratumReference]] {
         try requireComponent(.geneticData, "geneticData")
         return try readIndividualStrata(connection: try requireConnection())
@@ -67,6 +89,9 @@ extension ProjectStore {
 
     /// Reconstructs the full `ImportedDataset`, synthesizing an empty
     /// `ParentageDesign` when none was stored.
+    ///
+    /// - Returns: The stored matrix, parentage design and strata.
+    /// - Throws: The same errors as ``readGeneticData()``.
     public func readDataset() async throws -> ImportedDataset {
         try requireComponent(.geneticData, "geneticData")
         let connection = try requireConnection()
@@ -81,6 +106,12 @@ extension ProjectStore {
     /// Flips a boolean classification flag in `meta` (e.g. `has_graph`,
     /// `has_results`), seeded to `"false"` by each component's own
     /// `createSchema`. Shared by `writeGraph`/`addResult`/`appendLog`/`addMatrix`.
+    ///
+    /// - Parameters:
+    ///   - key: The `meta` key to update.
+    ///   - value: The new flag value.
+    ///   - connection: The open connection to write to.
+    /// - Throws: ``PersistenceError/sqliteError(code:message:)`` if the update fails.
     func setMetaFlag(_ key: String, to value: Bool, connection: SQLiteConnection) throws {
         let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
         stmt.bind(value ? "true" : "false", at: 1)
@@ -144,6 +175,12 @@ extension ProjectStore {
     /// `writeNodeStrata` (`ProjectStore+GraphEncoding.swift`), but builds its
     /// own ordinal map locally since `writeIndividuals` already establishes
     /// ordinal == array index and callers don't otherwise have one to pass in.
+    ///
+    /// - Parameters:
+    ///   - strata: Each individual's strata, keyed by `Individual.id`.
+    ///   - individuals: The individuals in ordinal order, as just written.
+    ///   - connection: The open connection to write to.
+    /// - Throws: ``PersistenceError/sqliteError(code:message:)`` if an insert fails.
     func writeIndividualStrata(_ strata: [UUID: [StratumReference]], individuals: [Individual],
                                 connection: SQLiteConnection) throws {
         guard !strata.isEmpty else { return }

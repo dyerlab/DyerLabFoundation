@@ -14,7 +14,10 @@
 //  file should hold. No component is privileged — a file can be genetic
 //  data alone, graph+log alone, or any other combination. Each selected
 //  component gets its own tables and its own schema-version row in `meta`;
-//  see the `*SQLiteSchema.swift` files.
+//  see the `*SchemaComponent.swift` files.
+//
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Which of `ProjectStore`'s data components to create (or that a file was
@@ -24,6 +27,8 @@ public struct StoreComponents: OptionSet, Sendable {
     public let rawValue: Int
 
     /// Initializes a component set from a raw bitmask value.
+    ///
+    /// - Parameter rawValue: The component bitmask.
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }

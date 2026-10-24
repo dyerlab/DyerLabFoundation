@@ -10,8 +10,8 @@
 //  paternalGamete.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Recovers the paternal gamete from an offspring and its mother.
@@ -20,6 +20,9 @@
 /// result is `.missing`. An offspring allele is a candidate paternal allele
 /// when the *other* offspring allele could have come from the mother.
 ///
+/// - Parameters:
+///   - offspring: The offspring's allele indices.
+///   - mother: The mother's allele indices.
 /// - Returns: `.resolved` for one candidate, `.ambiguous` for two,
 ///   `.impossible` when the offspring cannot descend from the mother.
 public func paternalGamete(offspring: (UInt8, UInt8), mother: (UInt8, UInt8)) -> PaternalContribution {
@@ -50,7 +53,9 @@ public func paternalGamete(offspring: (UInt8, UInt8), mother: (UInt8, UInt8)) ->
 ///   - motherOrdinal: Row index of the mother in `column`.
 ///   - column: The genotype column providing both genotypes.
 /// - Returns: The paternal contribution (`.resolved`, `.ambiguous`, `.impossible`, or `.missing`).
-public func paternalGamete(offspringOrdinal: Int, motherOrdinal: Int, in column: GenotypeColumn) -> PaternalContribution {
+public func paternalGamete(offspringOrdinal: Int,
+                           motherOrdinal: Int,
+                           in column: GenotypeColumn) -> PaternalContribution {
     guard let offspring = column.alleles(at: offspringOrdinal),
           let mother = column.alleles(at: motherOrdinal) else {
         return .missing

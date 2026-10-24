@@ -1,6 +1,3 @@
-//
-//  GraphAsymmetries.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,12 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  GraphAsymmetries.swift
+//  Graph
 //
 //  A direct port of gstudio's `graph_asymmetries()` — directional introgression
 //  pressures and a per-edge asymmetry index for a weighted population graph,
 //  from a local Gaussian kernel over each node's neighbourhood.
 //  See `~/Coding/gstudio/R/graph_asymmetries.R`.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -128,6 +129,13 @@ public func GraphAsymmetries(graph: Graph,
 /// This is the kernel-normalisation + per-edge lookup shared by
 /// ``GraphAsymmetries(graph:bandwidth:scale:)`` and the bandwidth-permutation
 /// null (gstudio's `.delta_with_bandwidth()`).
+///
+/// - Parameters:
+///   - graph: An undirected, weighted graph.
+///   - b: Kernel bandwidth per node name.
+///   - adjacency: A precomputed ``Graph/undirectedAdjacency()``, to skip rebuilding it.
+///   - flat: Use the flat kernel instead of the bandwidth-scaled one.
+/// - Returns: One directional edge per undirected edge.
 func directionalEdges(of graph: Graph,
                       bandwidth b: [String: Double],
                       adjacency: [String: [String: Double]]? = nil,

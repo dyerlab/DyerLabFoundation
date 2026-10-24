@@ -1,6 +1,3 @@
-//
-//  AsymmetrySignificance.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -9,6 +6,9 @@
 //                        |_ _/
 //
 //         Making Population Genetic Software That Doesn't Suck
+//
+//  AsymmetrySignificance.swift
+//  Graph
 //
 //  Ports of the graph-only members of gstudio's (>= 1.15) `asymmetry_significance()`
 //  family: the bandwidth-alignment permutation null (`asymmetry_bandwidth()`,
@@ -21,6 +21,9 @@
 //  The genotype-driven members (`asymmetry_permutation()` — mode "location" —,
 //  `asymmetry_ci()`, `permute_popgraph()`) re-estimate the population graph from
 //  raw genotypes and live in PopulationGenetics.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -48,6 +51,14 @@ public struct EdgeAsymmetrySignificance: Sendable, Equatable {
     public let nullDistribution: [Double]?
 
     /// Initializes a new per-edge asymmetry-significance row.
+    ///
+    /// - Parameters:
+    ///   - from: The edge's first endpoint.
+    ///   - to: The edge's second endpoint.
+    ///   - delta: Observed asymmetry index `Δ`.
+    ///   - statistic: The test statistic.
+    ///   - pValue: Add-one permutation p-value.
+    ///   - nullDistribution: The edge's null distribution, or `nil` if not kept.
     public init(from: String, to: String, delta: Double, statistic: Double,
                 pValue: Double, nullDistribution: [Double]? = nil) {
         self.from = from
@@ -239,6 +250,8 @@ public enum AsymmetrySignificanceResult: Sendable {
 ///     for `.existence`.
 ///   - returnNull: Keep the null distribution(s) on the result (default `false`).
 ///   - seed: RNG seed, equivalent to R's `set.seed(seed)`.
+/// - Returns: The `.existence` graph-level test or the `.mechanism` per-edge rows, or `nil` if the
+///   underlying test can't be computed for this graph.
 public func AsymmetrySignificance(graph: Graph,
                                   mode: AsymmetryNull,
                                   permutations: Int = 999,
@@ -265,6 +278,12 @@ public func AsymmetrySignificance(graph: Graph,
 /// gstudio's `.handle_pendant_edges()`: flag (`.warn`) or drop (`.drop`) rows
 /// whose edge touches a degree-≤1 node. Returns the retained rows and the
 /// pendant count (`nil` when there are none, or for `.keep`).
+///
+/// - Parameters:
+///   - rows: Per-edge results.
+///   - graph: The graph the rows describe.
+///   - pendants: How to handle leaf edges.
+///   - endpoints: Extracts a row's two endpoint names.
 public func handlePendantEdges<Row>(_ rows: [Row],
                                     graph: Graph,
                                     pendants: PendantHandling,

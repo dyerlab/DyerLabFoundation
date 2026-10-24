@@ -19,16 +19,23 @@
 //  `symmetric: false`, so `graph.edges.last` after each call is always the
 //  edge just added, regardless of node/edge naming collisions.
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import CoreLocation
 import Foundation
 import Graph
-import SwiftUI
 
 extension ProjectStore {
 
     /// Reconstructs the population graph and its associated metadata from the
     /// currently open connection.
+    ///
+    /// - Returns: The graph (as a `GraphSnapshot`) with its strata, values and loci.
+    /// - Throws: `PersistenceError.componentNotPresent` if the file has no `.graph`
+    ///   component, `PersistenceError.notOpen` if no connection is open, or
+    ///   `PersistenceError.corruptData` if rows reference missing nodes or hold invalid UUIDs.
     public func readGraph() async throws -> PopulationGraphDataset {
         try requireComponent(.graph, "graph")
         return try decodeGraph(connection: try requireConnection())
@@ -36,36 +43,22 @@ extension ProjectStore {
 
     func decodeGraph(connection: SQLiteConnection) throws -> PopulationGraphDataset {
         let nodeRows = try readNodeRows(connection: connection)
-        let graph = Graph()
-        var nodesByOrdinal: [Int: Node] = [:]
-        for row in nodeRows {
-            graph.addNode(name: row.name, size: row.size, color: .gray)
-            guard let node = graph.nodes.last else {
-                throw PersistenceError.corruptData("failed to reconstruct node \"\(row.name)\"")
-            }
-            node.id = row.uuid
-            if let latitude = row.latitude, let longitude = row.longitude {
-                node.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-            }
-            nodesByOrdinal[row.ordinal] = node
+        let nodes = nodeRows.map {
+            GraphSnapshot.NodeRecord(id: $0.uuid, name: $0.name, size: $0.size,
+                                     latitude: $0.latitude, longitude: $0.longitude)
         }
+        let nodeIDsByOrdinal = Dictionary(uniqueKeysWithValues: nodeRows.map { ($0.ordinal, $0.uuid) })
 
-        let edgeRows = try readEdgeRows(connection: connection)
-        for row in edgeRows {
-            guard let from = nodesByOrdinal[row.fromOrdinal], let to = nodesByOrdinal[row.toOrdinal] else {
+        let edges = try readEdgeRows(connection: connection).map { row in
+            guard let from = nodeIDsByOrdinal[row.fromOrdinal], let to = nodeIDsByOrdinal[row.toOrdinal] else {
                 throw PersistenceError.corruptData("edge references a node ordinal not present in this graph")
             }
-            graph.addEdge(from: from, to: to, weight: row.weight, symmetric: false)
-            guard let edge = graph.edges.last else {
-                throw PersistenceError.corruptData("failed to reconstruct edge")
-            }
-            edge.id = row.uuid
+            return GraphSnapshot.EdgeRecord(id: row.uuid, fromNode: from, toNode: to, weight: row.weight)
         }
+        let graph = GraphSnapshot(nodes: nodes, edges: edges)
+        let edgeIDsByOrdinal = Dictionary(uniqueKeysWithValues: edges.enumerated().map { ($0, $1.id) })
 
-        let nodeIDsByOrdinal = nodesByOrdinal.mapValues(\.id)
-        let edgeIDsByOrdinal = Dictionary(uniqueKeysWithValues: graph.edges.enumerated().map { ($0, $1.id) })
-
-        let nodeStrata = try readNodeStrata(nodesByOrdinal: nodesByOrdinal, connection: connection)
+        let nodeStrata = try readNodeStrata(nodeIDsByOrdinal: nodeIDsByOrdinal, connection: connection)
         let nodeValues = try readValues(table: "node_values", ordinalColumn: "node_ordinal",
                                          idsByOrdinal: nodeIDsByOrdinal, connection: connection)
         let edgeValues = try readValues(table: "edge_values", ordinalColumn: "edge_ordinal",
@@ -128,7 +121,7 @@ extension ProjectStore {
         return result
     }
 
-    private func readNodeStrata(nodesByOrdinal: [Int: Node],
+    private func readNodeStrata(nodeIDsByOrdinal: [Int: UUID],
                                  connection: SQLiteConnection) throws -> [UUID: [StratumReference]] {
         let stmt = try connection.prepare("""
             SELECT node_ordinal, level, stratum_uuid, stratum_name FROM node_strata
@@ -136,7 +129,7 @@ extension ProjectStore {
         var result: [UUID: [StratumReference]] = [:]
         while try stmt.step() {
             let ordinal = stmt.columnInt(at: 0)
-            guard let node = nodesByOrdinal[ordinal] else {
+            guard let nodeID = nodeIDsByOrdinal[ordinal] else {
                 throw PersistenceError.corruptData("node_strata references unknown node ordinal \(ordinal)")
             }
             let level = stmt.columnText(at: 1)
@@ -145,7 +138,7 @@ extension ProjectStore {
                 throw PersistenceError.corruptData("invalid stratum uuid: \(uuidString)")
             }
             let name = stmt.columnText(at: 3)
-            result[node.id, default: []].append(StratumReference(id: uuid, level: level, name: name))
+            result[nodeID, default: []].append(StratumReference(id: uuid, level: level, name: name))
         }
         return result
     }

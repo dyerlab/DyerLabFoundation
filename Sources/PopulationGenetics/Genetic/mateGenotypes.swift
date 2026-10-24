@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  mateGenotypes.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Produces one offspring allele pair by randomly selecting one allele from
@@ -20,6 +21,9 @@
 /// Pure and storage-independent — the caller (`PopGenStore.mateIndividuals`,
 /// `randomMate`) is responsible for writing the result into a store.
 ///
+/// - Parameters:
+///   - motherGenotype: The mother's genotype.
+///   - fatherGenotype: The father's genotype.
 /// - Returns: `nil` if either parent's genotype has no alleles to draw from.
 public func mateGenotypes(mother motherGenotype: Genotype, father fatherGenotype: Genotype)
 -> (leftAllele: String, rightAllele: String, leftLineage: Int, rightLineage: Int)? {

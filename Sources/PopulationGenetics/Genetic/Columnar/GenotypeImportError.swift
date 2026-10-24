@@ -10,12 +10,14 @@
 //  GenotypeImportError.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
+import Foundation
+
 /// Errors thrown while importing a genotype table.
-public enum GenotypeImportError: Error, Equatable {
+public enum GenotypeImportError: LocalizedError, Equatable {
     /// The input table had no rows.
     case emptyInput
     /// A required column was not found; the payload is the missing column's header.
@@ -31,4 +33,22 @@ public enum GenotypeImportError: Error, Equatable {
     /// A genotype dosage code fell outside the expected set (e.g. vcftools
     /// `--012`'s `{-1, 0, 1, 2}`). `row`/`column` are 0-based data positions.
     case invalidDosageCode(row: Int, column: Int, value: String)
+
+    /// A user-presentable description of the failure.
+    public var errorDescription: String? {
+        switch self {
+        case .emptyInput:
+            "The genotype table has no rows."
+        case .missingColumn(let column):
+            "The genotype table has no '\(column)' column."
+        case .malformedGenotype(let locus, let row, let value):
+            "Row \(row) has an unreadable genotype '\(value)' at locus \(locus)."
+        case .duplicateMother(let family):
+            "Family \(family) has more than one row marked as the mother."
+        case .sideFileMismatch(let expected, let found, let file):
+            "The \(file) file has \(found) entries but \(expected) were expected."
+        case .invalidDosageCode(let row, let column, let value):
+            "Row \(row + 1), column \(column + 1) has an invalid dosage code '\(value)'."
+        }
+    }
 }

@@ -23,6 +23,9 @@
 //  on every save, which destroys the file and any component data a caller
 //  isn't currently touching.
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import Graph
@@ -62,6 +65,8 @@ public actor ProjectStore {
     ///     of which components are included.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
+    /// - Throws: ``PersistenceError/cannotOpen(_:)`` if the file exists (and `overwrite` is `false`) or can't be
+    ///   created, or ``PersistenceError/sqliteError(code:message:)`` if installing a schema fails.
     public func create(at url: URL, overwrite: Bool = false, components: StoreComponents = .all,
                         projectName: String, species: String? = nil, description: String? = nil) async throws {
         if overwrite {
@@ -91,6 +96,13 @@ public actor ProjectStore {
 
     /// Opens an existing SQLite file, validating the schema version of
     /// whichever components are present.
+    ///
+    /// - Parameters:
+    ///   - url: The project file's location.
+    ///   - mode: `.readWrite` (default) or `.readOnly`.
+    /// - Throws: ``PersistenceError/cannotOpen(_:)`` if the file can't be opened,
+    ///   ``PersistenceError/schemaVersionMismatch(found:expected:)`` or ``PersistenceError/corruptData(_:)``
+    ///   for a component with a bad version row, or ``PersistenceError/sqliteError(code:message:)``.
     public func open(at url: URL, mode: OpenMode = .readWrite) async throws {
         let newConnection = SQLiteConnection()
         try newConnection.open(at: url, mode: mode == .readOnly ? .readOnly : .readWrite)
@@ -127,6 +139,12 @@ public actor ProjectStore {
     /// across its lifetime, instead of `create(overwrite:true)`, which
     /// destroys the file — and every component's data — on every save.
     ///
+    /// - Parameters:
+    ///   - url: The project file's location.
+    ///   - components: Components to create for a new file (default `.all`).
+    ///   - projectName: The project's name for a new file; required when the file doesn't exist.
+    ///   - species: The species, for a new file.
+    ///   - description: A description, for a new file.
     /// - Throws: `.cannotOpen` if the file doesn't exist and `projectName` is `nil`.
     public func openOrCreate(at url: URL, components: StoreComponents = .all, projectName: String? = nil,
                               species: String? = nil, description: String? = nil) async throws {
@@ -158,6 +176,11 @@ public actor ProjectStore {
     }
 
     /// Throws `.componentNotPresent` unless `component` was created for this file.
+    ///
+    /// - Parameters:
+    ///   - component: The component the caller needs.
+    ///   - label: The component's name for the error message.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` if the file lacks `component`.
     func requireComponent(_ component: StoreComponents, _ label: String) throws {
         guard presentComponents.contains(component) else {
             throw PersistenceError.componentNotPresent(label)
@@ -188,6 +211,17 @@ public actor ProjectStore {
     /// store open via `openOrCreate(at:)` and call `writeGeneticData`/
     /// `writeGraph`/`addResult`/`appendLog`/`addMatrix` instead if the file
     /// may already carry other components.
+    ///
+    /// - Parameters:
+    ///   - matrix: The genotypes to store.
+    ///   - parentage: The parentage design, if any.
+    ///   - strata: Each individual's stratum lineage, keyed by `Individual.id`.
+    ///   - projectName: The project's name.
+    ///   - species: The species, if any.
+    ///   - description: A description, if any.
+    ///   - url: Destination file URL; any existing file is replaced.
+    /// - Throws: The errors of ``create(at:overwrite:components:projectName:species:description:)`` and
+    ///   ``writeGeneticData(matrix:parentage:strata:)``.
     public static func save(_ matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
                              strata: [UUID: [StratumReference]] = [:],
                              projectName: String, species: String? = nil, description: String? = nil,
@@ -200,6 +234,10 @@ public actor ProjectStore {
     }
 
     /// One-shot convenience: opens `url` read-only and returns the full genetic dataset.
+    ///
+    /// - Parameter url: The project file's location.
+    /// - Returns: The file's matrix, parentage design and strata.
+    /// - Throws: The errors of ``open(at:mode:)`` and ``readDataset()``.
     public static func load(from url: URL) async throws -> ImportedDataset {
         let store = ProjectStore()
         try await store.open(at: url, mode: .readOnly)

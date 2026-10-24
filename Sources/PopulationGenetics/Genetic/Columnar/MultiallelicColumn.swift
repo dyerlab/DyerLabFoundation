@@ -1,3 +1,11 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  MultiallelicColumn.swift
 //  PopulationGenetics
@@ -5,6 +13,9 @@
 //  Columnar core: a multiallelic (microsatellite) column storing two parallel
 //  UInt8 allele-index arrays. Index 0 is the NULL allele: both zero = missing,
 //  one zero = haploid. Allele pairs are returned in canonical (sorted) order.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -68,14 +79,19 @@ public struct MultiallelicColumn: GenotypeColumn {
         rightAlleles[ordinal] = right
     }
 
-    // MARK: GenotypeColumn
+    // MARK: - GenotypeColumn
 
     /// Returns `true` when both allele indices at `ordinal` are 0 (missing).
+    ///
+    /// - Parameter ordinal: The individual ordinal.
+    /// - Returns: `true` if the genotype is missing.
     public func isEmpty(at ordinal: Int) -> Bool {
         leftAlleles[ordinal] == 0 && rightAlleles[ordinal] == 0
     }
 
     /// Returns the allele-index pair at `ordinal` in canonical (sorted) order, or `nil` if missing.
+    ///
+    /// - Parameter ordinal: The individual ordinal.
     public func alleles(at ordinal: Int) -> (UInt8, UInt8)? {
         if isEmpty(at: ordinal) { return nil }
         let l = leftAlleles[ordinal]

@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  UtilityTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Claude Code on 1/13/26.
+//  Created by Rodney Dyer on 2026.01.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -22,7 +21,7 @@ struct UtilityTests {
 
     // MARK: - FileIO Tests
 
-    @Test func testCSVToMatrixBasic() async throws {
+    @Test func cSVToMatrixBasic() async throws {
         let csv = "A,B,C\n1,2,3\n4,5,6"
         let matrix = csvToMatrix(raw: csv)
 
@@ -32,7 +31,7 @@ struct UtilityTests {
         #expect(matrix[2] == ["4", "5", "6"])
     }
 
-    @Test func testCSVToMatrixEmpty() async throws {
+    @Test func cSVToMatrixEmpty() async throws {
         let csv = ""
         let matrix = csvToMatrix(raw: csv)
 
@@ -40,7 +39,7 @@ struct UtilityTests {
         #expect(matrix[0] == [""])
     }
 
-    @Test func testCSVToMatrixSingleRow() async throws {
+    @Test func cSVToMatrixSingleRow() async throws {
         let csv = "A,B,C"
         let matrix = csvToMatrix(raw: csv)
 
@@ -48,7 +47,7 @@ struct UtilityTests {
         #expect(matrix[0] == ["A", "B", "C"])
     }
 
-    @Test func testCSVToMatrixWithTrailingNewline() async throws {
+    @Test func cSVToMatrixWithTrailingNewline() async throws {
         let csv = "A,B,C\n1,2,3\n"
         let matrix = csvToMatrix(raw: csv)
 
@@ -56,7 +55,7 @@ struct UtilityTests {
         #expect(matrix[2] == [""]) // Trailing newline creates empty row
     }
 
-    @Test func testCSVToMatrixUnevenColumns() async throws {
+    @Test func cSVToMatrixUnevenColumns() async throws {
         let csv = "A,B,C\n1,2\n3,4,5,6"
         let matrix = csvToMatrix(raw: csv)
 
@@ -66,7 +65,7 @@ struct UtilityTests {
         #expect(matrix[2].count == 4)
     }
 
-    @Test func testCSVToMatrixWithSpaces() async throws {
+    @Test func cSVToMatrixWithSpaces() async throws {
         let csv = "A, B, C\n1, 2, 3"
         let matrix = csvToMatrix(raw: csv)
 
@@ -75,7 +74,7 @@ struct UtilityTests {
         #expect(matrix[1] == ["1", " 2", " 3"])
     }
 
-    @Test func testCSVToMatrixWithEmptyCells() async throws {
+    @Test func cSVToMatrixWithEmptyCells() async throws {
         let csv = "A,,C\n,2,"
         let matrix = csvToMatrix(raw: csv)
 
@@ -86,13 +85,13 @@ struct UtilityTests {
 
     // MARK: - DiversityType Tests
 
-    @Test func testDiversityTypeLevelAllelic() async throws {
+    @Test func diversityTypeLevelAllelic() async throws {
         #expect(DiversityType.A.level == .Allelic)
         #expect(DiversityType.A95.level == .Allelic)
         #expect(DiversityType.Ae.level == .Allelic)
     }
 
-    @Test func testDiversityTypeLevelGenotypic() async throws {
+    @Test func diversityTypeLevelGenotypic() async throws {
         #expect(DiversityType.Ho.level == .Genotypic)
         #expect(DiversityType.He.level == .Genotypic)
         #expect(DiversityType.Ht.level == .Genotypic)
@@ -102,7 +101,7 @@ struct UtilityTests {
         #expect(DiversityType.Pe.level == .Genotypic)
     }
 
-    @Test func testDiversityTypeRawValues() async throws {
+    @Test func diversityTypeRawValues() async throws {
         #expect(DiversityType.A.rawValue == "A")
         #expect(DiversityType.A95.rawValue == "A95")
         #expect(DiversityType.Ae.rawValue == "Ae")
@@ -113,7 +112,7 @@ struct UtilityTests {
 
     // MARK: - DiversityLevel Tests
 
-    @Test func testDiversityLevelRawValues() async throws {
+    @Test func diversityLevelRawValues() async throws {
         #expect(DiversityLevel.Allelic.rawValue == "Allelic")
         #expect(DiversityLevel.Genotypic.rawValue == "Genotypic")
     }

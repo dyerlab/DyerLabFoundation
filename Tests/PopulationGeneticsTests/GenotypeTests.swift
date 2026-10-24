@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  GenotypeTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Claude Code on 1/13/26.
+//  Created by Rodney Dyer on 2026.01.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -22,7 +21,7 @@ struct GenotypeTests {
 
     // MARK: - Initialization Tests
 
-    @Test func testGenotypeInitialization() async throws {
+    @Test func genotypeInitialization() async throws {
         let geno = Genotype(leftAllele: "A", rightAllele: "B")
 
         #expect(geno.leftAllele == "A")
@@ -33,7 +32,7 @@ struct GenotypeTests {
 
     // MARK: - Ploidy Tests
 
-    @Test func testEmptyGenotype() async throws {
+    @Test func emptyGenotype() async throws {
         let geno = Genotype(leftAllele: "", rightAllele: "")
 
         #expect(geno.isEmpty == true)
@@ -41,7 +40,7 @@ struct GenotypeTests {
         #expect(geno.isHeterozygote == false)
     }
 
-    @Test func testHaploidGenotype() async throws {
+    @Test func haploidGenotype() async throws {
         let geno1 = Genotype(leftAllele: "A", rightAllele: "")
         #expect(geno1.ploidy == Genotype.Haploid)
         #expect(geno1.isEmpty == false)
@@ -50,7 +49,7 @@ struct GenotypeTests {
         #expect(geno2.ploidy == Genotype.Haploid)
     }
 
-    @Test func testDiploidHomozygote() async throws {
+    @Test func diploidHomozygote() async throws {
         let geno = Genotype(leftAllele: "A", rightAllele: "A")
 
         #expect(geno.ploidy == Genotype.Diploid)
@@ -58,7 +57,7 @@ struct GenotypeTests {
         #expect(geno.isHeterozygote == false)
     }
 
-    @Test func testDiploidHeterozygote() async throws {
+    @Test func diploidHeterozygote() async throws {
         let geno = Genotype(leftAllele: "A", rightAllele: "B")
 
         #expect(geno.ploidy == Genotype.Diploid)
@@ -68,7 +67,7 @@ struct GenotypeTests {
 
     // MARK: - Lineage Constants Tests
 
-    @Test func testLineageConstants() async throws {
+    @Test func lineageConstants() async throws {
         #expect(Genotype.MaternalLineage == -1)
         #expect(Genotype.UnknownLineage == 0)
         #expect(Genotype.PaternalLineage == 1)
@@ -76,7 +75,7 @@ struct GenotypeTests {
         #expect(Genotype.ImpossibleLineage == 3)
     }
 
-    @Test func testPloidyConstants() async throws {
+    @Test func ploidyConstants() async throws {
         #expect(Genotype.Empty == 0)
         #expect(Genotype.Haploid == 1)
         #expect(Genotype.Diploid == 2)
@@ -84,15 +83,19 @@ struct GenotypeTests {
 
     // MARK: - Lineage Tracking Tests (via PopGenStore)
 
-    private func makeStoreWithOffspring(offspringLeft: String, offspringRight: String) -> (store: PopGenStore, offspring: Individual) {
+    private func makeStoreWithOffspring(offspringLeft: String,
+                                        offspringRight: String) -> (store: PopGenStore, offspring: Individual) {
         let store = PopGenStore()
         store.addLocus(name: "LTRS")
         let offspring = store.addIndividual(name: "Offspring")
-        store.setGenotype(individual: offspring, locusName: "LTRS", leftAllele: offspringLeft, rightAllele: offspringRight)
+        store.setGenotype(individual: offspring,
+                          locusName: "LTRS",
+                          leftAllele: offspringLeft,
+                          rightAllele: offspringRight)
         return (store, offspring)
     }
 
-    @Test func testSetLineageFromIdenticalHeterozygotes() async throws {
+    @Test func setLineageFromIdenticalHeterozygotes() async throws {
         let (store, offspring) = makeStoreWithOffspring(offspringLeft: "A", offspringRight: "B")
         let parent = Genotype(leftAllele: "A", rightAllele: "B")
 
@@ -104,7 +107,7 @@ struct GenotypeTests {
         #expect(updated.rightLineage == Genotype.AmbiguousLineage)
     }
 
-    @Test func testSetLineageFromMatchingAlleles() async throws {
+    @Test func setLineageFromMatchingAlleles() async throws {
         let (store, offspring) = makeStoreWithOffspring(offspringLeft: "A", offspringRight: "C")
         let parent = Genotype(leftAllele: "A", rightAllele: "B")
 
@@ -116,7 +119,7 @@ struct GenotypeTests {
         #expect(updated.rightLineage == Genotype.PaternalLineage)
     }
 
-    @Test func testSetLineageFromNoMatch() async throws {
+    @Test func setLineageFromNoMatch() async throws {
         let (store, offspring) = makeStoreWithOffspring(offspringLeft: "C", offspringRight: "D")
         let parent = Genotype(leftAllele: "A", rightAllele: "B")
 
@@ -130,7 +133,7 @@ struct GenotypeTests {
 
     // MARK: - Mating Tests (pure mateGenotypes function)
 
-    @Test func testMatingProducesOffspring() async throws {
+    @Test func matingProducesOffspring() async throws {
         let mother = Genotype(leftAllele: "A", rightAllele: "B")
         let father = Genotype(leftAllele: "C", rightAllele: "D")
 
@@ -143,7 +146,7 @@ struct GenotypeTests {
         #expect(possibleAlleles.contains(result!.rightAllele))
     }
 
-    @Test func testMatingProducesValidLineage() async throws {
+    @Test func matingProducesValidLineage() async throws {
         let mother = Genotype(leftAllele: "A", rightAllele: "A")
         let father = Genotype(leftAllele: "B", rightAllele: "B")
 
@@ -158,13 +161,14 @@ struct GenotypeTests {
 
             // Check lineage is set
             #expect(result!.leftLineage == Genotype.MaternalLineage || result!.leftLineage == Genotype.PaternalLineage)
-            #expect(result!.rightLineage == Genotype.MaternalLineage || result!.rightLineage == Genotype.PaternalLineage)
+            #expect(result!.rightLineage == Genotype.MaternalLineage
+                    || result!.rightLineage == Genotype.PaternalLineage)
         }
     }
 
     // MARK: - Equality Tests
 
-    @Test func testGenotypeEquality() async throws {
+    @Test func genotypeEquality() async throws {
         let geno1 = Genotype(leftAllele: "A", rightAllele: "B")
         let geno2 = Genotype(leftAllele: "A", rightAllele: "B")
 
@@ -172,7 +176,7 @@ struct GenotypeTests {
         #expect(geno1 == geno2)
     }
 
-    @Test func testGenotypeInequality() async throws {
+    @Test func genotypeInequality() async throws {
         let geno1 = Genotype(leftAllele: "A", rightAllele: "B")
         let geno2 = Genotype(leftAllele: "A", rightAllele: "C")
 
@@ -181,14 +185,14 @@ struct GenotypeTests {
 
     // MARK: - String Description Test
 
-    @Test func testGenotypeDescription() async throws {
+    @Test func genotypeDescription() async throws {
         let geno = Genotype(leftAllele: "A", rightAllele: "B")
         #expect(geno.description == "A:B")
     }
 
     // MARK: - Color for Lineage Test
 
-    @Test func testColorForLineage() async throws {
+    @Test func colorForLineage() async throws {
         let maternalColor = Genotype.colorForLineage(lineage: Genotype.MaternalLineage)
         let paternalColor = Genotype.colorForLineage(lineage: Genotype.PaternalLineage)
         let ambiguousColor = Genotype.colorForLineage(lineage: Genotype.AmbiguousLineage)

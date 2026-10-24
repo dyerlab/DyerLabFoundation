@@ -12,7 +12,10 @@
 //
 //  Read/write access to the `.graph` component: turns an in-memory `Graph`
 //  plus its population-genetics metadata into rows in the schema defined by
-//  `GraphSQLiteSchema.swift`.
+//  `GraphSchemaComponent.swift`.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -20,12 +23,30 @@ import Graph
 
 extension ProjectStore {
 
+    /// Writes a live graph, capturing it as a `GraphSnapshot` on the caller's actor
+    /// first so the non-`Sendable` `Graph` never crosses into this actor.
+    ///
+    /// - Parameters:
+    ///   - graph: The graph structure itself (nodes carry `name`, `size`, `coordinate`).
+    ///   - nodeStrata: Ancestor stratum lineage per node, keyed by `Node.id`.
+    ///   - nodeValues: Sparse numeric measures per node, keyed by `Node.id`.
+    ///   - edgeValues: Sparse numeric measures per edge, keyed by `Edge.id`.
+    ///   - graphValues: Graph-wide computed measures (diameter, component count, ...) by name.
+    ///   - loci: The loci this graph was built from, if any (see the snapshot overload).
+    /// - Throws: The same errors as the `GraphSnapshot` overload.
+    nonisolated public func writeGraph(_ graph: Graph, nodeStrata: [UUID: [StratumReference]] = [:],
+                                       nodeValues: [UUID: [GraphValue]] = [:], edgeValues: [UUID: [GraphValue]] = [:],
+                                       graphValues: [String: Double] = [:], loci: [Locus] = []) async throws {
+        try await writeGraph(GraphSnapshot(graph), nodeStrata: nodeStrata, nodeValues: nodeValues,
+                             edgeValues: edgeValues, graphValues: graphValues, loci: loci)
+    }
+
     /// Writes the population graph into the currently open connection, in one
     /// transaction, replacing any previously-written graph. Leaves every
     /// other component (geneticData/results/log/matrices) untouched.
     ///
     /// - Parameters:
-    ///   - graph: The graph structure itself (nodes carry `name`, `size`, `coordinate`).
+    ///   - graph: The graph's nodes and edges (nodes carry `name`, `size`, `coordinate`).
     ///   - nodeStrata: Ancestor stratum lineage per node, keyed by `Node.id`.
     ///   - nodeValues: Sparse numeric measures per node, keyed by `Node.id`.
     ///   - edgeValues: Sparse numeric measures per edge, keyed by `Edge.id`.
@@ -34,7 +55,11 @@ extension ProjectStore {
     ///     already be present in this file's `loci` table (i.e. `.geneticData` written
     ///     first via `writeGeneticData`) — leave empty for a graph with no underlying
     ///     genetic data.
-    public func writeGraph(_ graph: Graph, nodeStrata: [UUID: [StratumReference]] = [:],
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.graph` component, ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` if an
+    ///   edge, stratum or value references an unknown node or edge, or a locus isn't in the `loci` table, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` if a write fails.
+    public func writeGraph(_ graph: GraphSnapshot, nodeStrata: [UUID: [StratumReference]] = [:],
                             nodeValues: [UUID: [GraphValue]] = [:], edgeValues: [UUID: [GraphValue]] = [:],
                             graphValues: [String: Double] = [:], loci: [Locus] = []) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
@@ -73,7 +98,13 @@ extension ProjectStore {
 
     /// Writes `nodes`, returning each node's assigned ordinal keyed by its `id`
     /// so later tables (edges, node_strata, node_values) can reference it.
-    func writeNodes(_ nodes: [Node], connection: SQLiteConnection) throws -> [UUID: Int] {
+    ///
+    /// - Parameters:
+    ///   - nodes: The nodes to insert, in order.
+    ///   - connection: The open connection to write to.
+    /// - Returns: Each node's ordinal keyed by its `id`.
+    /// - Throws: ``PersistenceError/sqliteError(code:message:)`` if an insert fails.
+    func writeNodes(_ nodes: [GraphSnapshot.NodeRecord], connection: SQLiteConnection) throws -> [UUID: Int] {
         let stmt = try connection.prepare("""
             INSERT INTO nodes (ordinal, uuid, name, size, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)
             """)
@@ -84,15 +115,16 @@ extension ProjectStore {
             stmt.bind(node.id.uuidString, at: 2)
             stmt.bind(node.name, at: 3)
             stmt.bind(node.size, at: 4)
-            stmt.bindOptional(node.coordinate?.latitude, at: 5)
-            stmt.bindOptional(node.coordinate?.longitude, at: 6)
+            stmt.bindOptional(node.latitude, at: 5)
+            stmt.bindOptional(node.longitude, at: 6)
             _ = try stmt.step()
             ordinals[node.id] = ordinal
         }
         return ordinals
     }
 
-    func writeEdges(_ edges: [Edge], nodeOrdinals: [UUID: Int], connection: SQLiteConnection) throws {
+    func writeEdges(_ edges: [GraphSnapshot.EdgeRecord], nodeOrdinals: [UUID: Int],
+                    connection: SQLiteConnection) throws {
         let stmt = try connection.prepare("""
             INSERT INTO edges (ordinal, uuid, from_ordinal, to_ordinal, weight) VALUES (?, ?, ?, ?, ?)
             """)
@@ -133,6 +165,15 @@ extension ProjectStore {
 
     /// Shared codec for `node_values` and `edge_values`, which share one
     /// `(ordinal, name, value, kind)` shape.
+    ///
+    /// - Parameters:
+    ///   - table: `"node_values"` or `"edge_values"`.
+    ///   - ordinalColumn: The table's owner-ordinal column.
+    ///   - values: Values keyed by node or edge id.
+    ///   - ordinals: Ordinals keyed by node or edge id.
+    ///   - connection: The open connection to write to.
+    /// - Throws: ``PersistenceError/corruptData(_:)`` if an id has no ordinal, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` if an insert fails.
     func writeValues(table: String, ordinalColumn: String, values: [UUID: [GraphValue]],
                       ordinals: [UUID: Int], connection: SQLiteConnection) throws {
         guard !values.isEmpty else { return }
@@ -168,6 +209,12 @@ extension ProjectStore {
     /// Records which of this file's already-written loci built the graph.
     /// Every locus must already exist in the `loci` table (written via
     /// `writeGeneticData`); this never duplicates locus metadata.
+    ///
+    /// - Parameters:
+    ///   - loci: The loci the graph was built from.
+    ///   - connection: The open connection to write to.
+    /// - Throws: ``PersistenceError/corruptData(_:)`` if a locus isn't in the `loci` table, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` if a query fails.
     func writeGraphLoci(_ loci: [Locus], connection: SQLiteConnection) throws {
         guard !loci.isEmpty else { return }
         let lookupStmt = try connection.prepare("SELECT ordinal FROM loci WHERE uuid = ?")

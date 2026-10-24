@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  GraphTests.swift
+//  GraphTests
+//
+//  Created by Rodney Dyer on 2025.05.21.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Test.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 5/21/25.
 //
 
 import SwiftUI
@@ -24,11 +23,11 @@ struct GraphTests {
     @Test func graphConstruction() async throws {
         let G = Graph()
 
-        #expect( G.cardinality == 0, "Failed cardinality" )
-        #expect( G.node(name:"Bob") == nil, "Failed empty node access.")
+        #expect(G.cardinality == 0, "Failed cardinality")
+        #expect(G.node(name:"Bob") == nil, "Failed empty node access.")
 
         G.addNode(name: "Bob", size: 12.2, color: .red)
-        #expect( G.cardinality == 1, "Failed cardinality, G=1" )
+        #expect(G.cardinality == 1, "Failed cardinality, G=1")
     }
 
     @Test func symmetricEdgeAddsBothDirections() async throws {

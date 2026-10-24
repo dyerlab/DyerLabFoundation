@@ -7,11 +7,12 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  Vector.swift
+//  Matrix
+//
+//  Created by Rodney Dyer on 2021.06.10.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Vector.swift
-//  Created by Rodney Dyer on 6/10/21.
-
 
 import Foundation
 import Accelerate
@@ -54,10 +55,8 @@ import CoreGraphics
 /// ```
 public typealias Vector = [Double]
 
-
-
 extension Vector {
-    
+
     /// The sum of all elements in the vector.
     ///
     /// - Returns: The sum of all elements
@@ -69,10 +68,10 @@ extension Vector {
     /// ```
     public var sum: Double {
         get {
-            return self.reduce( 0.0, + )
+            self.reduce(0.0, +)
         }
     }
-    
+
     /// The arithmetic mean (average) of all elements.
     ///
     /// - Returns: The mean value, or `NaN` if the vector is empty
@@ -84,10 +83,9 @@ extension Vector {
     /// ```
     public var mean: Double {
         guard !self.isEmpty else { return Double.nan }
-        return self.reduce(0,+) / Double( self.count )
-        
+        return self.reduce(0,+) / Double(self.count)
+
     }
-    
 
     /// The sample variance of the vector.
     ///
@@ -106,7 +104,7 @@ extension Vector {
         let squaredDiffs = self.map { ($0 - mean) * ($0 - mean) }
         return squaredDiffs.reduce(0.0, +) / Double(self.count - 1)
     }
-    
+
     /// The sample standard deviation of the vector.
     ///
     /// Computed as the square root of the sample variance.
@@ -121,10 +119,9 @@ extension Vector {
     public var sd: Double {
         let v = self.variance
         if v.isNaN { return Double.nan }
-        return sqrt( v )
+        return sqrt(v)
     }
-    
-    
+
     /// The magnitude (L2 norm) of the vector.
     ///
     /// Computed as: `sqrt(x₁² + x₂² + ... + xₙ²)`
@@ -139,10 +136,10 @@ extension Vector {
     public var magnitude: Double {
         get {
             let v = self
-            return  sqrt( (v * v).sum )
+            return  sqrt((v * v).sum)
         }
     }
-    
+
     /// The minimum value in the vector.
     ///
     /// - Returns: The smallest element, or `nil` if the vector is empty
@@ -156,15 +153,14 @@ extension Vector {
     public var maximum: Double? {
         self.max()
     }
-    
-    
+
     /// The first element (x-coordinate).
     ///
     /// Useful when treating the vector as a point in space.
     ///
     /// - Returns: The first element, or `0.0` if the vector is empty
     public var x: Double {
-        return self.count > 0 ? self[0] : 0.0
+        self.count > 0 ? self[0] : 0.0
     }
 
     /// The second element (y-coordinate).
@@ -173,7 +169,7 @@ extension Vector {
     ///
     /// - Returns: The second element, or `0.0` if the vector has fewer than 2 elements
     public var y: Double {
-        return self.count > 1 ? self[1] : 0.0
+        self.count > 1 ? self[1] : 0.0
     }
 
     /// The third element (z-coordinate).
@@ -182,7 +178,7 @@ extension Vector {
     ///
     /// - Returns: The third element, or `0.0` if the vector has fewer than 3 elements
     public var z: Double {
-        return self.count > 2 ? self[2] : 0.0
+        self.count > 2 ? self[2] : 0.0
     }
 
     /// Returns a unit vector (normalized to magnitude 1).
@@ -198,17 +194,19 @@ extension Vector {
     /// print(normalized.magnitude) // 1.0
     /// ```
     public var normal: Vector {
-        return self/magnitude
+        self/magnitude
     }
-    
-    
+
     /// Return random normalized vector
-    public static func randomNormalizedVector( size: Int = 512) -> Vector {
+    ///
+    /// - Parameter size: The number of elements (default `512`).
+    /// - Returns: A vector of uniform draws in `[-1, 1]`, scaled to unit length.
+    public static func randomNormalizedVector(size: Int = 512) -> Vector {
         let raw = (0..<size).map { _ in Double.random(in: -1.0...1.0) }
         let magnitude = sqrt(raw.map { $0 * $0 }.reduce(0.0, +))
         return raw.map { $0 / magnitude }
     }
-    
+
     /// Returns the coordinate as a CGPoint in 2-space
     public var asCGPoint: CGPoint {
         switch self.count {
@@ -220,13 +218,13 @@ extension Vector {
             return CGPoint(x: self[0], y: self[1])
         }
     }
-    
+
     /// Self as a SCNVector3
     public var asSCNVector3: SCNVector3 {
         switch self.count {
         case 0:
             return SCNVector3Make(0, 0, 0)
-            
+
 #if os(macOS)
         case 1:
             return SCNVector3Make(CGFloat(self[0]), 0.0, 0.0)
@@ -244,33 +242,43 @@ extension Vector {
 #endif
         }
     }
-    
-    public func smallest( other: Vector ) -> Vector {
+
+    /// The element-wise minimum of two vectors.
+    ///
+    /// - Parameter other: A vector of the same length.
+    /// - Returns: The element-wise minimum, or `self` unchanged if the lengths differ.
+    public func smallest(other: Vector) -> Vector {
         if self.count != other.count {
             return self
         }
-        var ret = Vector.zeros( self.count )
+        var ret = Vector.zeros(self.count)
         for i in 0 ..< self.count {
-            ret[i] = Swift.min( self[i], other[i])
+            ret[i] = Swift.min(self[i], other[i])
         }
         return ret
     }
-    
-    public func largest( other: Vector ) -> Vector {
+
+    /// The element-wise maximum of two vectors.
+    ///
+    /// - Parameter other: A vector of the same length.
+    /// - Returns: The element-wise maximum, or `self` unchanged if the lengths differ.
+    public func largest(other: Vector) -> Vector {
         if self.count != other.count {
             return self
         }
-        var ret = Vector.zeros( self.count )
+        var ret = Vector.zeros(self.count)
         for i in 0 ..< self.count {
-            ret[i] = Swift.max( self[i], other[i])
+            ret[i] = Swift.max(self[i], other[i])
         }
         return ret
     }
-    
+
     /// This function constrains each of the values in the vector to the designated range
-    ///  - Parameters:
+    ///
+    /// - Parameters:
     ///   - minimum: The minimum value to constrain the value to.
     ///   - maximum: The maximum value to constrain the value to.
+    /// - Returns: A copy with every value clamped to `minimum...maximum`.
     public func constrain(minimum: Double, maximum: Double) -> Vector {
         var ret = Vector(repeating: 0.0, count: self.count)
         for i in 0..<self.count {
@@ -285,48 +293,54 @@ extension Vector {
         }
         return ret
     }
-    
-    public func limitAnnealingMagnitude( temp: Double ) -> Vector {
-        var ret = Vector.zeros( self.count )
+
+    /// Caps each element's magnitude at `temp`, keeping its sign — the
+    /// temperature-limited step of simulated annealing.
+    ///
+    /// - Parameter temp: The largest allowed magnitude.
+    /// - Returns: The capped vector.
+    public func limitAnnealingMagnitude(temp: Double) -> Vector {
+        var ret = Vector.zeros(self.count)
         for i in 0..<count {
             if self[i] < 0 {
-                ret[i] = -1.0 * Double.minimum( temp, abs(self[i]) )
+                ret[i] = -1.0 * Double.minimum(temp, abs(self[i]))
             } else {
-                ret[i] = Double.minimum( temp, self[i] )
+                ret[i] = Double.minimum(temp, self[i])
             }
         }
         return ret
     }
-    
-    /// Create a zero vector
+
+    /// Creates a zero vector.
     ///
-    /// - Parameters length: How long you want the vector
-    /// - Returns A `Vector` of proper length with zeros
-    public static func zeros(_ length: Int ) -> Vector  {
-        return Vector( repeating: 0.0, count: length)
+    /// - Parameter length: How long you want the vector.
+    /// - Returns: A `Vector` of proper length with zeros.
+    public static func zeros(_ length: Int) -> Vector  {
+        Vector(repeating: 0.0, count: length)
     }
-    
-    
+
     /// Creats a random vector values
+    ///
     /// - Parameters:
     ///   - length: The length of the vector
     ///   - type: The type of data requested, 1 = uniform [0,1], 2 = uniform [-1,1], 3 = normal[0,1]
     /// - Returns: Vector of random values
-    public static func random( length: Int, type: RangeEnum = .uniform_0_1 ) -> Vector {
+    public static func random(length: Int, type: RangeEnum = .uniform_0_1) -> Vector {
         var seed = (0..<4).map { _ in
             Int32(Random.within(0.0...4095.0))
         }
-        
-        var dist = Int32( type.rawValue )
-        var n = Int32( length )
+
+        var dist = Int32(type.rawValue)
+        var n = Int32(length)
         var ret = Vector(repeating: 0.0, count: length)
-        
+
         dlarnv_(&dist, &seed, &n, &ret)
-        
+
         return ret
     }
-    
-    
+
+    /// The values rescaled to `[0, 1]` by subtracting the minimum and dividing by the
+    /// resulting maximum, or `nil` if the vector is empty or constant.
     public var studentized: Vector? {
         guard let minVal = self.minimum else { return nil }
         let ret = self - minVal
@@ -334,31 +348,20 @@ extension Vector {
               maxVal != 0 else { return nil }
         return ret.map { $0 / maxVal }
     }
-    
 
-    
-    
 }
-
-
-
 
 // MARK: - Overriding rSourceConverible
 extension Vector: rSourceConvertible {
-    
+
+    /// R source for the vector as a `c(...)` call.
+    ///
+    /// - Returns: The R expression.
     public func toR() -> String {
         var ret = "c("
-        ret += self.map{ String("\($0)")}.joined(separator: ", ")
+        ret += self.map { String("\($0)")}.joined(separator: ", ")
         ret += ")"
         return ret
     }
-    
+
 }
-
-
-
-
-
-
-
-

@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopGenStore+Loci.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -20,17 +21,25 @@ import Foundation
 public extension PopGenStore {
 
     /// Fetches all loci, sorted naturally by name.
+    ///
+    /// - Returns: Every locus, in natural name order.
     func getAllLoci() -> [Locus] {
         loci.naturalSorted(by: \.name)
     }
 
     /// Retrieves a specific locus by name.
+    ///
+    /// - Parameter named: The locus's name.
+    /// - Returns: The locus, or `nil` if no locus has that name.
     func getLocus(named: String) -> Locus? {
         guard let ordinal = locusOrdinalByName[named] else { return nil }
         return loci[ordinal]
     }
 
     /// Retrieves all loci with a specific name (typically returns 0 or 1 results).
+    ///
+    /// - Parameter named: The locus name to match.
+    /// - Returns: The matching loci.
     func getLoci(named: String) -> [Locus] {
         loci.filter { $0.name == named }
     }
@@ -66,6 +75,8 @@ public extension PopGenStore {
     ///
     /// No-op if `locus.id` isn't already present. Does not change marker type or
     /// codebook — those are fixed at `addLocus` time.
+    ///
+    /// - Parameter locus: The updated locus, matched by `id`.
     func updateLocus(_ locus: Locus) {
         guard let ordinal = locusOrdinalByID[locus.id] else { return }
         locusOrdinalByName.removeValue(forKey: loci[ordinal].name)

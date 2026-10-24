@@ -10,8 +10,8 @@
 //  PollenPoolFrequencies.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Accumulates recovered paternal gametes into a pollen-pool allele-frequency
@@ -54,6 +54,8 @@ public struct PollenPoolFrequencies: Sendable {
     }
 
     /// Adds a single recovered paternal contribution.
+    ///
+    /// - Parameter contribution: The recovered paternal gamete.
     public mutating func add(_ contribution: PaternalContribution) {
         switch contribution {
         case .resolved(let allele):
@@ -71,11 +73,14 @@ public struct PollenPoolFrequencies: Sendable {
     }
 
     /// Recovers and adds the paternal gamete for an offspring/mother genotype pair.
+    ///
+    /// - Parameters:
+    ///   - offspring: The offspring's allele indices.
+    ///   - mother: The mother's allele indices.
     public mutating func add(offspring: (UInt8, UInt8), mother: (UInt8, UInt8)) {
         add(paternalGamete(offspring: offspring, mother: mother))
     }
 }
-
 
 // MARK: - Pollen-pool frequencies and diversity
 
@@ -85,18 +90,26 @@ extension PollenPoolFrequencies {
     public var N: Double { counts.reduce(0.0, +) }
 
     /// Returns the count for a paternal allele index.
+    ///
+    /// - Parameter index: The paternal allele index.
+    /// - Returns: The allele's count, or `0` for an out-of-range index.
     public func count(forIndex index: UInt8) -> Double {
         let i = Int(index)
         return i < counts.count ? counts[i] : 0.0
     }
 
     /// Returns the pollen-pool frequency for an allele index, or `NaN` if empty.
+    ///
+    /// - Parameter index: The paternal allele index.
+    /// - Returns: The allele's frequency, or `NaN`.
     public func frequency(forIndex index: UInt8) -> Double {
         let n = N
         return n > 0 ? count(forIndex: index) / n : Double.nan
     }
 
     /// Pollen-pool frequencies for all non-null slots, or `[]` when empty.
+    ///
+    /// - Returns: One frequency per non-null slot, in index order.
     public func frequencies() -> [Double] {
         let n = N
         guard n > 0 else { return [] }

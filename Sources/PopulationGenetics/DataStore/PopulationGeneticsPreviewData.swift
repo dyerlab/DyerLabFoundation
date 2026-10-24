@@ -7,14 +7,14 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  PreviewData.swift
-// PopulationGenetics
+//  PopulationGeneticsPreviewData.swift
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
-
 
 #if DEBUG
 
@@ -24,7 +24,8 @@ import SwiftUI
 /// via `ExampleDataset.arapatPopulations` (see `loadAraptusSamples()`), the same
 /// bundled resource and import pipeline a real user import would use.
 ///
-/// - Note: Only available in DEBUG builds.
+/// - Note: Only available in DEBUG builds. Main-actor isolated, like the SwiftUI views
+///   that observe its `PopGenStore`.
 ///
 /// ## Usage
 ///
@@ -39,7 +40,8 @@ import SwiftUI
 /// let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 /// let stratum = dataStore.getStratum(named: "SBP", within: "Population")
 /// ```
-public final class PopulationGeneticsPreviewData: @unchecked Sendable {
+@MainActor
+public final class PopulationGeneticsPreviewData {
     /// The shared singleton instance containing pre-loaded sample data.
     public static let shared = PopulationGeneticsPreviewData()
 
@@ -52,21 +54,20 @@ public final class PopulationGeneticsPreviewData: @unchecked Sendable {
     }
 }
 
-
 extension PopulationGeneticsPreviewData {
 
     /// Sample loci for use in previews (randomly located on contig 1).
     static public var exampleLoci: [Locus] {
 
         let ret = [
-            Locus(name: "LTRS", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "WNT", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "EN", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "EF", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "ZMP", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "AML", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "ATPS", location: UInt.random(in: 1000...10000), contig: "1" ),
-            Locus(name: "MP20", location: UInt.random(in: 1000...10000), contig: "1" ),
+            Locus(name: "LTRS", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "WNT", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "EN", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "EF", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "ZMP", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "AML", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "ATPS", location: UInt.random(in: 1000...10000), contig: "1"),
+            Locus(name: "MP20", location: UInt.random(in: 1000...10000), contig: "1"),
         ]
 
         return ret.sorted()

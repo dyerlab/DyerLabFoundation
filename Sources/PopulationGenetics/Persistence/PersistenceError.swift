@@ -10,9 +10,14 @@
 //  PersistenceError.swift
 //  PopulationGenetics
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
+
+import Foundation
 
 /// Errors thrown by the SQLite-backed `ProjectStore`.
-public enum PersistenceError: Error, Equatable {
+public enum PersistenceError: LocalizedError, Equatable {
     /// The file at the given path could not be opened.
     case cannotOpen(String)
     /// A SQLite call failed with the given result code and message.
@@ -27,4 +32,24 @@ public enum PersistenceError: Error, Equatable {
     case readOnly
     /// The requested component (e.g. `.graph`) was never created for this file.
     case componentNotPresent(String)
+
+    /// A user-presentable description of the failure.
+    public var errorDescription: String? {
+        switch self {
+        case .cannotOpen(let path):
+            "The project file at \(path) could not be opened."
+        case .sqliteError(let code, let message):
+            "The project file could not be read or written (SQLite error \(code): \(message))."
+        case .schemaVersionMismatch(let found, let expected):
+            "The project file uses format version \(found), but this app expects version \(expected)."
+        case .corruptData(let detail):
+            "The project file is damaged: \(detail)"
+        case .notOpen:
+            "No project file is open."
+        case .readOnly:
+            "The project file was opened read-only and can't be changed."
+        case .componentNotPresent(let component):
+            "The project file has no \(component) data."
+        }
+    }
 }

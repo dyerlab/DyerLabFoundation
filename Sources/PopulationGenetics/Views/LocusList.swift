@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  LocusList.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -24,18 +25,21 @@ struct LocusList: View {
     @EnvironmentObject var dataStore: PopGenStore
 
     private var loci: [Locus] {
-        return dataStore.getAllLoci()
+        dataStore.getAllLoci()
     }
 
     var body: some View {
-        List(loci.sorted() ) { locus in
-            LocusPlacard(locus: locus )
+        List(loci.sorted()) { locus in
+            LocusPlacard(locus: locus)
         }
         .navigationTitle("Loci")
     }
 }
 
 #if DEBUG
+
+// MARK: - Previews
+
 #Preview {
     LocusList()
         .environmentObject(PopulationGeneticsPreviewData.shared.dataStore)

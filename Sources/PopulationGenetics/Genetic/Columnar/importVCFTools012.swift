@@ -10,15 +10,15 @@
 //  importVCFTools012.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
-//
 //  Imports the three-file output of `vcftools --012`, which encodes biallelic
 //  SNP dosage with no allele identity at all (only CHROM/POS, never REF/ALT
 //  bases). Every locus this importer produces is tagged
 //  `Locus.AlleleProvenance.refAltPlaceholder` with a fixed `Z` (REF-slot) /
 //  `z` (ALT-slot) codebook — see `Locus.AlleleProvenance` for why this is
 //  REF/ALT identity, not major/minor.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -35,6 +35,9 @@ import Foundation
 ///     in the same column order as `dosageText`'s dosage columns.
 /// - Returns: The parsed matrix. `parentage` and `strata` are always empty —
 ///   neither exists in this triplet.
+/// - Throws: ``GenotypeImportError/emptyInput``, ``GenotypeImportError/sideFileMismatch(expected:found:file:)``,
+///   ``GenotypeImportError/invalidDosageCode(row:column:value:)`` or
+///   ``GenotypeImportError/malformedGenotype(locus:row:value:)``.
 public func importVCFTools012(dosageText: String, indvText: String, posText: String) throws -> ImportedDataset {
 
     let sampleNames = indvText.split(separator: "\n", omittingEmptySubsequences: true)
@@ -59,7 +62,9 @@ public func importVCFTools012(dosageText: String, indvText: String, posText: Str
 
     let dosageRows = dosageText.split(separator: "\n", omittingEmptySubsequences: true)
     guard dosageRows.count == sampleNames.count else {
-        throw GenotypeImportError.sideFileMismatch(expected: sampleNames.count, found: dosageRows.count, file: ".012.indv")
+        throw GenotypeImportError.sideFileMismatch(expected: sampleNames.count,
+                                                   found: dosageRows.count,
+                                                   file: ".012.indv")
     }
 
     var codes = [[UInt8]](repeating: [UInt8](repeating: 0, count: sampleNames.count), count: loci.count)

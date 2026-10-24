@@ -7,14 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  LayoutControllerTests.swift
-//  MatrixStuffTests
+//  GraphTests
 //
 //  Tests for the @Observable layout controllers (LayoutOrchestrator drives
 //  GraphLayoutView). Methods are exercised directly via step() rather than the
 //  animation timer, so the tests stay deterministic.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -164,7 +165,8 @@ struct LayoutControllerTests {
         while !o.isSettled { o.step() }
 
         guard case .stoppedStillMoving(let motion, let suggested?) = o.settleOutcome else {
-            Issue.record("expected a still-moving cut-off with a suggestion, got \(String(describing: o.settleOutcome))")
+            let outcome = String(describing: o.settleOutcome)
+            Issue.record("expected a still-moving cut-off with a suggestion, got \(outcome)")
             return
         }
         #expect(motion >= config.settleThreshold)

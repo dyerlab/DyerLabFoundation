@@ -8,12 +8,13 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Individual.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 5/30/25.
+//  PopulationGenetics
 //
 //  Represents an individual in a population genetics dataset, including metadata
 //  like spatial coordinates and associated genetic and stratification information.
+//
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import CoreLocation
@@ -36,6 +37,11 @@ public struct Individual: Codable, Hashable, Sendable, Identifiable {
     public var longitude: Double?
 
     /// Initializes a new individual with optional name and coordinates.
+    ///
+    /// - Parameters:
+    ///   - name: The individual's name (default `""`).
+    ///   - latitude: Latitude in decimal degrees, if known.
+    ///   - longitude: Longitude in decimal degrees, if known.
     public init(name: String = "", latitude: Double? = nil, longitude: Double? = nil) {
         self.id = UUID()
         self.name = name
@@ -45,7 +51,7 @@ public struct Individual: Codable, Hashable, Sendable, Identifiable {
 
     /// Indicates whether the individual has valid spatial coordinates.
     public var isSpatial: Bool {
-        return latitude != nil && longitude != nil
+        latitude != nil && longitude != nil
     }
 
     /// Returns the individual's coordinates as a `CLLocationCoordinate2D` if available.

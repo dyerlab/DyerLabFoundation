@@ -8,9 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PhylogAnalysisIntegrationTests.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGeneticsTests
 //
 //  End-to-end validation of the analysis pipeline (geneticDistance, AMOVA,
 //  rarefaction) against the real phylog SNP dataset (1318 individuals x 926
@@ -18,6 +16,10 @@
 //  fixtures. Individual names encode their sampling site as a trailing state
 //  abbreviation (e.g. "AlligatorRiverNC", "AkronZooOH"), which gives real
 //  population structure to partition on.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Testing
 import Foundation
@@ -44,11 +46,7 @@ struct PhylogAnalysisIntegrationTests {
         #expect(matrix.individualCount == 1318)
         #expect(matrix.locusCount == 926)
 
-        let clock = ContinuousClock()
-        let start = clock.now
         let distance = matrix.geneticDistance(strategy: .rescaleToTotalLoci)
-        let elapsed = clock.now - start
-        print("geneticDistance over \(matrix.individualCount) individuals x \(matrix.locusCount) loci took \(elapsed)")
 
         // Every pair should have a finite, non-negative squared distance —
         // real SNP-scale data with ~11% missingness is exactly what would
@@ -124,7 +122,11 @@ struct PhylogAnalysisIntegrationTests {
         #expect(!genotypes.isEmpty)
         try #require(genotypes.count >= 4, "site should have enough real (non-missing) calls at this locus to rarefy")
 
-        let result = genotypicRarefaction(genotypes: genotypes, type: .Ho, size: genotypes.count / 2, iterations: 50, seed: 42)
+        let result = GenotypicRarefaction(genotypes: genotypes,
+                                          type: .Ho,
+                                          size: genotypes.count / 2,
+                                          iterations: 50,
+                                          seed: 42)
         let unwrapped = try #require(result)
         #expect(unwrapped.values.count == 50)
         #expect(unwrapped.observed >= 0.0 && unwrapped.observed <= 1.0)
@@ -147,7 +149,7 @@ struct PhylogAnalysisIntegrationTests {
         // gather-only (no genotype recomputation), so what's actually being
         // timed here is `.impute` distance construction, not the pairwise step.
         let distance = matrix.geneticDistance(overLoci: 0..<50, strategy: .impute)
-        let result = pairwisePhiST(distance: distance, strata: strata)
+        let result = PairwisePhiST(distance: distance, strata: strata)
 
         #expect(result.groupNames.count == stateIndex.count)
         #expect(result.groupNames == stateIndex.keys.sorted { $0.naturalCompare($1) == .orderedAscending })

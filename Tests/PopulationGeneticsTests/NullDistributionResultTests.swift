@@ -8,14 +8,16 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  NullDistributionResultTests.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGeneticsTests
 //
 //  Direct, hand-computed tests for pValue(direction:) — the shared logic
 //  behind both rarefaction's CDF-position reading and AMOVA's permutation
 //  p-value, so it deserves its own coverage rather than only being exercised
 //  indirectly through those two call sites.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Testing
 import Matrix
@@ -71,9 +73,21 @@ struct NullDistributionResultTests {
     }
 
     @Test func equatableComparesAllFields() async throws {
-        let a = NullDistributionResult(analysisType: .rarefaction(.A), observed: 3.0, values: [1, 2, 3], size: 10, seed: 42)
-        let b = NullDistributionResult(analysisType: .rarefaction(.A), observed: 3.0, values: [1, 2, 3], size: 10, seed: 42)
-        let c = NullDistributionResult(analysisType: .rarefaction(.Ae), observed: 3.0, values: [1, 2, 3], size: 10, seed: 42)
+        let a = NullDistributionResult(analysisType: .rarefaction(.A),
+                                       observed: 3.0,
+                                       values: [1, 2, 3],
+                                       size: 10,
+                                       seed: 42)
+        let b = NullDistributionResult(analysisType: .rarefaction(.A),
+                                       observed: 3.0,
+                                       values: [1, 2, 3],
+                                       size: 10,
+                                       seed: 42)
+        let c = NullDistributionResult(analysisType: .rarefaction(.Ae),
+                                       observed: 3.0,
+                                       values: [1, 2, 3],
+                                       size: 10,
+                                       seed: 42)
         #expect(a == b)
         #expect(a != c)
     }

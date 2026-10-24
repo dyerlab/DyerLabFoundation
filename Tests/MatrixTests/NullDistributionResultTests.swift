@@ -7,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  NullDistributionResultTests.swift
+//  MatrixTests
 //
 //  Direct, hand-computed tests for pValue(direction:) — the shared logic
 //  behind any "observed value vs. a distribution of comparison values"
@@ -17,6 +18,9 @@
 //  `.rarefaction(_:)` (domain-specific AnalysisTag values defined via
 //  extension in that package) replaced with local test tags, since Matrix
 //  ships the tagging mechanism only, no predefined values.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

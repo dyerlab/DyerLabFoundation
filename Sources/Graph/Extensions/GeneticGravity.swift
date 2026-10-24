@@ -1,6 +1,3 @@
-//
-//  GeneticGravity.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -9,6 +6,9 @@
 //                        |_ _/
 //
 //         Making Population Genetic Software That Doesn't Suck
+//
+//  GeneticGravity.swift
+//  Graph
 //
 //  Ports of gstudio's (>= 1.15) genetic-gravity core: `neighbourhood_weights()`,
 //  `gravity_edges()`, `source_sink_scores()`, and `pgd()` (partitioned
@@ -20,6 +20,9 @@
 //  gamma = 0.5 (default) is degree-neutral, for inferring direction; gamma = 1
 //  is the local mean, for describing connectivity; gamma = Inf is the flat,
 //  degree-only kernel (w_{j|i} = 1/k_i).
+//
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix

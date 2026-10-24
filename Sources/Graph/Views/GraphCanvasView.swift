@@ -1,6 +1,3 @@
-//
-//  GraphCanvasView.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,11 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  GraphCanvasView.swift
+//  Graph
 //
 //  The Canvas-rendering half of GraphLayoutView, split out on its own so
 //  Xcode's canvas can preview and inspect it independently of the
 //  surrounding control/inspector chrome.
+//
+//  Created by Rodney Dyer on 2026.08.08.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -39,6 +40,12 @@ public struct GraphCanvasView: View {
     @State private var draggedNodeIndex: Int?
     @State private var lastTranslation: CGSize = .zero
 
+    /// Creates the canvas.
+    ///
+    /// - Parameters:
+    ///   - orchestrator: The layout simulation to draw.
+    ///   - camera: The pan/zoom state, shared with the surrounding panels.
+    ///   - options: Display options.
     public init(orchestrator: LayoutOrchestrator, camera: Binding<Camera2D>, options: GraphLayoutOptions) {
         self.orchestrator = orchestrator
         self._camera = camera
@@ -90,7 +97,10 @@ public struct GraphCanvasView: View {
         // On first frame, hit test
         if draggedNodeIndex == nil && lastTranslation == .zero {
             // Try to hit test a node
-            if let nodeIndex = hitTest(viewPoint: viewPoint, state: orchestrator.state, camera: camera, canvasSize: size) {
+            if let nodeIndex = hitTest(viewPoint: viewPoint,
+                                       state: orchestrator.state,
+                                       camera: camera,
+                                       canvasSize: size) {
                 draggedNodeIndex = nodeIndex
                 let worldPoint = viewToWorld(viewPoint: viewPoint, canvasSize: size, camera: camera)
                 orchestrator.pinNode(at: nodeIndex, position: worldPoint)
@@ -173,7 +183,7 @@ public struct GraphCanvasView: View {
             if options.showLabels {
                 let labelText = Text(node.name)
                     .font(.caption)
-                    .foregroundColor(.primary)
+                    .foregroundStyle(.primary)
 
                 context.draw(
                     labelText,

@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  MappableNode.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
+//  Created by Rodney Dyer on 2025.05.21.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 5/21/25.
 //
 
 import Foundation

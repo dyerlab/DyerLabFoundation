@@ -7,9 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  SimulationTests.swift
+//  PopulationGeneticsTests
 //
-//  Created by Rodney Dyer on 4/23/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.04.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -204,7 +206,7 @@ struct SimulationTests {
         #expect((result["B"]?.count ?? 0) + (result["C"]?.count ?? 0) == 3,
                 "every emigrant must land somewhere, none silently dropped")
         #expect((result["C"]?.count ?? 0) > 0,
-                "C must receive its clamped share rather than being zeroed out by the earlier column's rounding overflow")
+                "C must receive its clamped share, not be zeroed by an earlier column's rounding overflow")
     }
 
     @Test func applyMigrationZeroRateChangesNothing() {

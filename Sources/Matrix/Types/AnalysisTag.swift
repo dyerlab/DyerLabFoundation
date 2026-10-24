@@ -5,14 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  AnalysisTag.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/14/26.
+//  Matrix
 //
 //  An open, extensible label for what produced a `NullDistributionResult`
 //  (distance-based variance decomposition, rarefaction, a future Mantel
@@ -33,6 +29,9 @@
 //  "neutral-sounding" default here would be taking sides in a naming
 //  question the foundation has no business arbitrating.
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 /// An open, string-backed label identifying which analysis produced a
 /// `NullDistributionResult` — or any other app-defined context/section a
@@ -44,6 +43,8 @@ public struct AnalysisTag: Sendable, Equatable, Hashable, CustomStringConvertibl
     public let rawValue: String
 
     /// Creates a tag with the given label.
+    ///
+    /// - Parameter rawValue: The tag's label.
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }

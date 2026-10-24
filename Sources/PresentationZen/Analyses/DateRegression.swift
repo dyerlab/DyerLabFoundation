@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DateRegression.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 2026-02-16.
+//  Created by Rodney Dyer on 2026.02.16.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -28,7 +27,7 @@ import Matrix
 /// - Returns: A ``RegressionResult`` with slope (per day), intercept, R², and
 ///   fitted ``PlotRow`` values (date x), or `nil` if there is insufficient
 ///   data or no date/value roles are bound.
-public func dateRegression(_ table: DataTable) -> RegressionResult? {
+public func DateRegression(_ table: DataTable) -> RegressionResult? {
     guard let xName = table.column(for: .x), table.kind(of: xName) == .date,
           table.column(for: .y) != nil else { return nil }
 

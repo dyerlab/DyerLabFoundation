@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  LinearModelFit.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Foundation
@@ -69,6 +68,18 @@ public struct LinearModelFit: Sendable {
     /// `ssModel`.
     public var r2: Double { ssTotal > 0 ? ssModel / ssTotal : Double.nan }
 
+    /// Creates a fit from precomputed components.
+    ///
+    /// - Parameters:
+    ///   - coefficients: The fitted coefficients.
+    ///   - fitted: The fitted response values.
+    ///   - residuals: The residuals.
+    ///   - dfModel: Model degrees of freedom.
+    ///   - dfResidual: Residual degrees of freedom.
+    ///   - dfTotal: Total degrees of freedom.
+    ///   - ssModel: Model sum of squares.
+    ///   - ssResidual: Residual sum of squares.
+    ///   - ssTotal: Total sum of squares.
     public init(coefficients: Vector, fitted: Vector, residuals: Vector,
                 dfModel: Int, dfResidual: Int, dfTotal: Int,
                 ssModel: Double, ssResidual: Double, ssTotal: Double) {

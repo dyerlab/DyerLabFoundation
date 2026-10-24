@@ -7,13 +7,17 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  SymmetricUpperTriangleTests.swift
+//  MatrixTests
 //
 //  Adapted from PopulationGenetics' GeneticDistanceTests.swift structural
 //  coverage (init-to-zero, diagonal, symmetry, add/subtract, dense) —
 //  originally written against GeneticDistanceMatrix, now against the shared
 //  SymmetricUpperTriangle<Double> storage both DistanceMatrix<Kind> and
 //  GeneticDistanceMatrix build on.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

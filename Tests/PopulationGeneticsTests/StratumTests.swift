@@ -7,41 +7,36 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  StratumTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Rodney Dyer on 6/5/25.
+//  Created by Rodney Dyer on 2025.06.05.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
 import Testing
 @testable import PopulationGenetics
 
+@MainActor
 struct StratumTests {
 
-    @Test func testFrequencyExtraction() async throws {
+    @Test func frequencyExtraction() async throws {
 
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
         let stratum = dataStore.getStratum(named: "102", within: "Population")
 
-        #expect( stratum != nil )
-        #expect( dataStore.getIndividuals(for: stratum!).count == 8)
+        #expect(stratum != nil)
+        #expect(dataStore.getIndividuals(for: stratum!).count == 8)
 
         let LTRS = dataStore.getLocus(for: stratum!, named: "LTRS")
-        #expect( LTRS != nil )
-
+        #expect(LTRS != nil)
 
         let genotypes = dataStore.getGenotypes(for: stratum!, locusName: "LTRS")
-        print("\(genotypes)")
-        #expect( genotypes.count == 8 )
-        genotypes.forEach( { print("\($0)") } )
+        #expect(genotypes.count == 8)
 
-
-        let fLTRS = dataStore.frequenciesForLocus(for: stratum!, locus: LTRS! )
-        print( "- \(fLTRS)")
-
+        let fLTRS = dataStore.frequenciesForLocus(for: stratum!, locus: LTRS!)
+        #expect(fLTRS.N == 2.0 * Double(genotypes.count))
 
     }
 

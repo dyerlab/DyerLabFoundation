@@ -1,6 +1,3 @@
-//
-//  IsolationByGraphDistance.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,9 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  IsolationByGraphDistance.swift
+//  Graph
+//
 //  A port of gstudio's `ibgd()` (>= 1.15), split by mode because the two return
 //  different kinds of result:
 //    - IsolationByGraphDistance            <- ibgd(mode = "cgd"): cGD vs
@@ -17,6 +17,9 @@
 //    - DirectionalIsolationByGraphDistance <- ibgd(mode = "pgd"): does a
 //      directed pGD model with forward/reverse slopes fit better than cGD?
 //  See `~/Coding/gstudio/R/ibgd.R`.
+//
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix

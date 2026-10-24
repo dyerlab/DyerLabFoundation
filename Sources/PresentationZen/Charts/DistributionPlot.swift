@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DistributionPlot.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 2026-02-16.
+//  Created by Rodney Dyer on 2026.02.16.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -23,13 +22,22 @@ import SwiftUI
 /// Pass a table whose `x` role is the (quantitative) domain value and `y` role
 /// is the frequency/count.
 public struct DistributionPlot: View {
+    /// The table to plot; bind the quantitative domain value to `x` and the frequency/count to `y` (see
+    /// `DataTable(nullDistribution:)`/`histogram(of:bins:)`).
     public var table: DataTable
+    /// The x-axis title.
     public var xLabel: String
+    /// The y-axis title.
     public var yLabel: String
+    /// The area fill color.
     public var fillColor: Color
+    /// An optional x-position (e.g. an observed statistic) to mark with a dashed vertical rule.
     public var referenceLine: Double?
+    /// An optional label drawn above `referenceLine`; ignored if `referenceLine` is `nil`.
     public var referenceLabel: String?
+    /// The reference line/label color.
     public var referenceColor: Color
+    /// An optional fixed x-axis range; when `nil`, the chart scales to the data.
     public var xDomain: ClosedRange<Double>?
 
     /// Creates a distribution plot.
@@ -119,6 +127,8 @@ public struct DistributionPlot: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     DistributionPlot(

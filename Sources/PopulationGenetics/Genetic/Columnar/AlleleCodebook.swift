@@ -1,3 +1,11 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  AlleleCodebook.swift
 //  PopulationGenetics
@@ -6,6 +14,9 @@
 //  labels for one locus. Index 0 is reserved as the NULL / missing allele in
 //  both SNP and microsatellite data, so a zero-initialized column reads as
 //  "all missing".
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -56,6 +67,9 @@ public struct AlleleCodebook: Codable, Hashable, Sendable {
     /// Returns the index for a label, or `nil` if it is not registered.
     ///
     /// An empty string maps to `nullIndex`.
+    ///
+    /// - Parameter label: The allele label.
+    /// - Returns: The label's index, ``nullIndex`` for `""`, or `nil` if unregistered.
     public func index(of label: String) -> UInt8? {
         if label.isEmpty { return Self.nullIndex }
         guard let i = labels.firstIndex(of: label) else { return nil }
@@ -63,6 +77,9 @@ public struct AlleleCodebook: Codable, Hashable, Sendable {
     }
 
     /// Returns the label for an allele index. Out-of-range indices return `""`.
+    ///
+    /// - Parameter index: The allele index.
+    /// - Returns: The label, or `""` for the null or an out-of-range index.
     public func label(for index: UInt8) -> String {
         let i = Int(index)
         return i < labels.count ? labels[i] : ""
@@ -72,6 +89,9 @@ public struct AlleleCodebook: Codable, Hashable, Sendable {
     ///
     /// Returns `nullIndex` for the empty string and the existing index if the
     /// label is already present. Precondition: fewer than 255 non-null alleles.
+    ///
+    /// - Parameter label: The allele label.
+    /// - Returns: The label's index.
     @discardableResult
     public mutating func register(_ label: String) -> UInt8 {
         if label.isEmpty { return Self.nullIndex }

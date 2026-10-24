@@ -1,6 +1,3 @@
-//
-//  Node.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,14 +7,12 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  Node.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2025.05.21.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Created by Rodney Dyer on 5/21/25.
-//
-
-
-
-
 
 import Matrix
 import SwiftUI
@@ -35,7 +30,7 @@ import CoreLocation
 /// node.coordinate = CLLocationCoordinate2D(latitude: 37.7, longitude: -122.4)
 /// ```
 public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
-    
+
     /// Unique identifier for the node.
     public var id: UUID
 
@@ -60,6 +55,14 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
     /// (e.g. `"elevation": 125.3`).
     public var continuousAttributes: [String: Double]
 
+    /// Creates a node with no coordinate.
+    ///
+    /// - Parameters:
+    ///   - name: The node's label.
+    ///   - size: The node's visual size.
+    ///   - color: The node's visual color (default `.red`).
+    ///   - categoricalAttributes: Categorical attributes by name.
+    ///   - continuousAttributes: Continuous attributes by name.
     public init(name: String, size: Double, color: Color = .red,
                 categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
         self.id = UUID()
@@ -70,6 +73,15 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
         self.continuousAttributes = continuousAttributes
     }
 
+    /// Creates a node at a geographic coordinate.
+    ///
+    /// - Parameters:
+    ///   - name: The node's label.
+    ///   - size: The node's visual size.
+    ///   - color: The node's visual color.
+    ///   - coordinate: The node's latitude and longitude.
+    ///   - categoricalAttributes: Categorical attributes by name.
+    ///   - continuousAttributes: Continuous attributes by name.
     public init(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D,
                 categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
         self.id = UUID()
@@ -77,22 +89,21 @@ public class Node: Identifiable, Equatable, Hashable, CustomStringConvertible {
         self.size = size
         self.color = color
         self.coordinate = CLLocationCoordinate2D(latitude: coordinate.latitude,
-                                                 longitude: coordinate.longitude )
+                                                 longitude: coordinate.longitude)
         self.categoricalAttributes = categoricalAttributes
         self.continuousAttributes = continuousAttributes
     }
-    
-    
+
     public static func == (lhs: Node, rhs: Node) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     public var description: String {
-        return "Node(\(name), \(size))"
+        "Node(\(name), \(size))"
     }
-    
+
 }

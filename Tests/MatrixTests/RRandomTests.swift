@@ -5,8 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
+//         Making Population Genetic Software That Doesn't Suck
+//
 //  RRandomTests.swift
-//  Matrix
+//  MatrixTests
 //
 //  Verifies RMersenneTwister reproduces R's set.seed()/runif()/sample() output
 //  bit-for-bit. Reference values captured from R 4.x with the default RNGkind
@@ -18,6 +20,9 @@
 //    set.seed(1);        sample(7)
 //    set.seed(123);      runif(3)
 //    set.seed(20260902); sample(12)
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

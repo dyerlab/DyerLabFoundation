@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopGenStore+Mating.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -48,7 +49,8 @@ public extension PopGenStore {
         } else if current.leftAllele == parentGenotype.leftAllele || current.leftAllele == parentGenotype.rightAllele {
             left = isMom ? Genotype.MaternalLineage : Genotype.PaternalLineage
             right = isMom ? Genotype.PaternalLineage : Genotype.MaternalLineage
-        } else if current.rightAllele == parentGenotype.leftAllele || current.rightAllele == parentGenotype.rightAllele {
+        } else if current.rightAllele == parentGenotype.leftAllele
+                    || current.rightAllele == parentGenotype.rightAllele {
             right = isMom ? Genotype.MaternalLineage : Genotype.PaternalLineage
             left = isMom ? Genotype.PaternalLineage : Genotype.MaternalLineage
         } else {
@@ -62,6 +64,11 @@ public extension PopGenStore {
 
     /// Assigns parental lineage tracking for every locus an individual and a
     /// parent share genotype calls at.
+    ///
+    /// - Parameters:
+    ///   - individual: The offspring whose lineages to set.
+    ///   - parent: The parent to trace alleles to.
+    ///   - isMom: Whether `parent` is the mother (default `true`).
     func pullParent(for individual: Individual, from parent: Individual, isMom: Bool = true) {
         for locusName in getLocusNames(for: individual) {
             guard let parentGenotype = getGenotype(for: parent, locusName: locusName) else { continue }
@@ -71,6 +78,11 @@ public extension PopGenStore {
 
     /// Produces and registers a new individual as the offspring of two parents,
     /// mating their genotype at every locus the mother has a call for.
+    ///
+    /// - Parameters:
+    ///   - mother: The mother; the offspring takes her coordinates.
+    ///   - father: The father.
+    /// - Returns: The new offspring, already added to the store.
     @discardableResult
     func mateIndividuals(mother: Individual, father: Individual) -> Individual {
         let offspring = addIndividual(name: "\(mother.name):\(father.name)",
@@ -90,6 +102,11 @@ public extension PopGenStore {
     }
 
     /// Old-API-compatible entry point taking raw individual UUIDs.
+    ///
+    /// - Parameters:
+    ///   - motherID: The mother's identifier.
+    ///   - fatherID: The father's identifier.
+    /// - Returns: The new offspring, or `nil` if either parent isn't in this store.
     @discardableResult
     func mateIndividuals(motherID: UUID, fatherID: UUID) -> Individual? {
         guard let mother = getIndividual(id: motherID), let father = getIndividual(id: fatherID) else { return nil }
