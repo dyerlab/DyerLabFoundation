@@ -32,6 +32,8 @@ public enum PersistenceError: LocalizedError, Equatable {
     case readOnly
     /// The requested component (e.g. `.graph`) was never created for this file.
     case componentNotPresent(String)
+    /// A project-metadata change was rejected, e.g. removing the project name.
+    case invalidMetadata(String)
 
     /// A user-presentable description of the failure.
     public var errorDescription: String? {
@@ -50,6 +52,8 @@ public enum PersistenceError: LocalizedError, Equatable {
             "The project file was opened read-only and can't be changed."
         case .componentNotPresent(let component):
             "The project file has no \(component) data."
+        case .invalidMetadata(let detail):
+            "The project details couldn't be changed: \(detail)."
         }
     }
 }

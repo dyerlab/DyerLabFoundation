@@ -53,8 +53,8 @@ public actor ProjectStore {
     /// `open(at:mode:)`, or `openOrCreate(at:...)` before using it.
     public init() {}
 
-    /// Creates a brand-new SQLite file with `meta` plus the requested
-    /// components' schemas installed.
+    /// Creates a brand-new SQLite file with `meta`, `project_metadata` and the
+    /// requested components' schemas installed.
     ///
     /// - Parameters:
     ///   - url: Destination file URL.
@@ -65,10 +65,13 @@ public actor ProjectStore {
     ///     of which components are included.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
+    ///   - metadata: App-defined project metadata to start with. The identity arguments above
+    ///     win over the same ``MetadataKey`` keys here, and empty values are dropped.
     /// - Throws: ``PersistenceError/cannotOpen(_:)`` if the file exists (and `overwrite` is `false`) or can't be
     ///   created, or ``PersistenceError/sqliteError(code:message:)`` if installing a schema fails.
     public func create(at url: URL, overwrite: Bool = false, components: StoreComponents = .all,
-                        projectName: String, species: String? = nil, description: String? = nil) async throws {
+                        projectName: String, species: String? = nil, description: String? = nil,
+                        metadata: [String: String] = [:]) async throws {
         if overwrite {
             try? FileManager.default.removeItem(at: url)
         } else if FileManager.default.fileExists(atPath: url.path) {
@@ -82,8 +85,11 @@ public actor ProjectStore {
                 value TEXT NOT NULL
             )
             """)
-        try writeProjectMeta(projectName: projectName, species: species, description: description,
-                              connection: newConnection)
+        try writeCreatedAt(connection: newConnection)
+        try ProjectMetadataSchema.createSchema(
+            in: newConnection,
+            values: Self.initialMetadata(metadata, projectName: projectName, species: species,
+                                         description: description))
         if components.contains(.geneticData) { try GeneticDataSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.graph) { try GraphSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.results) { try ResultsSchemaComponent.createSchema(in: newConnection) }
@@ -145,9 +151,12 @@ public actor ProjectStore {
     ///   - projectName: The project's name for a new file; required when the file doesn't exist.
     ///   - species: The species, for a new file.
     ///   - description: A description, for a new file.
-    /// - Throws: `.cannotOpen` if the file doesn't exist and `projectName` is `nil`.
+    ///   - metadata: App-defined project metadata, for a new file.
+    /// - Throws: `.cannotOpen` if the file doesn't exist and `projectName` is `nil`, plus the errors of
+    ///   ``open(at:mode:)`` or ``create(at:overwrite:components:projectName:species:description:metadata:)``.
     public func openOrCreate(at url: URL, components: StoreComponents = .all, projectName: String? = nil,
-                              species: String? = nil, description: String? = nil) async throws {
+                              species: String? = nil, description: String? = nil,
+                              metadata: [String: String] = [:]) async throws {
         if FileManager.default.fileExists(atPath: url.path) {
             try await open(at: url, mode: .readWrite)
         } else {
@@ -155,7 +164,7 @@ public actor ProjectStore {
                 throw PersistenceError.cannotOpen("projectName is required to create a new project at \(url.path)")
             }
             try await create(at: url, overwrite: false, components: components, projectName: projectName,
-                              species: species, description: description)
+                              species: species, description: description, metadata: metadata)
         }
     }
 
@@ -187,21 +196,11 @@ public actor ProjectStore {
         }
     }
 
-    private func writeProjectMeta(projectName: String, species: String?, description: String?,
-                                   connection: SQLiteConnection) throws {
-        let stmt = try connection.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
-        let rows: [(String, String)] = [
-            ("project_name", projectName),
-            ("species", species ?? ""),
-            ("description", description ?? ""),
-            ("created_at", ISO8601DateFormatter().string(from: Date())),
-        ]
-        for (key, value) in rows {
-            stmt.reset()
-            stmt.bind(key, at: 1)
-            stmt.bind(value, at: 2)
-            _ = try stmt.step()
-        }
+    private func writeCreatedAt(connection: SQLiteConnection) throws {
+        let stmt = try connection.prepare("INSERT INTO meta (key, value) VALUES (?, ?)")
+        stmt.bind("created_at", at: 1)
+        stmt.bind(ISO8601DateFormatter().string(from: Date()), at: 2)
+        _ = try stmt.step()
     }
 
     /// One-shot convenience: creates (overwriting) a new file with only the
@@ -220,7 +219,7 @@ public actor ProjectStore {
     ///   - species: The species, if any.
     ///   - description: A description, if any.
     ///   - url: Destination file URL; any existing file is replaced.
-    /// - Throws: The errors of ``create(at:overwrite:components:projectName:species:description:)`` and
+    /// - Throws: The errors of ``create(at:overwrite:components:projectName:species:description:metadata:)`` and
     ///   ``writeGeneticData(matrix:parentage:strata:)``.
     public static func save(_ matrix: GenotypeMatrix, parentage: ParentageDesign? = nil,
                              strata: [UUID: [StratumReference]] = [:],

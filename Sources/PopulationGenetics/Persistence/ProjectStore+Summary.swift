@@ -24,12 +24,13 @@ import Foundation
 
 extension ProjectStore {
 
-    /// Reads the file's `meta`-table classification: project identity
-    /// (always present), plus whichever component classifications are
+    /// Reads the file's project identity (from `project_metadata`) plus its
+    /// `meta`-table classification: whichever component classifications are
     /// available given what this file was created with.
     ///
     /// - Returns: The project's identity and per-component classification.
-    /// - Throws: ``PersistenceError/notOpen`` or ``PersistenceError/sqliteError(code:message:)``.
+    /// - Throws: ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` if the project name or a
+    ///   classification row is missing or unreadable, or ``PersistenceError/sqliteError(code:message:)``.
     public func readSummary() async throws -> DatasetSummary {
         let connection = try requireConnection()
         var values: [String: String] = [:]
@@ -49,8 +50,10 @@ extension ProjectStore {
         guard let createdAt = ISO8601DateFormatter().date(from: createdAtString) else {
             throw PersistenceError.corruptData("invalid created_at: \(createdAtString)")
         }
-        let species = try require("species")
-        let description = values["description"] ?? ""
+        let metadata = try ProjectMetadataSchema.read(connection)
+        guard let projectName = metadata[MetadataKey.projectName] else {
+            throw PersistenceError.corruptData("missing \(MetadataKey.projectName) in project_metadata")
+        }
 
         var individualCount: Int?
         var locusCount: Int?
@@ -79,9 +82,9 @@ extension ProjectStore {
         }
 
         return DatasetSummary(
-            projectName: try require("project_name"),
-            species: species.isEmpty ? nil : species,
-            description: description.isEmpty ? nil : description,
+            projectName: projectName,
+            species: metadata[MetadataKey.species],
+            description: metadata[MetadataKey.description],
             createdAt: createdAt,
             individualCount: individualCount,
             locusCount: locusCount,

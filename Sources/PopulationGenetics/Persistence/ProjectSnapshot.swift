@@ -23,12 +23,15 @@ import PresentationZen
 /// present in the file (or wasn't given to `saveSnapshot`), not that it's
 /// present-but-empty.
 public struct ProjectSnapshot: Sendable {
+    /// Every project-metadata pair: the reserved `ProjectStore.MetadataKey`
+    /// keys plus any app-defined ones.
+    public let metadata: [String: String]
     /// The project's name. Always present, written unconditionally at `create` time.
-    public let projectName: String
+    public var projectName: String { metadata[ProjectStore.MetadataKey.projectName] ?? "" }
     /// The species this project concerns, if given.
-    public let species: String?
+    public var species: String? { metadata[ProjectStore.MetadataKey.species] }
     /// Free-text description of what this project is focused on.
-    public let description: String?
+    public var description: String? { metadata[ProjectStore.MetadataKey.description] }
     /// The genetic dataset (matrix, parentage, strata), if `.geneticData` is present.
     public let dataset: ImportedDataset?
     /// The population graph and its metadata, if `.graph` is present.
@@ -46,17 +49,18 @@ public struct ProjectSnapshot: Sendable {
     ///   - projectName: The project's name.
     ///   - species: The species this project concerns, if any.
     ///   - description: Free-text description of the project.
+    ///   - metadata: Other project metadata. The identity arguments above win over the
+    ///     same `ProjectStore.MetadataKey` keys here, and empty values are dropped.
     ///   - dataset: The genetic dataset, or `nil` for none.
     ///   - graph: The population graph, or `nil` for none.
     ///   - results: Every analysis result.
     ///   - logEntries: Every log entry.
     ///   - matrices: Every named matrix attachment.
     public init(projectName: String, species: String? = nil, description: String? = nil,
-                dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
+                metadata: [String: String] = [:], dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
                 results: [AnalysisResult] = [], logEntries: [LogEntry] = [], matrices: [MatrixAttachment] = []) {
-        self.projectName = projectName
-        self.species = species
-        self.description = description
+        self.metadata = ProjectStore.initialMetadata(metadata, projectName: projectName, species: species,
+                                                     description: description)
         self.dataset = dataset
         self.graph = graph
         self.results = results

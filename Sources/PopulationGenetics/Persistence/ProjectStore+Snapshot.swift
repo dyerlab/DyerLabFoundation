@@ -52,6 +52,8 @@ extension ProjectStore {
     ///   - projectName: The project's name, written unconditionally.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
+    ///   - metadata: App-defined project metadata. The identity arguments above win over the
+    ///     same ``MetadataKey`` keys here.
     ///   - url: Destination file URL. Its prior contents (if any) are only
     ///     replaced once the new file is fully and successfully built.
     /// - Throws: Any ``PersistenceError`` from building the temporary file, or a file-system error from
@@ -60,7 +62,7 @@ extension ProjectStore {
                                      results: [AnalysisResult] = [], logEntries: [LogEntry] = [],
                                      matrices: [MatrixAttachment] = [],
                                      projectName: String, species: String? = nil, description: String? = nil,
-                                     to url: URL) async throws {
+                                     metadata: [String: String] = [:], to url: URL) async throws {
         var components: StoreComponents = []
         if dataset != nil { components.insert(.geneticData) }
         if graph != nil { components.insert(.graph) }
@@ -74,7 +76,7 @@ extension ProjectStore {
         let store = ProjectStore()
         do {
             try await store.create(at: tempURL, overwrite: true, components: components, projectName: projectName,
-                                    species: species, description: description)
+                                    species: species, description: description, metadata: metadata)
             if let dataset {
                 try await store.writeGeneticData(matrix: dataset.matrix, parentage: dataset.parentage,
                                                   strata: dataset.strata)
@@ -113,7 +115,7 @@ extension ProjectStore {
     public static func loadSnapshot(from url: URL) async throws -> ProjectSnapshot {
         let store = ProjectStore()
         try await store.open(at: url, mode: .readOnly)
-        let summary = try await store.readSummary()
+        let metadata = try await store.metadata()
         let present = await store.presentComponents
 
         let dataset = present.contains(.geneticData) ? try await store.readDataset() : nil
@@ -132,8 +134,10 @@ extension ProjectStore {
         }
 
         await store.close()
-        return ProjectSnapshot(projectName: summary.projectName, species: summary.species,
-                                description: summary.description, dataset: dataset, graph: graph, results: results,
-                                logEntries: logEntries, matrices: matrices)
+        guard let projectName = metadata[MetadataKey.projectName] else {
+            throw PersistenceError.corruptData("missing \(MetadataKey.projectName) in project_metadata")
+        }
+        return ProjectSnapshot(projectName: projectName, metadata: metadata, dataset: dataset, graph: graph,
+                                results: results, logEntries: logEntries, matrices: matrices)
     }
 }

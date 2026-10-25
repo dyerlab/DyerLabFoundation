@@ -192,6 +192,16 @@ Protocol" note (Bear). That pass included these source-breaking renames, which e
 - `MapView` (Graph) gained a public `init(graph:lineWidth:nodeScaling:)`. Before this it had no public
   initializer and couldn't be constructed outside the module.
 
+**Project metadata (2026-10-24)** — `ProjectStore` files carry a `project_metadata` table of string key/value
+pairs, part of every file (not a `StoreComponents` case). It holds the reserved identity keys in
+`ProjectStore.MetadataKey` (`project_name`, `species`, `description`, moved out of `meta`) plus any keys an app
+adds; `meta` is now purely the store's own bookkeeping (`created_at`, schema versions, `has_*` flags, counts). API:
+`metadata()`, `metadata(forKey:)`, `setMetadata(_:forKey:)`, `updateMetadata(_:)` (one transaction; `nil`/empty
+removes a key; removing `project_name` throws the new `PersistenceError.invalidMetadata`). `create`/`openOrCreate`/
+`saveSnapshot` take `metadata:`; `ProjectSnapshot` gained `metadata` and its identity fields are now computed from
+it. No migration: files written before this have no `project_metadata` table and won't read (sole-developer
+project, no legacy files to support).
+
 Linguistics (Matrix + PresentationZen) is affected by the Matrix and PresentationZen renames above.
 
 - **PopulationGenetics** — no longer a separate downstream consumer; folded into this repo as of 2026-07-14 (see above). The standalone `github.com/dyerlab/PopulationGenetics` repo is legacy.
