@@ -7,60 +7,53 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
+//  FrequenciesTests.swift
+//  PopulationGeneticsTests
 //
-//  FrequenciesTest.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 6/2/25.
+//  Created by Rodney Dyer on 2025.06.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
 @testable import PopulationGenetics
 
-struct FrequenciesTest {
+@MainActor
+struct FrequenciesTests {
 
     @Test func AlleleFrequencies() async throws {
 
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
-        #expect( genotypes.count == 363 )
+        #expect(genotypes.count == 363)
 
-        let freqs = GenotypeFrequencies(genotypes: genotypes )
+        let freqs = GenotypeFrequencies(genotypes: genotypes)
 
-        #expect( freqs.alleles == ["01","02"] )
+        #expect(freqs.alleles == ["01","02"])
         let p = freqs.frequency(for: "01")
         let q = freqs.frequency(for: "02")
-        #expect( p.isFinite )
-        #expect( p >= 0.0 )
-        #expect( p <= 1.0 )
-        print("f(1): \(p) ")
-        print("f(2): \(q)")
-        #expect( p + q == 1 )
+        #expect(p.isFinite)
+        #expect(p >= 0.0)
+        #expect(p <= 1.0)
+        #expect(p + q == 1)
 
-        print("Ho: \(freqs.Ho)")
-        #expect( freqs.Ho == freqs.numHets / freqs.numGenos )
+        #expect(freqs.Ho == freqs.numHets / freqs.numGenos)
 
-        print("He: \(freqs.He)")
-        #expect( abs( (2*p*q) -  freqs.He) < 0.000000001  )
+        #expect(abs((2*p*q) -  freqs.He) < 0.000000001)
 
-        print("A:, \(freqs.A)")
-        #expect( freqs.A == 2.0 )
+        #expect(freqs.A == 2.0)
 
-        print("Ae: \(freqs.Ae)")
-        #expect( freqs.Ae == ( 1.0 / ( p*p + q*q )))
+        #expect(freqs.Ae == (1.0 / (p*p + q*q)))
 
-        print("N: \(freqs.N )")
-        #expect( freqs.N == 2.0 * 363.0 )
+        #expect(freqs.N == 2.0 * 363.0)
 
         let pq = freqs.frequencies()
-        #expect( pq == [p,q], "\(pq) != [\(p), \(q)]")
+        #expect(pq == [p,q], "\(pq) != [\(p), \(q)]")
     }
 
     // MARK: - Incremental Addition Tests
 
-    @Test func testAddGenotypeIncremental() async throws {
+    @Test func addGenotypeIncremental() async throws {
         let freqs = GenotypeFrequencies()
         #expect(freqs.N == 0)
         #expect(freqs.A == 0)
@@ -81,7 +74,7 @@ struct FrequenciesTest {
         #expect(freqs.numHets == 1.0) // Still only 1 het
     }
 
-    @Test func testAddGenotypesArray() async throws {
+    @Test func addGenotypesArray() async throws {
         let freqs = GenotypeFrequencies()
 
         let geno1 = Genotype(leftAllele: "A", rightAllele: "B")
@@ -95,7 +88,7 @@ struct FrequenciesTest {
         #expect(freqs.A == 2.0)
     }
 
-    @Test func testAddGenotypeWithHaploid() async throws {
+    @Test func addGenotypeWithHaploid() async throws {
         let freqs = GenotypeFrequencies()
 
         let haploid = Genotype(leftAllele: "A", rightAllele: "")
@@ -108,7 +101,7 @@ struct FrequenciesTest {
 
     // MARK: - Count Method Tests
 
-    @Test func testCountForAllele() async throws {
+    @Test func countForAllele() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
@@ -124,7 +117,7 @@ struct FrequenciesTest {
 
     // MARK: - A95 Tests
 
-    @Test func testA95WithCommonAlleles() async throws {
+    @Test func a95WithCommonAlleles() async throws {
         // Create genotypes where all alleles are common (>= 5%)
         var genotypes = [Genotype]()
         for _ in 0..<50 {
@@ -138,7 +131,7 @@ struct FrequenciesTest {
         #expect(freqs.A95 == 2.0)
     }
 
-    @Test func testA95WithRareAlleles() async throws {
+    @Test func a95WithRareAlleles() async throws {
         // Create genotypes with one rare allele
         var genotypes = [Genotype]()
         for _ in 0..<98 {
@@ -153,7 +146,7 @@ struct FrequenciesTest {
         #expect(freqs.A95 == 1.0) // Only A is >= 5%
     }
 
-    @Test func testA95WithMultipleAlleles() async throws {
+    @Test func a95WithMultipleAlleles() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         // MP20 has multiple alleles
@@ -166,7 +159,7 @@ struct FrequenciesTest {
 
     // MARK: - HTML Export Test
 
-    @Test func testHTMLTableRowGeneration() async throws {
+    @Test func hTMLTableRowGeneration() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
@@ -180,7 +173,7 @@ struct FrequenciesTest {
         #expect(html.contains("</td>"))
     }
 
-    @Test func testHTMLTableRowWithSpecificAlleles() async throws {
+    @Test func hTMLTableRowWithSpecificAlleles() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
@@ -198,7 +191,7 @@ struct FrequenciesTest {
 
     // MARK: - Default Frequencies Test
 
-    @Test func testDefaultFrequencies() async throws {
+    @Test func defaultFrequencies() async throws {
         let freqs = GenotypeFrequencies.defaultFrequencies
 
         #expect(freqs.counts["A"] == 25.0)
@@ -209,7 +202,7 @@ struct FrequenciesTest {
 
     // MARK: - Description Test
 
-    @Test func testFrequenciesDescription() async throws {
+    @Test func frequenciesDescription() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
@@ -223,7 +216,7 @@ struct FrequenciesTest {
 
     // MARK: - Empty Frequencies Tests
 
-    @Test func testEmptyFrequencies() async throws {
+    @Test func emptyFrequencies() async throws {
         let freqs = GenotypeFrequencies()
 
         #expect(freqs.N == 0)

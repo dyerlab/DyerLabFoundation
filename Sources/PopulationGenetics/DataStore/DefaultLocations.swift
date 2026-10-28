@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 The Dyer Laboratory.  All Rights Reserved.
-//
 //  DefaultLocations.swift
+//  PopulationGenetics
 //
-//
-//  Created by Rodney Dyer on 12/9/21.
+//  Created by Rodney Dyer on 2021.12.09.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -24,11 +23,11 @@ import MapKit
 public struct DefaultLocations {
 
     /// Default map center coordinate.
-    static public let center = CLLocationCoordinate2D( latitude: 37.5407,
-                                                       longitude: -77.4360 )
+    static public let center = CLLocationCoordinate2D(latitude: 37.5407,
+                                                       longitude: -77.4360)
 
     /// Default map region, a 1000×1000 meter span centered on `center`.
-    static public let region = MKCoordinateRegion( center: DefaultLocations.center,
+    static public let region = MKCoordinateRegion(center: DefaultLocations.center,
                                                    latitudinalMeters: 1000,
                                                    longitudinalMeters: 1000)
 }

@@ -1,6 +1,3 @@
-//
-//  GraphLayoutView.swift
-//  MatrixStuff
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,10 +7,14 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  GraphLayoutView.swift
+//  Graph
 //
 //  SwiftUI Canvas view for rendering force-directed graph layouts.
 //  Refactored to use LayoutOrchestrator with SIMD3-based positions.
+//
+//  Created by Rodney Dyer on 2026.08.08.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI

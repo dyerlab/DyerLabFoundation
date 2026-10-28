@@ -19,67 +19,12 @@
 //  `writeGeneticData`/`writeGraph`/`addResult`/`appendLog`/`addMatrix`
 //  directly if only one component changed.
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import PresentationZen
-
-/// One named, generic `Matrix` attachment together with its encoded payload —
-/// the unit `saveSnapshot`/`loadSnapshot` pass for the `.matrices` component.
-/// Mirrors `StoredMatrixInfo` plus the payload `matrixData(named:)` fetches
-/// separately.
-public struct MatrixAttachment: Sendable, Equatable {
-    /// Short label for this matrix, app-defined.
-    public let name: String
-    /// Optional longer description.
-    public let description: String?
-    /// The matrix's encoded payload (typically JSON via `Matrix`'s `Codable` conformance).
-    public let data: Data
-
-    /// Initializes a new matrix attachment.
-    public init(name: String, description: String? = nil, data: Data) {
-        self.name = name
-        self.description = description
-        self.data = data
-    }
-}
-
-/// The full contents of a `ProjectStore` file, read or written in one call —
-/// the read-side counterpart to `saveSnapshot`'s arguments. Every field here
-/// mirrors one `StoreComponents` case; `nil`/empty means that component isn't
-/// present in the file (or wasn't given to `saveSnapshot`), not that it's
-/// present-but-empty.
-public struct ProjectSnapshot: Sendable {
-    /// The project's name. Always present, written unconditionally at `create` time.
-    public let projectName: String
-    /// The species this project concerns, if given.
-    public let species: String?
-    /// Free-text description of what this project is focused on.
-    public let description: String?
-    /// The genetic dataset (matrix, parentage, strata), if `.geneticData` is present.
-    public let dataset: ImportedDataset?
-    /// The population graph and its metadata, if `.graph` is present.
-    public let graph: PopulationGraphDataset?
-    /// Every stored analysis result, in insertion order.
-    public let results: [AnalysisResult]
-    /// Every stored log entry, in insertion order.
-    public let logEntries: [LogEntry]
-    /// Every currently-named matrix attachment (latest version per name).
-    public let matrices: [MatrixAttachment]
-
-    /// Initializes a new project snapshot.
-    public init(projectName: String, species: String? = nil, description: String? = nil,
-                dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
-                results: [AnalysisResult] = [], logEntries: [LogEntry] = [], matrices: [MatrixAttachment] = []) {
-        self.projectName = projectName
-        self.species = species
-        self.description = description
-        self.dataset = dataset
-        self.graph = graph
-        self.results = results
-        self.logEntries = logEntries
-        self.matrices = matrices
-    }
-}
 
 extension ProjectStore {
 
@@ -107,13 +52,17 @@ extension ProjectStore {
     ///   - projectName: The project's name, written unconditionally.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
+    ///   - metadata: App-defined project metadata. The identity arguments above win over the
+    ///     same ``MetadataKey`` keys here.
     ///   - url: Destination file URL. Its prior contents (if any) are only
     ///     replaced once the new file is fully and successfully built.
+    /// - Throws: Any ``PersistenceError`` from building the temporary file, or a file-system error from
+    ///   replacing `url`. In either case `url` is left unchanged.
     public static func saveSnapshot(dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
                                      results: [AnalysisResult] = [], logEntries: [LogEntry] = [],
                                      matrices: [MatrixAttachment] = [],
                                      projectName: String, species: String? = nil, description: String? = nil,
-                                     to url: URL) async throws {
+                                     metadata: [String: String] = [:], to url: URL) async throws {
         var components: StoreComponents = []
         if dataset != nil { components.insert(.geneticData) }
         if graph != nil { components.insert(.graph) }
@@ -127,7 +76,7 @@ extension ProjectStore {
         let store = ProjectStore()
         do {
             try await store.create(at: tempURL, overwrite: true, components: components, projectName: projectName,
-                                    species: species, description: description)
+                                    species: species, description: description, metadata: metadata)
             if let dataset {
                 try await store.writeGeneticData(matrix: dataset.matrix, parentage: dataset.parentage,
                                                   strata: dataset.strata)
@@ -159,10 +108,14 @@ extension ProjectStore {
     /// counterpart to `saveSnapshot`. Only reads whichever components
     /// `presentComponents` reports for this file; a component absent from the
     /// file comes back `nil`/empty in the returned snapshot, not an error.
+    ///
+    /// - Parameter url: The project file's location.
+    /// - Returns: Every component present in the file.
+    /// - Throws: Any ``PersistenceError`` from opening the file or reading a present component.
     public static func loadSnapshot(from url: URL) async throws -> ProjectSnapshot {
         let store = ProjectStore()
         try await store.open(at: url, mode: .readOnly)
-        let summary = try await store.readSummary()
+        let metadata = try await store.metadata()
         let present = await store.presentComponents
 
         let dataset = present.contains(.geneticData) ? try await store.readDataset() : nil
@@ -181,8 +134,10 @@ extension ProjectStore {
         }
 
         await store.close()
-        return ProjectSnapshot(projectName: summary.projectName, species: summary.species,
-                                description: summary.description, dataset: dataset, graph: graph, results: results,
-                                logEntries: logEntries, matrices: matrices)
+        guard let projectName = metadata[MetadataKey.projectName] else {
+            throw PersistenceError.corruptData("missing \(MetadataKey.projectName) in project_metadata")
+        }
+        return ProjectSnapshot(projectName: projectName, metadata: metadata, dataset: dataset, graph: graph,
+                                results: results, logEntries: logEntries, matrices: matrices)
     }
 }

@@ -1,6 +1,3 @@
-//
-//  Graph.swift
-//  GraphVisualization
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,9 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Graph.swift
+//  Graph
 //
-//  Created by Rodney Dyer on 5/21/25.
+//  Created by Rodney Dyer on 2025.05.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -47,39 +46,47 @@ import CoreLocation
 ///
 /// - Note: Edges are directed. Use `symmetric: true` when adding edges to create bidirectional connections.
 public class Graph: Identifiable, Hashable  {
+    /// Unique identifier for the graph.
     public var id: UUID
+    /// The graph's nodes, in insertion order.
     public var nodes: [Node]
+    /// The graph's directed edges, in insertion order.
     public var edges: [Edge]
 
+    /// Creates a graph from existing nodes and edges.
+    ///
+    /// - Parameters:
+    ///   - nodes: The nodes (default none).
+    ///   - edges: The edges, which must reference nodes in `nodes` (default none).
     public init(nodes: [Node] = [] , edges: [Edge] = []) {
         self.id = UUID()
         self.nodes = nodes
         self.edges = edges
     }
-    
+
     /// The number of nodes in the graph.
     public var cardinality: Int {
-        return nodes.count
+        nodes.count
     }
-    
+
     public static func == (lhs: Graph, rhs: Graph) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
-    
+
     /// Finds a node by name.
     ///
     /// - Parameter name: The name of the node to find
     /// - Returns: The matching node, or `nil` if not found
-    public func node(name: String ) -> Node? {
-        return nodes.first(where: { $0.name == name })
+    public func node(name: String) -> Node? {
+        nodes.first(where: { $0.name == name })
     }
 
     /// Finds a node by unique identifier.
     ///
     /// - Parameter id: The UUID of the node to find
     /// - Returns: The matching node, or `nil` if not found
-    public func node(id: UUID ) -> Node? {
-        return nodes.first(where: { $0.id == id })
+    public func node(id: UUID) -> Node? {
+        nodes.first(where: { $0.id == id })
     }
 
     /// Maps each node's id to its index in `nodes`.
@@ -89,6 +96,8 @@ public class Graph: Identifiable, Hashable  {
     /// into O(n + edges). Intended for hot loops (force computation, per-frame
     /// rendering) that need every edge's endpoint indices — not cached on `Graph`
     /// itself since `nodes` is mutable and a stale cache would silently misbehave.
+    ///
+    /// - Returns: Each node's index keyed by its id.
     func nodeIndices() -> [UUID: Int] {
         var indices = [UUID: Int](minimumCapacity: nodes.count)
         for (index, node) in nodes.enumerated() {
@@ -103,10 +112,12 @@ public class Graph: Identifiable, Hashable  {
     ///   - name: The node's label
     ///   - size: Visual size (used for rendering)
     ///   - color: Visual color (used for rendering)
+    ///   - categoricalAttributes: Open-ended string-valued attributes (e.g. `"Region": "1"`)
+    ///   - continuousAttributes: Open-ended real-valued attributes (e.g. `"elevation": 125.3`)
     public func addNode(name: String, size: Double, color: Color,
-                         categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:] ) {
-        nodes.append( Node(name: name, size: size, color: color,
-                            categoricalAttributes: categoricalAttributes, continuousAttributes: continuousAttributes) )
+                         categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
+        nodes.append(Node(name: name, size: size, color: color,
+                            categoricalAttributes: categoricalAttributes, continuousAttributes: continuousAttributes))
     }
 
     /// Adds a new node with geographic coordinates.
@@ -119,12 +130,11 @@ public class Graph: Identifiable, Hashable  {
     ///   - categoricalAttributes: Open-ended string-valued attributes (e.g. `"Region": "1"`)
     ///   - continuousAttributes: Open-ended real-valued attributes (e.g. `"elevation": 125.3`)
     public func addNode(name: String, size: Double, color: Color, coordinate: CLLocationCoordinate2D,
-                         categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:] ) {
-        nodes.append( Node(name: name, size: size, color: color, coordinate: coordinate,
-                            categoricalAttributes: categoricalAttributes, continuousAttributes: continuousAttributes) )
+                         categoricalAttributes: [String: String] = [:], continuousAttributes: [String: Double] = [:]) {
+        nodes.append(Node(name: name, size: size, color: color, coordinate: coordinate,
+                            categoricalAttributes: categoricalAttributes, continuousAttributes: continuousAttributes))
     }
-    
-    
+
     /// Adds a directed edge between nodes identified by name.
     ///
     /// - Parameters:
@@ -140,37 +150,50 @@ public class Graph: Identifiable, Hashable  {
     /// g.addEdge(from: "A", to: "B", weight: 2.5, symmetric: true)
     /// // Creates edges A→B and B→A, both with weight 2.5
     /// ```
-    public func addEdge( from: String, to: String, weight: Double, symmetric: Bool ) {
+    public func addEdge(from: String, to: String, weight: Double, symmetric: Bool) {
         if let node1 = self.node(name: from),
            let node2 = self.node(name: to) {
             self.addEdge(from: node1, to: node2, weight: weight, symmetric: symmetric)
         }
     }
-    
-    
-    public func addEdge( from: Node, to: Node, weight: Double = 1.0, symmetric: Bool ) {
-        edges.append( Edge(fromNode: from, toNode: to, weight: weight ) )
+
+    /// Adds an edge between two nodes.
+    ///
+    /// - Parameters:
+    ///   - from: The source node.
+    ///   - to: The target node.
+    ///   - weight: The edge weight (default `1.0`).
+    ///   - symmetric: Whether to also add the reverse edge.
+    public func addEdge(from: Node, to: Node, weight: Double = 1.0, symmetric: Bool) {
+        edges.append(Edge(fromNode: from, toNode: to, weight: weight))
         if symmetric {
-            edges.append( Edge(fromNode: to, toNode: from, weight: weight ) )
+            edges.append(Edge(fromNode: to, toNode: from, weight: weight))
         }
     }
-    
+
+    /// The two endpoints of an edge.
+    ///
+    /// - Parameter edge: The edge to resolve.
+    /// - Returns: `[from, to]`, or `nil` if either endpoint isn't in this graph.
     public func nodesForEdge(_ edge: Edge) -> [Node]? {
-        if let node1 = nodes.first(where: { $0.id == edge.fromNode } ),
-           let node2 = nodes.first(where: { $0.id == edge.toNode } ) {
+        if let node1 = nodes.first(where: { $0.id == edge.fromNode }),
+           let node2 = nodes.first(where: { $0.id == edge.toNode }) {
             return [node1,node2]
         }
         return nil
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
-    
-    /// Convience function to pass node names instead of node objects.
-    /// - Returns: Path for the shortest path or nil i fno path exists
-    public func shortestPath( from: String, to: String) -> Path? {
+
+    /// Finds the shortest path between two nodes looked up by name.
+    ///
+    /// - Parameters:
+    ///   - from: The start node's name.
+    ///   - to: The end node's name.
+    /// - Returns: The shortest path, or `nil` if either name is unknown or no path exists.
+    public func shortestPath(from: String, to: String) -> Path? {
         if let node1 = self.node(name: from),
            let node2 = self.node(name: to) {
             return self.shortestPath(from: node1, to: node2)
@@ -178,9 +201,13 @@ public class Graph: Identifiable, Hashable  {
             return nil
         }
     }
-    
+
     /// Implements Dijkstra's algorithm for shortest path in a directed graph with non-negative edge weights.
-    /// - Returns: Path object for the shortest path, or nil if no path exists.
+    ///
+    /// - Parameters:
+    ///   - start: The start node.
+    ///   - end: The end node.
+    /// - Returns: The shortest path, or `nil` if no path exists.
     public func shortestPath(from start: Node, to end: Node) -> Path? {
         var distances = [UUID: Double]()
         var previous = [UUID: UUID]()
@@ -191,7 +218,9 @@ public class Graph: Identifiable, Hashable  {
         }
         distances[start.id] = 0
 
-        while let current = unvisited.min(by: { (distances[$0] ?? Double.infinity) < (distances[$1] ?? Double.infinity) }) {
+        while let current = unvisited.min(by: {
+            (distances[$0] ?? Double.infinity) < (distances[$1] ?? Double.infinity)
+        }) {
             // If the closest remaining node is unreachable (infinite distance),
             // then so is every other unvisited node — including the destination.
             // Stop and report no path rather than returning a bogus ∞-distance
@@ -228,32 +257,28 @@ public class Graph: Identifiable, Hashable  {
 
         return nil
     }
-    
-    
+
 }
-
-
-
-
 
 public extension Graph {
 
+    /// A four-node example graph with three symmetric edges and one directed edge, for previews and tests.
     static var smallGraph: Graph {
         let g = Graph()
-        
-        g.addNode(name: "A", size: 1.0, color: .red )
-        g.addNode(name: "B", size: 1.0, color: .green )
-        g.addNode(name: "C", size: 1.5, color: .blue )
-        g.addNode(name: "D", size: 2.0, color: .orange )
-        
-        g.addEdge(from: "A", to: "B", weight: 1.0, symmetric: true )
-        g.addEdge(from: "B", to: "C", weight: 2.0, symmetric: true )
-        g.addEdge(from: "C", to: "A", weight: 3.0, symmetric: true )
-        g.addEdge(from: "C", to: "D", weight: 4.0, symmetric: false )
-        
+
+        g.addNode(name: "A", size: 1.0, color: .red)
+        g.addNode(name: "B", size: 1.0, color: .green)
+        g.addNode(name: "C", size: 1.5, color: .blue)
+        g.addNode(name: "D", size: 2.0, color: .orange)
+
+        g.addEdge(from: "A", to: "B", weight: 1.0, symmetric: true)
+        g.addEdge(from: "B", to: "C", weight: 2.0, symmetric: true)
+        g.addEdge(from: "C", to: "A", weight: 3.0, symmetric: true)
+        g.addEdge(from: "C", to: "D", weight: 4.0, symmetric: false)
+
         return g
     }
-    
+
     /// The Lophocereus schottii (senita cactus) population graph: 21 sampled
     /// populations across the Baja California / Sonoran Desert range, spatially
     /// located with genetic-distance-weighted edges.
@@ -267,6 +292,3 @@ public extension Graph {
     }
 
 }
-
-
-

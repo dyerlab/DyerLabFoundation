@@ -1,6 +1,3 @@
-//
-//  GraphControlPanel.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  GraphControlPanel.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2026.08.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -23,6 +24,12 @@ public struct GraphControlPanel: View {
     @Binding var camera: Camera2D
     @Binding var options: GraphLayoutOptions
 
+    /// Creates the control bar.
+    ///
+    /// - Parameters:
+    ///   - orchestrator: The layout simulation to control.
+    ///   - camera: The pan/zoom state, updated by "Fit".
+    ///   - options: Display options, updated by the label toggle.
     public init(orchestrator: LayoutOrchestrator, camera: Binding<Camera2D>, options: Binding<GraphLayoutOptions>) {
         self.orchestrator = orchestrator
         self._camera = camera
@@ -107,19 +114,23 @@ public struct GraphControlPanel: View {
         switch orchestrator.settleOutcome {
         case .atRest:
             Label("At rest", systemImage: "checkmark.circle.fill")
-                .foregroundColor(.green)
+                .foregroundStyle(.green)
         case .stoppedStillMoving(let motion, let suggested?):
-            Label("Still moving (\(String(format: "%.2f", motion))/frame)", systemImage: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
+            Label("Still moving (\(String(format: "%.2f", motion))/frame)",
+                  systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
                 .help("Stopped at the iteration budget before coming to rest. About \(suggested) should let it settle.")
             Button("Continue to \(suggested)") {
                 orchestrator.continueRun(toBudget: suggested)
             }
             .buttonStyle(.bordered)
         case .stoppedStillMoving(let motion, nil):
-            Label("Not converging (\(String(format: "%.2f", motion))/frame)", systemImage: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
-                .help("Motion was not dying down when the budget ran out, so more iterations alone are unlikely to help. Try a slower cooling factor, a different k, or the other layout algorithm.")
+            Label("Not converging (\(String(format: "%.2f", motion))/frame)",
+                  systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .help("Motion was not dying down when the budget ran out, so more iterations alone "
+                      + "are unlikely to help. Try a slower cooling factor, a different k, "
+                      + "or the other layout algorithm.")
         case nil:
             EmptyView()
         }

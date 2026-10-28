@@ -1,8 +1,19 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  PairwisePhiSTTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Tests for GeneticDistanceMatrix.submatrix, PhiSTMatrix, and pairwisePhiST.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -52,7 +63,7 @@ struct PairwisePhiSTTests {
     }
 
     @Test func pairwisePhiSTMatchesHandComputedValues() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: strata)
+        let result = PairwisePhiST(distance: makeDistance(), strata: strata)
         #expect(result.groupNames == ["A", "B", "C"])
         #expect(abs(result["A", "B"]! - 0.75) < 1e-12)
         #expect(abs(result["A", "C"]! - 0.75) < 1e-12)
@@ -64,20 +75,20 @@ struct PairwisePhiSTTests {
         // just those 4 individuals' submatrix — proving the gather-and-
         // decompose path isn't silently using the wrong individuals.
         let d = makeDistance()
-        let result = pairwisePhiST(distance: d, strata: strata)
+        let result = PairwisePhiST(distance: d, strata: strata)
         let direct = AMOVA(distance: d.submatrix(indices: [0, 1, 2, 3])).decompose(partition: [0, 0, 1, 1]).phi
         #expect(abs(result["A", "B"]! - direct) < 1e-12)
     }
 
     @Test func matrixIsSymmetricByIndex() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: strata)
+        let result = PairwisePhiST(distance: makeDistance(), strata: strata)
         #expect(result[0, 1] == result[1, 0])
         #expect(result[0, 2] == result[2, 0])
         #expect(result[1, 2] == result[2, 1])
     }
 
     @Test func diagonalIsZero() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: strata)
+        let result = PairwisePhiST(distance: makeDistance(), strata: strata)
         #expect(result[0, 0] == 0)
         #expect(result[1, 1] == 0)
         #expect(result[2, 2] == 0)
@@ -87,23 +98,23 @@ struct PairwisePhiSTTests {
         // Numeric-looking labels should sort numerically, not lexicographically.
         var d = GeneticDistanceMatrix(count: 6)
         for i in 0..<6 { for j in (i + 1)..<6 { d[i, j] = 4 } }
-        let result = pairwisePhiST(distance: d, strata: ["9", "9", "12", "12", "88", "88"])
+        let result = PairwisePhiST(distance: d, strata: ["9", "9", "12", "12", "88", "88"])
         #expect(result.groupNames == ["9", "12", "88"])
     }
 
     @Test func nameSubscriptReturnsNilForUnknownStratum() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: strata)
+        let result = PairwisePhiST(distance: makeDistance(), strata: strata)
         #expect(result["A", "Nonexistent"] == nil)
     }
 
     @Test func singleStratumProducesEmptyMatrixWithoutCrashing() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: Array(repeating: "OnlyOne", count: 6))
+        let result = PairwisePhiST(distance: makeDistance(), strata: Array(repeating: "OnlyOne", count: 6))
         #expect(result.groupNames == ["OnlyOne"])
         #expect(result[0, 0] == 0)
     }
 
     @Test func denseIsSymmetricWithZeroDiagonal() async throws {
-        let result = pairwisePhiST(distance: makeDistance(), strata: strata)
+        let result = PairwisePhiST(distance: makeDistance(), strata: strata)
         let dense = result.dense()
         #expect(dense[0][1] == dense[1][0])
         #expect(dense[0][0] == 0)

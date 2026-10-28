@@ -24,6 +24,9 @@
 //  means the component isn't present in this file at all (as opposed to
 //  present with no data yet, which reads as `false`/`0`).
 //
+//  Created by Rodney Dyer on 2026.07.15.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 

@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  AsymmetryResamplingTests.swift
-//  Graph
+//  GraphTests
 //
 //  Phase 2a of the downstream popgraph port: the seeded resampling ops
 //    - RandomizeGraph          <- randomize_graph()   (.full / .degree)
@@ -25,6 +25,9 @@
 //  >= 1.15, ported functionally rather than draw-for-draw, so it is tested by
 //  its invariants (degree sequence, simplicity, vertex order) and the network
 //  null by statistical agreement with R's null distribution.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -135,7 +138,8 @@ func randomizeDegreePreservesDegreesAndSimplicity(_ name: String) throws {
     var seen = Set<String>()
     for seed in 1...400 {
         let result = try #require(RandomizeGraph(graph: graph, mode: .degree, seed: seed))
-        seen.insert(directedPairs(result).map { [$0.0, $0.1].sorted().joined(separator: "-") }.sorted().joined(separator: ","))
+        let pairs = directedPairs(result).map { [$0.0, $0.1].sorted().joined(separator: "-") }
+        seen.insert(pairs.sorted().joined(separator: ","))
     }
     #expect(seen.count > 5, "only \(seen.count) distinct rewired graphs in 400 draws")
 }

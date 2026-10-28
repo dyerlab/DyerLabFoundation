@@ -5,10 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  MoranSpectralRandomization.swift
-//  DyerLabFoundation
+//  Matrix
 //
 //  A port of gstudio's `msr_null()` — Moran spectral randomization, the
 //  "singleton" algorithm of Wagner & Dray (2015), itself a native port of
@@ -23,6 +23,9 @@
 //  for the same seed up to floating-point rounding; within a repeated
 //  eigenvalue the basis is arbitrary, and replicates agree with R only in
 //  distribution.
+//
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -74,6 +77,14 @@ public func MoranSpectralRandomization(_ z: Vector,
 
 /// Seeded convenience for ``MoranSpectralRandomization(_:weights:replicates:using:)``,
 /// equivalent to R's `set.seed(seed); msr_null(z, W, nrepet)`.
+///
+/// - Parameters:
+///   - z: The observed variable, one value per site.
+///   - weights: An `n × n` spatial weight matrix.
+///   - replicates: Number of randomized replicates.
+///   - seed: R `set.seed()` value.
+/// - Returns: An `n × replicates` matrix, one randomized replicate per column, or `nil` under the same
+///   conditions as the generator-based overload.
 public func MoranSpectralRandomization(_ z: Vector,
                                        weights: Matrix,
                                        replicates: Int,
@@ -91,6 +102,7 @@ public func MoranSpectralRandomization(_ z: Vector,
 /// null eigenvalue is repeated, that eigenspace is re-orthonormalised against
 /// the constant vector first (R's `qr.Q(qr(cbind(wt, V0)))`).
 ///
+/// - Parameter weights: An `n × n` spatial weight matrix.
 /// - Returns: An `n × (n − 1)` matrix, or `nil` if there is no null eigenvalue
 ///   or the eigendecomposition fails.
 func moranEigenvectorBasis(_ weights: Matrix) -> Matrix? {

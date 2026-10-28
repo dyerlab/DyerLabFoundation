@@ -5,10 +5,12 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
+//  MatrixDataRow.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 4/23/26.
+//  Created by Rodney Dyer on 2026.04.23.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -32,6 +34,7 @@ public struct MatrixDataRow: View {
 
     // MARK: - Constants
 
+    /// Validation and styling constants.
     public struct Constants {
         /// Tolerance for accepting a row sum as valid (equal to 1.0).
         public static let sumTolerance: Double    = 1e-9

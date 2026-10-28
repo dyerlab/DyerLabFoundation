@@ -1,0 +1,91 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
+//
+//  standardNormalQuantile.swift
+//  Matrix
+//
+//  Created by Rodney Dyer on 2026.08.26.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
+
+import Foundation
+
+/// The standard normal quantile function (inverse CDF), a.k.a. the probit function.
+///
+/// Implements Wichura's AS 241 algorithm (Applied Statistics, 1988) — the same
+/// algorithm R's `qnorm()` uses internally — so this matches R's `qnorm(p)` to
+/// full double precision rather than a coarser approximation.
+///
+/// - Parameter p: A probability in `(0, 1)`.
+/// - Returns: The value `z` such that `Φ(z) = p`, where `Φ` is the standard
+///   normal CDF. Returns `-.infinity` for `p <= 0` and `.infinity` for `p >= 1`.
+public func standardNormalQuantile(_ p: Double) -> Double {
+    if p <= 0.0 { return -Double.infinity }
+    if p >= 1.0 { return Double.infinity }
+
+    let q = p - 0.5
+    var val: Double
+
+    if abs(q) <= 0.425 {
+        let r = 0.180625 - q * q
+        val = q * (((((((r * 2509.0809287301226727 +
+                          33430.575583588128105) * r + 67265.770927008700853) * r +
+                        45921.953931549871457) * r + 13731.693765509461125) * r +
+                      1971.5909503065514427) * r + 133.14166789178437745) * r +
+                    3.387132872796366608)
+            / (((((((r * 5226.495278852854561 +
+                      28729.085735721942674) * r + 39307.89580009271061) * r +
+                    21213.794301586595867) * r + 5394.1960214247511077) * r +
+                  687.1870074920579083) * r + 42.313330701600911252) * r + 1.0)
+        return val
+    }
+
+    var r = q < 0.0 ? p : 1.0 - p
+    r = sqrt(-log(r))
+
+    if r <= 5.0 {
+        r -= 1.6
+        val = (((((((r * 7.7454501427834140764e-4 +
+                      0.0227238449892691845833) * r + 0.24178072517745061177) * r +
+                    1.27045825245236838258) * r + 3.64784832476320460504) * r +
+                  5.7694972214606914055) * r + 4.6303378461565452959) * r +
+                1.42343711074968357734)
+            / (((((((r * 1.05075007164441684324e-9 +
+                      5.475938084995344946e-4) * r + 0.0151986665636164571966) * r +
+                    0.14810397642748007459) * r + 0.68976733498510000455) * r +
+                  1.6763848301838038494) * r + 2.05319162663775882187) * r + 1.0)
+    } else {
+        r -= 5.0
+        val = (((((((r * 2.01033439929228813265e-7 +
+                      2.71155556874348757815e-5) * r + 0.0012426609473880784386) * r +
+                    0.026532189526576123093) * r + 0.29656057182850489123) * r +
+                  1.7848265399172913358) * r + 5.4637849111641143699) * r +
+                6.6579046435011037772)
+            / (((((((r * 2.04426310338993978564e-15 +
+                      1.4215117583164458887e-7) * r + 1.8463183175100546818e-5) * r +
+                    7.868691311456132591e-4) * r + 0.0148753612908506148525) * r +
+                  0.13692988092273580531) * r + 0.59983220655588793769) * r + 1.0)
+    }
+
+    return q < 0.0 ? -val : val
+}
+
+/// The chi-square quantile function (inverse CDF) for 1 degree of freedom.
+///
+/// Uses the exact closed form for 1 df: since `X² ~ χ²₁` when `X ~ N(0,1)`,
+/// `qchisq(p, 1) = qnorm(0.5 + p/2)²`. Named explicitly for 1 df rather than
+/// taking a general `df` parameter — that's the only case this is implemented
+/// or validated for.
+///
+/// - Parameter p: A probability in `(0, 1)`.
+/// - Returns: The value `x` such that `P(χ²₁ ≤ x) = p`.
+public func chiSquareQuantileOneDF(_ p: Double) -> Double {
+    let z = standardNormalQuantile(0.5 + p / 2.0)
+    return z * z
+}

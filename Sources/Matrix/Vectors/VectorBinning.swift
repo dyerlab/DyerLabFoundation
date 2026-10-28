@@ -7,13 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  VectorBinning.swift
+//  Matrix
 //
 //  Reusable numeric binning/frequency on `Vector`. The charting layer's
 //  histogram/frequency transforms are thin wrappers over these so the math
 //  lives in the numeric core where any consumer can reach it.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -31,6 +33,13 @@ public extension Vector {
         /// The number of observations that fell in the bin.
         public let count: Int
 
+        /// Creates a bin.
+        ///
+        /// - Parameters:
+        ///   - center: The midpoint of the bin's range.
+        ///   - lower: The inclusive lower edge.
+        ///   - upper: The exclusive upper edge.
+        ///   - count: The number of observations in the bin.
         public init(center: Double, lower: Double, upper: Double, count: Int) {
             self.center = center
             self.lower = lower
@@ -75,6 +84,9 @@ public extension Vector {
     ///
     /// Each value is rounded to the nearest integer; values outside `range`
     /// are ignored. Returns one count per bucket, in `range` order.
+    ///
+    /// - Parameter range: The integer buckets to count.
+    /// - Returns: One count per bucket, in `range` order.
     func frequency(range: ClosedRange<Int>) -> [Int] {
         var counts = [Int: Int]()
         for bucket in range { counts[bucket] = 0 }

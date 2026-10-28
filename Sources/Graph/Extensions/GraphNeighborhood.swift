@@ -1,6 +1,3 @@
-//
-//  GraphNeighborhood.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  GraphNeighborhood.swift
+//  Graph
 //
 //  Undirected-neighbourhood queries shared by the population-graph analysis
 //  ports (`GraphAsymmetries`, `AsymmetricWeights`, `CongruenceTopology`,
@@ -19,6 +17,9 @@
 //  parallel pair contributes a single undirected edge whose weight is taken
 //  from the first edge encountered — matching R/igraph's handling of a
 //  `popgraph` built with `graph_from_adjacency_matrix(mode = "undirected")`.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -49,22 +50,36 @@ public extension Graph {
 
     /// The undirected weight between two nodes by name, or `nil` if they are
     /// not adjacent.
+    ///
+    /// - Parameters:
+    ///   - a: The first node's name.
+    ///   - b: The second node's name.
+    /// - Returns: The edge weight, or `nil` if the nodes aren't adjacent.
     func undirectedEdgeWeight(_ a: String, _ b: String) -> Double? {
         undirectedAdjacency()[a]?[b]
     }
 
     /// The names of a node's undirected neighbours, in ascending natural order.
+    ///
+    /// - Parameter name: The node's name.
+    /// - Returns: The neighbours' names, or an empty array for an unknown node.
     func undirectedNeighbors(of name: String) -> [String] {
         (undirectedAdjacency()[name].map { Array($0.keys) } ?? []).sorted()
     }
 
     /// Weighted degree (igraph `strength()`): the sum of the weights of a
     /// node's incident undirected edges.
+    ///
+    /// - Parameter name: The node's name.
+    /// - Returns: The weighted degree, or `0` for an unknown node.
     func undirectedStrength(of name: String) -> Double {
         (undirectedAdjacency()[name]?.values.reduce(0, +)) ?? 0.0
     }
 
     /// Topological degree: the number of a node's undirected neighbours.
+    ///
+    /// - Parameter name: The node's name.
+    /// - Returns: The degree, or `0` for an unknown node.
     func undirectedDegree(of name: String) -> Int {
         undirectedAdjacency()[name]?.count ?? 0
     }
@@ -72,6 +87,9 @@ public extension Graph {
     /// The subgraph induced by `nodeNames` — every node in the list that exists
     /// in the graph, plus every undirected edge whose endpoints are both in the
     /// list. Node order follows `nodeNames`. Edge weights are preserved.
+    ///
+    /// - Parameter nodeNames: The nodes to keep, in output order.
+    /// - Returns: A new graph with copies of the kept nodes.
     func inducedSubgraph(nodeNames: [String]) -> Graph {
         let keep = nodeNames.filter { node(name: $0) != nil }
         let keepSet = Set(keep)
@@ -97,6 +115,8 @@ public extension Graph {
     /// graph — the equivalent of igraph's `distances()`. Row/column order and
     /// names follow `nodes`; unreachable pairs are `Double.infinity`; the
     /// diagonal is `0`.
+    ///
+    /// - Returns: An `n × n` distance matrix in node order.
     func weightedDistanceMatrix() -> Matrix {
         let order = nodes.map { $0.name }
         let adjacency = undirectedAdjacency()
@@ -140,6 +160,8 @@ public extension Graph {
 
     /// Symmetric name-keyed adjacency with undirected weights, each unordered
     /// pair taken from the first originating `Edge`.
+    ///
+    /// - Returns: Each node name mapped to its neighbours' names and edge weights.
     internal func undirectedAdjacency() -> [String: [String: Double]] {
         var adjacency: [String: [String: Double]] = [:]
         for node in nodes where adjacency[node.name] == nil {
@@ -153,6 +175,8 @@ public extension Graph {
     }
 
     /// Maps each node id to its name for O(1) edge-endpoint resolution.
+    ///
+    /// - Returns: Node names keyed by node id.
     internal func nodeNameByID() -> [UUID: String] {
         Dictionary(uniqueKeysWithValues: nodes.map { ($0.id, $0.name) })
     }

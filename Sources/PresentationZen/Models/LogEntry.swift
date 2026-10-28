@@ -5,10 +5,10 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  LogEntry.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
 //  A timestamped, freeform note persisted alongside a project's data —
 //  "we imported this file and dropped 3 individuals with no genotypes",
@@ -17,6 +17,9 @@
 //  `AnalysisResult`: that type is a full Markdown writeup for a single
 //  analysis; this one is a lightweight, append-only running log spanning
 //  the whole project's lifetime, not tied to any one result.
+//
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

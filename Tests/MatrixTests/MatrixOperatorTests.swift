@@ -1,6 +1,3 @@
-//
-//  MatrixOperatorTests.swift
-//  Tests macOS
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,7 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Claude Code on 1/11/26.
+//  MatrixOperatorTests.swift
+//  MatrixTests
+//
+//  Created by Rodney Dyer on 2026.01.11.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -19,7 +19,7 @@ import Testing
 
 struct MatrixOperatorTests {
 
-    @Test func testMatrixScalarAddition() {
+    @Test func matrixScalarAddition() {
         let M = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let result = M + 10.0
 
@@ -29,7 +29,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 14.0)
     }
 
-    @Test func testMatrixScalarSubtraction() {
+    @Test func matrixScalarSubtraction() {
         let M = Matrix(2, 2, Vector([10.0, 8.0, 6.0, 4.0]))
         let result = M - 3.0
 
@@ -39,7 +39,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 1.0)
     }
 
-    @Test func testMatrixScalarMultiplication() {
+    @Test func matrixScalarMultiplication() {
         let M = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let result = M * 2.0
 
@@ -49,7 +49,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 8.0)
     }
 
-    @Test func testMatrixScalarDivision() {
+    @Test func matrixScalarDivision() {
         let M = Matrix(2, 2, Vector([10.0, 20.0, 30.0, 40.0]))
         let result = M / 10.0
 
@@ -59,7 +59,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 4.0)
     }
 
-    @Test func testMatrixElementwiseAddition() {
+    @Test func matrixElementwiseAddition() {
         let M1 = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let M2 = Matrix(2, 2, Vector([5.0, 6.0, 7.0, 8.0]))
         let result = M1 + M2
@@ -70,7 +70,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 12.0)
     }
 
-    @Test func testMatrixElementwiseSubtraction() {
+    @Test func matrixElementwiseSubtraction() {
         let M1 = Matrix(2, 2, Vector([10.0, 9.0, 8.0, 7.0]))
         let M2 = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let result = M1 - M2
@@ -81,7 +81,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 3.0)
     }
 
-    @Test func testMatrixElementwiseMultiplication() {
+    @Test func matrixElementwiseMultiplication() {
         let M1 = Matrix(2, 2, Vector([2.0, 3.0, 4.0, 5.0]))
         let M2 = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let result = M1 * M2
@@ -92,7 +92,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 20.0)
     }
 
-    @Test func testMatrixElementwiseDivision() {
+    @Test func matrixElementwiseDivision() {
         let M1 = Matrix(2, 2, Vector([10.0, 20.0, 30.0, 40.0]))
         let M2 = Matrix(2, 2, Vector([2.0, 4.0, 5.0, 8.0]))
         let result = M1 / M2
@@ -103,7 +103,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 5.0)
     }
 
-    @Test func testMatrixMultiplication() {
+    @Test func matrixMultiplication() {
         // Test simple 2x2 matrix multiplication
         let M1 = Matrix(2, 2, Vector([1.0, 2.0, 3.0, 4.0]))
         let M2 = Matrix(2, 2, Vector([5.0, 6.0, 7.0, 8.0]))
@@ -117,7 +117,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 50.0)
     }
 
-    @Test func testMatrixMultiplicationNonSquare() {
+    @Test func matrixMultiplicationNonSquare() {
         // Test 2x3 * 3x2 = 2x2
         let M1 = Matrix(2, 3, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
         let M2 = Matrix(3, 2, Vector([7.0, 8.0, 9.0, 10.0, 11.0, 12.0]))
@@ -134,7 +134,7 @@ struct MatrixOperatorTests {
         #expect(result[1,1] == 154.0)
     }
 
-    @Test func testMatrixVectorMultiplication() {
+    @Test func matrixVectorMultiplication() {
         // Note: The M .* v operator requires rows(M) == length(v), not cols(M) == length(v)
         // This is a non-standard implementation
         let M = Matrix(3, 2, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
@@ -150,7 +150,7 @@ struct MatrixOperatorTests {
         #expect(result[2] == 17.0)
     }
 
-    @Test func testMatrixTranspose() {
+    @Test func matrixTranspose() {
         let M = Matrix(2, 3, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
         let MT = M.transpose
 
@@ -164,7 +164,7 @@ struct MatrixOperatorTests {
         #expect(MT[2,1] == 6.0)
     }
 
-    @Test func testIdentityMatrixMultiplication() {
+    @Test func identityMatrixMultiplication() {
         let M = Matrix(3, 3, Vector([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]))
         let I = Matrix(3, 3, 0.0)
         I.diagonal = Vector([1.0, 1.0, 1.0])

@@ -1,6 +1,3 @@
-//
-//  MatrixTests.swift
-//  Tests macOS
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,40 +7,41 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Rodney Dyer on 6/7/21.
+//  VectorTests.swift
+//  MatrixTests
+//
+//  Created by Rodney Dyer on 2021.06.07.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
 import SceneKit
 import CoreGraphics
-
 @testable import Matrix
 
 struct VectorTests {
-    
-    @Test
-    func testInit() {
-        let v = Vector(repeating: 2.2, count: 4 )
-        
+
+    @Test func initialization() {
+        let v = Vector(repeating: 2.2, count: 4)
+
         #expect(v.count == 4)
         #expect(v.sum == 8.8)
 
         #expect(v[1] == 2.2)
-        #expect(v.magnitude == sqrt( 19.36))
+        #expect(v.magnitude == sqrt(19.36))
         #expect(v.normal == [0.5, 0.5, 0.5, 0.5])
-        
+
         let v1 = Vector([1.0,2.0,3.0])
         #expect(v1.x == 1.0)
         #expect(v1.y == 2.0)
 
-        #expect(v1.asCGPoint == CGPoint( x: 1.0, y: 2.0) )
-        
+        #expect(v1.asCGPoint == CGPoint(x: 1.0, y: 2.0))
+
         let v1svn = v1.asSCNVector3
         #expect(v1svn.x == 1.0)
         #expect(v1svn.y == 2.0)
         #expect(v1svn.z == 3.0)
-        
+
         let v2 = [-2.3, 2.1, 2.8]
         #expect(v2.limitAnnealingMagnitude(temp: 2.2) == [-2.2, 2.1, 2.2 ])
         #expect(Vector.zeros(3) == [0.0, 0.0, 0.0])
@@ -51,7 +49,7 @@ struct VectorTests {
     }
 
     @Test
-    func testEqualityRequiresAllElements() {
+    func equalityRequiresAllElements() {
         // Regression: `==` must require *every* element to match, not just one.
         let a = Vector([1.0, 2.0, 3.0])
         #expect(!(a == [1.0, 99.0, 99.0]))   // first element matches; still unequal
@@ -60,15 +58,14 @@ struct VectorTests {
         #expect(!(a == [1.0, 2.0]))          // different length → unequal
         #expect(Vector() == Vector())        // both empty → equal
     }
-    
-    
+
     @Test
-    func testOperators() {
-        
+    func operators() {
+
         let x = [ 1.0 ,2.0, 3.0 ]
         let y = [ 3.0, 2.0, 1.0 ]
         let s = 2.0
-        
+
         #expect(x+s == [3.0, 4.0, 5.0])
         #expect(x-s == [-1.0, 0.0, 1.0])
         #expect(x*s == [2.0, 4.0, 6.0])
@@ -83,33 +80,30 @@ struct VectorTests {
 
         #expect(x .* y == 10.0)
         #expect(isApprox(euclideanDistance(x, y), sqrt((x - y).map { $0 * $0 }.sum)))
-        
-        #expect(amovaDistance( [ 0.0, 2.0, 0.0], [ 2.0, 0.0, 0.0] ) == 4.0)
-        #expect(amovaDistance( [ 0.0, 2.0, 0.0], [ 1.0, 1.0, 0.0] ) == 1.0)
-        #expect(amovaDistance( [ 1.0, 0.0, 1.0], [ 0.0, 2.0, 0.0] ) == 3.0)
-        #expect(amovaDistance( [ 1.0, 1.0, 0.0], [ 0.0, 1.0, 1.0] ) == 1.0)
-        #expect(amovaDistance( [ 2.0, 0.0, 0.0], [ 2.0, 0.0, 0.0] ) == 0.0)
-        #expect(amovaDistance( [ 1.0, 1.0, 0.0, 0.0], [ 0.0, 0.0, 1.0, 1.0] ) == 2.0)
+
+        #expect(amovaDistance([ 0.0, 2.0, 0.0], [ 2.0, 0.0, 0.0]) == 4.0)
+        #expect(amovaDistance([ 0.0, 2.0, 0.0], [ 1.0, 1.0, 0.0]) == 1.0)
+        #expect(amovaDistance([ 1.0, 0.0, 1.0], [ 0.0, 2.0, 0.0]) == 3.0)
+        #expect(amovaDistance([ 1.0, 1.0, 0.0], [ 0.0, 1.0, 1.0]) == 1.0)
+        #expect(amovaDistance([ 2.0, 0.0, 0.0], [ 2.0, 0.0, 0.0]) == 0.0)
+        #expect(amovaDistance([ 1.0, 1.0, 0.0, 0.0], [ 0.0, 0.0, 1.0, 1.0]) == 2.0)
 
     }
-    
-    
-    
+
     @Test
-    func testRSourceConvertable() {
-        
+    func rSourceConvertable() {
+
         let x = Vector(repeating: 1.0, count: 10)
         #expect(x.count == 10)
-        
+
         let r = x.toR()
         #expect(!r.isEmpty)
         #expect(r == "c(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)")
-        
+
     }
-    
-    
+
     @Test
-    func testStudentize() throws {
+    func studentize() throws {
         // `#require` fails the test if studentization unexpectedly returns nil,
         // rather than silently skipping the assertions.
         let x = try #require(Vector([1, 2, 3, 4, 5]).studentized)
@@ -121,27 +115,27 @@ struct VectorTests {
     }
 
     @Test
-    func testStudentizeReturnsNil() {
+    func studentizeReturnsNil() {
         // No minimum (empty) or a zero range (constant) cannot be studentized.
         #expect(Vector().studentized == nil, "Empty vector cannot be studentized")
         #expect(Vector([5.0, 5.0, 5.0]).studentized == nil, "Constant vector has zero range")
     }
 
     @Test
-    func testSquaredEuclideanDistance() {
+    func squaredEuclideanDistanceBetweenPoints() {
         #expect(squaredEuclideanDistance([0.0, 0.0], [3.0, 4.0]) == 25.0)
         #expect(squaredEuclideanDistance([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]) == 0.0)
     }
 
     @Test
-    func testRandomNormalizedVector() {
+    func randomNormalizedVector() {
         let v = Vector.randomNormalizedVector(size: 16)
         #expect(v.count == 16)
         #expect(isApprox(v.magnitude, 1.0), "Should be a unit vector")
     }
 
     @Test
-    func testVectorStatistics() {
+    func vectorStatistics() {
         let v = Vector([1.0, 2.0, 3.0, 4.0, 5.0])
 
         // Test mean
@@ -159,7 +153,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorMinMax() {
+    func vectorMinMax() {
         let v = Vector([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0])
 
         #expect(v.minimum == 1.0, "Minimum should be 1.0")
@@ -167,7 +161,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorSmallestLargest() {
+    func vectorSmallestLargest() {
         let v1 = Vector([1.0, 5.0, 3.0])
         let v2 = Vector([2.0, 3.0, 4.0])
 
@@ -179,7 +173,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorConstrain() {
+    func vectorConstrain() {
         let v = Vector([1.0, 5.0, 10.0, 15.0, 20.0])
         let constrained = v.constrain(minimum: 5.0, maximum: 15.0)
 
@@ -187,7 +181,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorZeros() {
+    func vectorZeros() {
         let v = Vector.zeros(5)
 
         #expect(v.count == 5, "Should have 5 elements")
@@ -195,7 +189,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorRandom() throws {
+    func vectorRandom() throws {
         // Test uniform [0,1]
         let v1 = Vector.random(length: 100, type: .uniform_0_1)
         #expect(v1.count == 100, "Should have 100 elements")
@@ -223,7 +217,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorEmptyStatistics() {
+    func vectorEmptyStatistics() {
         let v = Vector()
 
         #expect(v.mean.isNaN, "Mean of empty vector should be NaN")
@@ -232,7 +226,7 @@ struct VectorTests {
     }
 
     @Test
-    func testVectorZ() {
+    func vectorZ() {
         let v = Vector([1.0, 2.0, 3.0])
         #expect(v.z == 3.0, "z should return third element")
 

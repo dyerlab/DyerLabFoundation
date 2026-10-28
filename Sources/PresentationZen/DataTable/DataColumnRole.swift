@@ -7,13 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  DataColumnRole.swift
+//  PresentationZen
 //
 //  The role a column plays in a plot. A `DataTable` maps roles to column
 //  names; charts read columns by role rather than by position, so the same
 //  table can be re-bound to different encodings without copying data.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -32,11 +34,4 @@ public enum DataColumnRole: String, Hashable, Sendable, CaseIterable {
     case series
     /// A per-point text annotation.
     case label
-}
-
-/// The underlying value kind of a ``DataTable`` column.
-public enum ColumnKind: Sendable {
-    case number
-    case date
-    case category
 }

@@ -1,6 +1,3 @@
-//
-//  GraphDemoApp.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  GraphDemoApp.swift
+//  GraphDemoApp
 //
 //  A minimal demo app, compiled for iOS/macOS/visionOS from this one Package.swift
 //  target, showing the bundled lopho population graph via the non-spatial (Canvas-
@@ -22,6 +20,9 @@
 //  at (Xcode's canvas #Preview mechanism can't stand in for a real per-platform
 //  run) — open Package.swift in Xcode, pick the GraphDemoApp scheme, and choose
 //  any iOS/macOS/visionOS simulator or device destination.
+//
+//  Created by Rodney Dyer on 2026.08.09.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Graph

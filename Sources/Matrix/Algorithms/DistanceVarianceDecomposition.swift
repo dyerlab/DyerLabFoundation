@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  DistanceVarianceDecomposition.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.06.28.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 6/28/26.
 //
 
 import Foundation
@@ -59,13 +58,14 @@ public struct DistanceVarianceDecomposition: Sendable {
     /// - Returns: The within-group sum of squared distances.
     /// - Precondition: `partition.count == unitCount`. This is the sole entry
     ///   point every other partition-taking method (`decompose`,
-    ///   `permutationTest`, `permutationProgress`) routes through first, so
+    ///   `PermutationTest`, `permutationProgress`) routes through first, so
     ///   checking here catches a length mismatch before `decompose` could
     ///   otherwise silently compute a group count (`k`) inconsistent with
     ///   what `withinSS` actually grouped.
     public func withinSS(partition: [Int]) -> Double {
         precondition(partition.count == unitCount,
-                     "DistanceVarianceDecomposition.withinSS: partition.count (\(partition.count)) must equal unitCount (\(unitCount))")
+                     "DistanceVarianceDecomposition.withinSS: partition.count (\(partition.count)) "
+                     + "must equal unitCount (\(unitCount))")
         let n = unitCount
         var labelToGroup: [Int: Int] = [:]
         var sizes: [Int] = []
@@ -150,13 +150,16 @@ public struct DistanceVarianceDecomposition: Sendable {
     ///   - seed: PRNG seed for reproducibility.
     ///   - tag: which analysis this is — e.g. a caller's own `.amovaPhiST`
     ///     or `.weirCockerhamTheta`; this type has no opinion on the name.
-    public func permutationTest(partition: [Int], iterations: Int, seed: UInt64, tag: AnalysisTag) -> NullDistributionResult {
+    /// - Returns: The observed ratio and its permutation null distribution.
+    public func permutationTest(partition: [Int],
+                                iterations: Int,
+                                seed: UInt64,
+                                tag: AnalysisTag) -> NullDistributionResult {
         Resampling.permutationTest(labels: partition, iterations: iterations, seed: seed, tag: tag) { labels in
             self.decompose(partition: labels).varianceRatio
         }
     }
 }
-
 
 // MARK: - Streaming permutation (live convergence)
 
@@ -164,10 +167,17 @@ extension DistanceVarianceDecomposition {
 
     /// Streams a permutation test, emitting a progress snapshot every `emitEvery`
     /// permutations (and a final one at completion). The same `seed` reproduces
-    /// the same sequence and final p-value as `permutationTest`.
+    /// the same sequence and final p-value as `PermutationTest`.
     ///
     /// Work runs in a cancellable child task; ending iteration of the stream
     /// cancels it.
+    ///
+    /// - Parameters:
+    ///   - partition: Observed group label per unit.
+    ///   - iterations: Number of permutations; a non-positive count finishes the stream immediately.
+    ///   - seed: PRNG seed for reproducibility.
+    ///   - emitEvery: Permutations between progress snapshots (minimum `1`).
+    /// - Returns: A stream of progress snapshots, ending with the completed result.
     public func permutationProgress(partition: [Int], iterations: Int, seed: UInt64,
                                     emitEvery: Int = 1) -> AsyncStream<DistanceVarianceDecompositionProgress> {
         AsyncStream { continuation in

@@ -5,13 +5,15 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
-//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  WrappingHStack.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
 //  Originally created for Reviews, moved to PresentationZen.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -36,9 +38,12 @@ public struct WrappingHStack: Layout {
     /// Creates a wrapping horizontal stack with the given spacings and alignment.
     ///
     /// - Parameters:
-    ///   - alignment: The guide for aligning the subviews in this stack. This guide has the same screen coordinate for every subview.
-    ///   - horizontalSpacing: The distance between adjacent subviews in a row or `nil` if you want the stack to choose a default distance.
-    ///   - verticalSpacing: The distance between consequtive rows or`nil` if you want the stack to choose a default distance.
+    ///   - alignment: The guide for aligning the subviews in this stack. This guide has the same screen coordinate for
+    ///     every subview.
+    ///   - horizontalSpacing: The distance between adjacent subviews in a row or `nil` if you want the stack to choose
+    ///     a default distance.
+    ///   - verticalSpacing: The distance between consequtive rows or`nil` if you want the stack to choose a default
+    ///     distance.
     ///   - fitContentWidth: Determines if the width of the stack should adjust to fit its content.
     @inlinable public init(alignment: Alignment = .center,
                            horizontalSpacing: CGFloat? = nil,

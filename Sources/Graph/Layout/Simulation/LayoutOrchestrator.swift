@@ -1,8 +1,19 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  LayoutOrchestrator.swift
-//  DyerLabFoundation
+//  Graph
 //
 //  Primary simulation controller for force-directed graph layout.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -179,6 +190,8 @@ public class LayoutOrchestrator {
     /// Fruchterman–Reingold keeps its temperature and step count, so the result
     /// is the same as one uninterrupted run; Kamada–Kawai takes the remaining
     /// moves, matching `layout_with_kk(maxiter = budget × n)`.
+    ///
+    /// - Parameter budget: The new iteration budget.
     public func continueRun(toBudget budget: Int) {
         let movesUsed = kamadaKawai?.iteration ?? 0
         iterationBudget = budget
@@ -214,6 +227,8 @@ public class LayoutOrchestrator {
     ///
     /// Kamada–Kawai restarts from igraph's circle, so the result matches R's
     /// `layout_with_kk()` for the same graph and weighting.
+    ///
+    /// - Parameter algorithm: The algorithm to switch to; selecting the current one does nothing.
     public func setAlgorithm(_ algorithm: LayoutAlgorithm) {
         guard algorithm != config.algorithm else { return }
         config.algorithm = algorithm

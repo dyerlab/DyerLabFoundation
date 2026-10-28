@@ -10,8 +10,8 @@
 //  smousePeakallDistance.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Smouse–Peakall squared-distance matrix for a single locus column.
@@ -64,6 +64,11 @@ public func smousePeakallDistance(column: any GenotypeColumn) -> GeneticDistance
 /// dataset (hundreds of loci, each a several-MB allocation for a
 /// thousand-plus-individual panel) dominates runtime far more than the
 /// per-pair arithmetic itself does.
+///
+/// - Parameters:
+///   - column: The locus to add.
+///   - distance: The running distance total, updated in place.
+///   - coverage: The running count of loci scored for each pair, updated in place.
 func accumulateDistanceAndCoverage(column: any GenotypeColumn,
                                     distance: inout GeneticDistanceMatrix,
                                     coverage: inout GeneticDistanceMatrix) {

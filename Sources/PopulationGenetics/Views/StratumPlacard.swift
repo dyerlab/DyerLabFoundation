@@ -1,8 +1,17 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  StratumPlacard.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -20,7 +29,7 @@ struct StratumPlacard: View {
     var count: Int
 
     var body: some View {
-        HStack(alignment: .bottom){
+        HStack(alignment: .bottom) {
             Text(name)
                 .font(.title)
             VStack(alignment: .leading) {
@@ -31,6 +40,8 @@ struct StratumPlacard: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     StratumPlacard(name: "LaV", count: 12)

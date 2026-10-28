@@ -10,8 +10,8 @@
 //  CorrelatedPaternity.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/24/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.24.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -62,7 +62,8 @@ extension GenotypeMatrix {
 
     /// Correlated paternity pooled across every family in `design` — a population-level estimate.
     ///
-    /// - Parameter design: The maternal families to analyze. A family with no genotyped mother contributes nothing — paternal alleles can't be recovered without her genotype.
+    /// - Parameter design: The maternal families to analyze. A family with no genotyped mother contributes nothing —
+    ///   paternal alleles can't be recovered without her genotype.
     /// - Returns: The pooled correlated-paternity estimate.
     public func correlatedPaternity(design: ParentageDesign) -> CorrelatedPaternity {
         let pollenPools = populationPollenPoolFrequencies(design: design)
@@ -78,13 +79,15 @@ extension GenotypeMatrix {
     /// uses that one family's offspring.
     ///
     /// - Parameter design: The maternal families to analyze.
-    /// - Returns: One estimate per family, in ``ParentageDesign/families`` order. A family with no genotyped mother gets `informativePairCount == 0`.
+    /// - Returns: One estimate per family, in ``ParentageDesign/families`` order. A family with no genotyped mother
+    ///   gets `informativePairCount == 0`.
     public func correlatedPaternityPerFamily(design: ParentageDesign) -> [CorrelatedPaternity] {
         let pollenPools = populationPollenPoolFrequencies(design: design)
         return design.families.map { correlatedPaternity(families: [$0], pollenPools: pollenPools) }
     }
 
-    /// Population-wide pollen-pool allele frequencies at every locus, pooling every family's recovered paternal alleles.
+    /// Population-wide pollen-pool allele frequencies at every locus, pooling every family's recovered paternal
+    /// alleles.
     private func populationPollenPoolFrequencies(design: ParentageDesign) -> [PollenPoolFrequencies] {
         (0..<locusCount).map { j in
             let column = columns[j]
@@ -92,15 +95,19 @@ extension GenotypeMatrix {
             for family in design.families {
                 guard let motherOrdinal = family.mother else { continue }
                 for offspringOrdinal in family.offspring {
-                    pool.add(paternalGamete(offspringOrdinal: offspringOrdinal, motherOrdinal: motherOrdinal, in: column))
+                    pool.add(paternalGamete(offspringOrdinal: offspringOrdinal,
+                                            motherOrdinal: motherOrdinal,
+                                            in: column))
                 }
             }
             return pool
         }
     }
 
-    /// Ritland's moment estimator: pools sib pairs from `families` against the (separately supplied) population pollen-pool frequencies.
-    private func correlatedPaternity(families: [MaternalFamily], pollenPools: [PollenPoolFrequencies]) -> CorrelatedPaternity {
+    /// Ritland's moment estimator: pools sib pairs from `families` against the (separately supplied) population
+    /// pollen-pool frequencies.
+    private func correlatedPaternity(families: [MaternalFamily],
+                                     pollenPools: [PollenPoolFrequencies]) -> CorrelatedPaternity {
         var numerator = 0.0
         var denominator = 0.0
         var informativePairCount = 0
@@ -117,9 +124,13 @@ extension GenotypeMatrix {
                 guard offspring.count > 1 else { continue }
 
                 for i in 0..<(offspring.count - 1) {
-                    let contributionI = paternalGamete(offspringOrdinal: offspring[i], motherOrdinal: motherOrdinal, in: column)
+                    let contributionI = paternalGamete(offspringOrdinal: offspring[i],
+                                                       motherOrdinal: motherOrdinal,
+                                                       in: column)
                     for k in (i + 1)..<offspring.count {
-                        let contributionK = paternalGamete(offspringOrdinal: offspring[k], motherOrdinal: motherOrdinal, in: column)
+                        let contributionK = paternalGamete(offspringOrdinal: offspring[k],
+                                                           motherOrdinal: motherOrdinal,
+                                                           in: column)
                         guard let match = Self.matchProbability(contributionI, contributionK) else { continue }
 
                         numerator += match - backgroundMatch
@@ -134,8 +145,12 @@ extension GenotypeMatrix {
         return CorrelatedPaternity(rp: rp, informativePairCount: informativePairCount)
     }
 
-    /// Probability that two (possibly ambiguous) recovered paternal alleles are identical, treating each ambiguous candidate as equally likely.
+    /// Probability that two (possibly ambiguous) recovered paternal alleles are identical, treating each ambiguous
+    /// candidate as equally likely.
     ///
+    /// - Parameters:
+    ///   - a: The first recovered paternal allele.
+    ///   - b: The second recovered paternal allele.
     /// - Returns: `nil` if either contribution is uninformative (`.missing` or `.impossible`).
     static func matchProbability(_ a: PaternalContribution, _ b: PaternalContribution) -> Double? {
         switch (a, b) {

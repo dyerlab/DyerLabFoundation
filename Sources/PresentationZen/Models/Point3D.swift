@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  DataPoint3D.swift
+//  Point3D.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 12/1/24.
+//  Created by Rodney Dyer on 2024.12.01.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -22,7 +21,7 @@ import SwiftUI
 ///
 /// Used primarily for color-space arithmetic (mapping RGB to a 3D coordinate)
 /// and for distance calculations in chart and visualization contexts.
-public struct Point3D: Equatable {
+public struct Point3D: Sendable, Equatable {
 
     let x: CGFloat
     let y: CGFloat
@@ -51,8 +50,13 @@ public struct Point3D: Equatable {
     }
 
     /// Returns whether two points have identical x, y, and z components.
+    ///
+    /// - Parameters:
+    ///   - lhs: The first point.
+    ///   - rhs: The second point.
+    /// - Returns: `true` if all three components are equal.
     public static func ==(lhs: Point3D, rhs: Point3D) -> Bool {
-        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z
+        lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z
     }
 
     /// Returns the squared Euclidean distance to another point.
@@ -69,21 +73,28 @@ public struct Point3D: Equatable {
     }
 }
 
-
-
 public extension Point3D {
 
     /// The origin point (0, 0, 0).
-    nonisolated(unsafe) static let zero = Point3D(0, 0, 0)
+    static let zero = Point3D(0, 0, 0)
 
     /// Adds two points component-wise.
+    ///
+    /// - Parameters:
+    ///   - lhs: The first point.
+    ///   - rhs: The second point.
+    /// - Returns: The component-wise sum.
     static func +(lhs: Point3D, rhs: Point3D) -> Point3D {
-        return Point3D(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z)
+        Point3D(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z)
     }
 
     /// Divides all components of a point by a scalar.
+    ///
+    /// - Parameters:
+    ///   - lhs: The point.
+    ///   - rhs: The divisor.
+    /// - Returns: The point with each component divided by `rhs`.
     static func /(lhs: Point3D, rhs: CGFloat) -> Point3D {
-        return Point3D(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs)
+        Point3D(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs)
     }
 }
-

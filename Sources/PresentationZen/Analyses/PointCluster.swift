@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  PointCluster.swift
 //  PresentationZen
 //
-//  Created by Rodney Dyer on 12/1/24.
+//  Created by Rodney Dyer on 2024.12.01.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -28,7 +27,7 @@ public class PointCluster {
     /// Creates an empty cluster centered at `center`.
     ///
     /// - Parameter center: The cluster's initial center.
-    public init( center: Point3D ) {
+    public init(center: Point3D) {
         self.center = center
     }
 
@@ -39,7 +38,7 @@ public class PointCluster {
         if points.isEmpty {
             return Point3D.zero
         }
-        return points.reduce( Point3D.zero, +) / CGFloat(points.count)
+        return points.reduce(Point3D.zero, +) / CGFloat(points.count)
     }
 
     /// Snaps `center` to whichever member of `points` is closest to the current centroid.
@@ -53,7 +52,3 @@ public class PointCluster {
     }
 
 }
-
-
-
-

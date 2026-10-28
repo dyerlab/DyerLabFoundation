@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  CentralityTests.swift
-//  Graph
+//  GraphTests
 //
-//  Created by Rodney Dyer on 5/21/25.
+//  Created by Rodney Dyer on 2025.05.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -23,16 +22,14 @@ struct CentralityTests {
 
     @Test func AdjacencyTests() async throws {
         let g = Graph.smallGraph
-        
-        
-        let a = AdjacencyMatrix(graph: g, weighed: false )
-        #expect(a.rows == a.cols, "Adjacency matrix not square" )
-        #expect(a.rows == g.cardinality, "Adjacency matrix incorrect size" )
-        
-        
+
+        let a = AdjacencyMatrix(graph: g, weighed: false)
+        #expect(a.rows == a.cols, "Adjacency matrix not square")
+        #expect(a.rows == g.cardinality, "Adjacency matrix incorrect size")
+
         // smallGraph: A-B (w1, sym), B-C (w2, sym), C-A (w3, sym),
         // and C->D (w4, NOT symmetric — so only [2,3] is set, not [3,2]).
-        let A1 = Matrix( 4, 4, 0 )
+        let A1 = Matrix(4, 4, 0)
         A1[0,1] = 1.0; A1[1,0] = 1.0
         A1[0,2] = 1.0; A1[2,0] = 1.0
         A1[1,2] = 1.0; A1[2,1] = 1.0
@@ -45,19 +42,19 @@ struct CentralityTests {
         //    C
         //    |
         //    D
-        #expect( a == A1, "Adjacency matrix incorrect")
+        #expect(a == A1, "Adjacency matrix incorrect")
 
-        let A2 = Matrix( 4, 4, 0 )
+        let A2 = Matrix(4, 4, 0)
         A2[0,1] = 1.0; A2[1,0] = 1.0
         A2[0,2] = 3.0; A2[2,0] = 3.0
         A2[1,2] = 2.0; A2[2,1] = 2.0
         A2[2,3] = 4.0
 
-        let b = AdjacencyMatrix(graph: g, weighed: true )
+        let b = AdjacencyMatrix(graph: g, weighed: true)
         A2.rowNames = b.rowNames
         A2.colNames = b.colNames
 
-        #expect( b == A2, "Weighted adjacency matrix incorrect")
+        #expect(b == A2, "Weighted adjacency matrix incorrect")
 
     }
 
@@ -99,63 +96,57 @@ struct CentralityTests {
 
     @Test func DegreeCentralityTests() async throws {
         let g = Graph.smallGraph
-        
+
         let v = OutDegreeCentrality(graph: g)
         #expect(v.isEmpty == false, "Vector created incorrectly")
         #expect(v[0] == 2.0, "Degree centrality incorrect")
         #expect(v[1] == 2.0, "Degree centrality incorrect")
         #expect(v[2] == 3.0, "Degree centrality incorrect")
         #expect(v[3] == 0.0, "Degree centrality incorrect")
-        
+
     }
-    
+
     @Test func InDegreeCentralityTests() async throws {
         let g = Graph.smallGraph
-        
+
         let v = InDegreeCentrality(graph: g)
         #expect(v.isEmpty == false, "Vector created incorrectly")
         #expect(v[0] == 2.0, "Degree centrality incorrect")
         #expect(v[1] == 2.0, "Degree centrality incorrect")
         #expect(v[2] == 2.0, "Degree centrality incorrect")
         #expect(v[3] == 1.0, "Degree centrality incorrect")
-        
+
     }
 
-    
-    
     @Test func TotalDegreeCentralityTests() async throws {
         let g = Graph.smallGraph
-        
+
         let v = TotalDegreeCentrality(graph: g)
         #expect(v.isEmpty == false, "Vector created incorrectly")
         #expect(v[0] == 4.0, "Degree centrality incorrect")
         #expect(v[1] == 4.0, "Degree centrality incorrect")
         #expect(v[2] == 5.0, "Degree centrality incorrect")
         #expect(v[3] == 1.0, "Degree centrality incorrect")
-        
+
     }
 
-    
     @Test func ClosenessCentralityTests() async throws {
         let g = Graph.smallGraph
         let v = ClosenessCentrality(graph: g)
 
         // A reaches B(1), C(3), D(7) → 3/11; B reaches A(1), C(2), D(6) → 3/9;
         // C reaches A(3), B(2), D(4) → 3/9; D has no outgoing edges → 0.
-        #expect( v == [3.0/11.0, 1.0/3.0, 1.0/3.0, 0.0 ],  "Closeness centrality incorrect")
-        
+        #expect(v == [3.0/11.0, 1.0/3.0, 1.0/3.0, 0.0 ],  "Closeness centrality incorrect")
+
     }
 
-    
-    
     @Test func BetweennessCentralityTests() async throws {
         let g = Graph.smallGraph
         let v = BetweennessCentrality(graph: g)
-        
-        #expect( v == [0.0, 0.0, 1.0/3.0, 0.0], "Betweenness centrality incorrect" )
+
+        #expect(v == [0.0, 0.0, 1.0/3.0, 0.0], "Betweenness centrality incorrect")
     }
-    
-    
+
     @Test func EigenvectorCentralityTests() async throws {
         // Test eigenvector centrality on a simple undirected graph
         // Note: Eigenvector centrality may return nil for some graph structures

@@ -10,14 +10,15 @@
 //  ExampleDataset.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/14/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
-//
 //  Bundled example datasets (see `ExampleData/` resources, wired via
 //  `Package.swift`), imported through the same public import functions a real
 //  user import would use — bundling these can never drift from the real
 //  import path. Lets downstream apps (previews, "New Document" templates,
 //  onboarding) draw on real data without shipping their own copy.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 
@@ -89,6 +90,9 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
     /// dataset's canonical `displayName`/`species`/`description` metadata —
     /// the same metadata a "New Document" template or onboarding flow would
     /// want without re-typing it at each call site.
+    ///
+    /// - Parameter url: Destination file URL; any existing file is replaced.
+    /// - Throws: The errors of ``load()``, or a ``PersistenceError`` from writing the file.
     public func save(to url: URL) async throws {
         let dataset = try load()
         try await ProjectStore.save(dataset.matrix, parentage: dataset.parentage, strata: dataset.strata,
@@ -97,6 +101,10 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
     }
 
     /// Imports this dataset through the real import path.
+    ///
+    /// - Returns: The imported dataset.
+    /// - Throws: ``ExampleData/LoadError/resourceMissing(_:)`` if a bundled file is missing, or a
+    ///   ``GenotypeImportError`` if it doesn't parse.
     public func load() throws -> ImportedDataset {
         switch self {
         case .arapatPopulations:
@@ -117,33 +125,5 @@ public enum ExampleDataset: String, CaseIterable, Sendable {
                 indvText: try ExampleData.text("phylog.012", extension: "indv"),
                 posText: try ExampleData.text("phylog.012", extension: "pos"))
         }
-    }
-}
-
-/// Raw-text access to the bundled example-data files themselves, for callers
-/// pinned to exact file content (e.g. regression tests).
-public enum ExampleData {
-
-    public enum LoadError: LocalizedError {
-        case resourceMissing(String)
-
-        public var errorDescription: String? {
-            switch self {
-            case .resourceMissing(let name):
-                return "Bundled example-data resource '\(name)' could not be found."
-            }
-        }
-    }
-
-    /// Reads a bundled `ExampleData/` resource file as UTF-8 text.
-    ///
-    /// - Parameters:
-    ///   - name: File name without its extension (e.g. `"phylog.012"` for `phylog.012.indv`).
-    ///   - ext: File extension without the leading dot (e.g. `"indv"`).
-    public static func text(_ name: String, extension ext: String) throws -> String {
-        guard let url = Bundle.module.url(forResource: name, withExtension: ext, subdirectory: "ExampleData") else {
-            throw LoadError.resourceMissing("\(name).\(ext)")
-        }
-        return try String(contentsOf: url, encoding: .utf8)
     }
 }

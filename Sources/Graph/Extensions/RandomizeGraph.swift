@@ -1,6 +1,3 @@
-//
-//  RandomizeGraph.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,9 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  RandomizeGraph.swift
+//  Graph
+//
 //  A port of gstudio's `randomize_graph()` — an edge-randomised copy of a
 //  graph, either fully (`.full`) or preserving the degree sequence (`.degree`).
 //  Uses ``RMersenneTwister``. `.full` reproduces R's
@@ -17,6 +17,9 @@
 //  functional (not RNG-exact) port of gstudio >= 1.15's
 //  `igraph::rewire(keeping_degseq())` edge-swap chain.
 //  See `~/Coding/gstudio/R/randomize_graph.R`.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -39,7 +42,7 @@ public enum GraphRandomization: Sendable {
 ///
 /// With the same `seed` and input graph, `.full` reproduces R's
 /// `set.seed(seed); randomize_graph(graph, mode = "full")` exactly, because the
-/// sampling runs through ``RMersenneTwister``. `.degree` follows the same
+/// sampling runs through `RMersenneTwister`. `.degree` follows the same
 /// edge-swap chain as gstudio's `igraph::rewire(keeping_degseq())` but does not
 /// reproduce igraph's individual random draws.
 ///
@@ -60,6 +63,12 @@ public func RandomizeGraph(graph: Graph,
 /// The RNG-threaded core, so callers that randomise repeatedly (e.g.
 /// ``AsymmetryNetworkTest(graph:permutations:rewire:seed:)``) keep a single
 /// generator state across iterations, exactly as R does.
+///
+/// - Parameters:
+///   - graph: The graph to randomise.
+///   - mode: The randomisation mode.
+///   - rng: The generator, advanced in place.
+/// - Returns: The randomised graph. Neither mode currently returns `nil`.
 func randomizeGraph(_ graph: Graph,
                     mode: GraphRandomization,
                     using rng: inout RMersenneTwister) -> Graph? {

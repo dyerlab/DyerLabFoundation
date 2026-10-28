@@ -1,10 +1,21 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  ProjectSnapshotTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Round-trip and atomicity coverage for saveSnapshot/loadSnapshot — the
 //  "persist everything currently held, in one call" pair that generalizes
 //  save(_:...)/load(from:) to all five StoreComponents.
+//
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import CoreLocation

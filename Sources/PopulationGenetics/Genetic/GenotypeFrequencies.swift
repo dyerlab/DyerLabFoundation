@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  GenotypeFrequencies.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/2/25.
+//  Created by Rodney Dyer on 2025.06.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -46,16 +47,14 @@ public class GenotypeFrequencies {
     /// Initializes a frequency object and immediately processes the provided genotypes.
     ///
     /// - Parameter genotypes: An array of genotypes to compute frequencies from.
-    public init( genotypes: [Genotype] ) {
+    public init(genotypes: [Genotype]) {
         self.counts = [String:Double]()
         self.numHets = 0.0
         self.numGenos = 0.0
-        self.addGenotypes(genos: genotypes )
+        self.addGenotypes(genos: genotypes)
     }
 
-
 }
-
 
 extension GenotypeFrequencies {
 
@@ -63,12 +62,12 @@ extension GenotypeFrequencies {
     ///
     /// For diploid data, this is twice the number of genotypes.
     public var N: Double {
-        return Double(  self.counts.values.reduce( 0.0, + ) )
+        Double(self.counts.values.reduce(0.0, +))
     }
 
     /// Sorted list of all unique allele names observed.
     public var alleles: [String] {
-        return self.counts.keys.sorted()
+        self.counts.keys.sorted()
     }
 
     /// Adds a single genotype to the frequency calculations.
@@ -78,7 +77,7 @@ extension GenotypeFrequencies {
     /// - **Diploid**: Counts both alleles and tracks heterozygosity
     ///
     /// - Parameter geno: The genotype to add to the frequency data.
-    public func addGenotype( geno: Genotype ) {
+    public func addGenotype(geno: Genotype) {
 
         if geno.ploidy == Genotype.Haploid {
             let allele = geno.leftAllele.isEmpty ? geno.rightAllele : geno.leftAllele
@@ -97,15 +96,15 @@ extension GenotypeFrequencies {
     /// Adds multiple genotypes to the frequency calculations.
     ///
     /// - Parameter genos: An array of genotypes to process.
-    public func addGenotypes( genos: [Genotype] ) {
-        genos.forEach({ addGenotype( geno: $0 ) } )
+    public func addGenotypes(genos: [Genotype]) {
+        genos.forEach({ addGenotype(geno: $0) })
     }
 
     /// Returns the count of a specific allele.
     ///
     /// - Parameter allele: The allele name to query.
     /// - Returns: The integer count of the allele.
-    public func count( for allele: String ) -> Int {
+    public func count(for allele: String) -> Int {
         return Int(counts[allele, default: 0.0])
     }
 
@@ -113,7 +112,7 @@ extension GenotypeFrequencies {
     ///
     /// - Parameter allele: The allele name to query.
     /// - Returns: The frequency as a proportion (0.0 to 1.0), or `NaN` if no data exists.
-    public func frequency( for allele: String) -> Double {
+    public func frequency(for allele: String) -> Double {
         if N > 0 {
             return counts[allele, default: 0.0]  / N
         } else {
@@ -126,9 +125,9 @@ extension GenotypeFrequencies {
     ///
     /// - Parameter alleles: An array of allele names to query.
     /// - Returns: An array of frequencies in the same order as the input alleles.
-    public func frequency( for alleles: [String] ) -> [Double] {
+    public func frequency(for alleles: [String]) -> [Double] {
         var ret = [Double]()
-        alleles.forEach( { ret.append( self.frequency(for: $0) ) } )
+        alleles.forEach({ ret.append(self.frequency(for: $0)) })
         return ret
     }
 
@@ -136,11 +135,10 @@ extension GenotypeFrequencies {
     ///
     /// - Returns: An array of frequencies for all alleles.
     public func frequencies() -> [Double] {
-        return frequency(for: self.alleles)
+        frequency(for: self.alleles)
     }
 
 }
-
 
 // MARK: - Genetic Diversity Statistics
 
@@ -150,7 +148,7 @@ extension GenotypeFrequencies {
     ///
     /// This is a simple count of unique allele variants at the locus.
     public var A: Double {
-        return Double( self.alleles.count )
+        Double(self.alleles.count)
     }
 
     /// Effective number of alleles: a measure of allelic diversity accounting for frequency distribution.
@@ -164,14 +162,14 @@ extension GenotypeFrequencies {
             return 0.0
         }
         let freqs = self.frequency(for: self.alleles)
-        return 1.0 / freqs.map{ $0 * $0 }.reduce( 0.0, + )
+        return 1.0 / freqs.map { $0 * $0 }.reduce(0.0, +)
     }
 
     /// Number of common alleles (alleles with frequency ≥ 5%).
     ///
     /// This metric excludes very rare alleles from diversity calculations.
     public var A95: Double {
-        return Double( self.frequencies().filter{ $0 >= 0.05 }.count )
+        Double(self.frequencies().filter { $0 >= 0.05 }.count)
     }
 
     /// Observed heterozygosity: the proportion of genotypes that are heterozygous.
@@ -180,7 +178,7 @@ extension GenotypeFrequencies {
     ///
     /// - Returns: The observed heterozygosity, or `NaN` if no genotypes exist.
     public var Ho: Double {
-        return numGenos > 0 ? numHets / numGenos : Double.nan
+        numGenos > 0 ? numHets / numGenos : Double.nan
     }
 
     /// Expected heterozygosity (gene diversity): the probability that two randomly chosen alleles differ.
@@ -191,18 +189,10 @@ extension GenotypeFrequencies {
     /// - Returns: The expected heterozygosity.
     public var He: Double {
         let freqs = self.frequency(for: self.alleles)
-        return 1.0 - freqs.map{ $0 * $0 }.reduce( 0.0, + )
+        return 1.0 - freqs.map { $0 * $0 }.reduce(0.0, +)
     }
 
-
-
 }
-
-
-
-
-
-
 
 // MARK: - Export Functions
 
@@ -212,7 +202,7 @@ extension GenotypeFrequencies {
     ///
     /// - Parameter alleles: Optional list of specific alleles to include. If empty, uses all alleles.
     /// - Returns: An HTML string representing a table row with frequency values.
-    func asHTMLTableRow(alleles: [String] = [] ) -> String {
+    func asHTMLTableRow(alleles: [String] = []) -> String {
         let theAlleles = alleles.isEmpty ? self.alleles : alleles
         var ret = "<tr>\n"
         for allele in theAlleles {
@@ -222,8 +212,6 @@ extension GenotypeFrequencies {
         return ret
     }
 }
-
-
 
 extension GenotypeFrequencies {
 
@@ -244,7 +232,7 @@ extension GenotypeFrequencies: CustomStringConvertible {
 
     /// Returns a string representation showing the allele counts.
     public var description: String {
-        return "Genotype Frequencies: \(self.counts)"
+        "Genotype Frequencies: \(self.counts)"
     }
 
 }

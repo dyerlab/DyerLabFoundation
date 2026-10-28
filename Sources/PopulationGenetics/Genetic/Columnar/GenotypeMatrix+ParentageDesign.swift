@@ -10,8 +10,8 @@
 //  GenotypeMatrix+ParentageDesign.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 // MARK: - Pollen-pool reductions over a GenotypeMatrix
@@ -19,6 +19,11 @@
 extension GenotypeMatrix {
 
     /// Allele frequencies among the adults (mothers) of a parentage design at a locus.
+    ///
+    /// - Parameters:
+    ///   - locusIndex: The locus ordinal.
+    ///   - design: The parentage design whose adults to include.
+    /// - Returns: The adults' allele frequencies.
     public func adultFrequencies(atLocus locusIndex: Int, design: ParentageDesign) -> AlleleFrequencies {
         frequencies(atLocus: locusIndex, over: design.adultOrdinals)
     }
@@ -29,6 +34,11 @@ extension GenotypeMatrix {
     /// ``paternalGamete(offspring:mother:)``) and the recovered paternal gametes
     /// are accumulated. Missing maternal or offspring genotypes are tallied as
     /// missing and excluded from the frequencies.
+    ///
+    /// - Parameters:
+    ///   - family: The maternal family.
+    ///   - locusIndex: The locus ordinal.
+    /// - Returns: The family's recovered paternal-gamete frequencies.
     public func pollenPool(forFamily family: MaternalFamily, atLocus locusIndex: Int) -> PollenPoolFrequencies {
         let column = columns[locusIndex]
         var pool = PollenPoolFrequencies(codebook: column.codebook)
@@ -42,6 +52,9 @@ extension GenotypeMatrix {
 
     /// The pollen pool a single mother sampled, one ``PollenPoolFrequencies`` per
     /// locus in ordinal order.
+    ///
+    /// - Parameter family: The maternal family.
+    /// - Returns: One pollen pool per locus.
     public func pollenPool(forFamily family: MaternalFamily) -> [PollenPoolFrequencies] {
         (0..<locusCount).map { pollenPool(forFamily: family, atLocus: $0) }
     }

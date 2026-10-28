@@ -7,14 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  ModernLayoutTests.swift
-//  MatrixStuffTests
+//  GraphTests
 //
 //  Tests for the modern layout engine (ForceSolver / PhysicsIntegrator /
 //  SettleDetector / EdgeState / Camera2D / LayoutState) used by
 //  LayoutOrchestrator and GraphLayoutView in production.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

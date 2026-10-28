@@ -7,7 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Rodney Dyer on 7/4/26.
+//  PermutationTestTests.swift
+//  MatrixTests
+//
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -25,8 +28,8 @@ struct PermutationTestTests {
         var rngOne = SeededGenerator(seed: 42)
         var rngTwo = SeededGenerator(seed: 42)
 
-        let resultOne = try #require(permutationTest(designMatrix: X, response: y, permutations: 50, using: &rngOne))
-        let resultTwo = try #require(permutationTest(designMatrix: X, response: y, permutations: 50, using: &rngTwo))
+        let resultOne = try #require(PermutationTest(designMatrix: X, response: y, permutations: 50, using: &rngOne))
+        let resultTwo = try #require(PermutationTest(designMatrix: X, response: y, permutations: 50, using: &rngTwo))
 
         #expect(resultOne.nullDistribution == resultTwo.nullDistribution)
     }
@@ -39,7 +42,7 @@ struct PermutationTestTests {
         let X = Matrix.DesignMatrix(strata: populations)
 
         var rng = SeededGenerator(seed: 7)
-        let result = try #require(permutationTest(designMatrix: X, response: y, permutations: 999, using: &rng))
+        let result = try #require(PermutationTest(designMatrix: X, response: y, permutations: 999, using: &rng))
 
         #expect(result.nullDistribution.count == 999)
         #expect(result.pValue < 0.05)
@@ -55,7 +58,7 @@ struct PermutationTestTests {
         let X = Matrix.DesignMatrix(strata: populations)
 
         var rng = SeededGenerator(seed: 99)
-        let result = try #require(permutationTest(designMatrix: X, response: y, permutations: 999, using: &rng))
+        let result = try #require(PermutationTest(designMatrix: X, response: y, permutations: 999, using: &rng))
 
         #expect(result.pValue > 0.05)
     }
@@ -63,13 +66,13 @@ struct PermutationTestTests {
     @Test func nonPositivePermutationsReturnsNil() {
         let X = Matrix.DesignMatrix(strata: ["A", "A", "B", "B"])
         var rng = SeededGenerator(seed: 1)
-        #expect(permutationTest(designMatrix: X, response: [1, 2, 3, 4], permutations: 0, using: &rng) == nil)
+        #expect(PermutationTest(designMatrix: X, response: [1, 2, 3, 4], permutations: 0, using: &rng) == nil)
     }
 
     @Test func unfittableModelReturnsNil() {
         // One observation can't estimate two parameters.
         let X = Matrix(1, 2, [1.0, 5.0])
         var rng = SeededGenerator(seed: 1)
-        #expect(permutationTest(designMatrix: X, response: [3.0], permutations: 10, using: &rng) == nil)
+        #expect(PermutationTest(designMatrix: X, response: [3.0], permutations: 10, using: &rng) == nil)
     }
 }

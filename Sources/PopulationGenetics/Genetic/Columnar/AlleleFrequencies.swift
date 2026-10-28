@@ -1,3 +1,11 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  AlleleFrequencies.swift
 //  PopulationGenetics
@@ -6,6 +14,9 @@
 //  allele index. Value type so it is cheap to copy for permutation/null-model
 //  work and `Sendable` for parallel reduction. Supports symmetric add/remove
 //  so individuals can be reconfigured across groupings without a full rebuild.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -39,11 +50,12 @@ public struct AlleleFrequencies: Sendable {
     }
 
     /// Creates an accumulator sized to a codebook.
+    ///
+    /// - Parameter codebook: The codebook whose slot count to match.
     public init(codebook: AlleleCodebook) {
         self.init(alleleSlots: codebook.count)
     }
 }
-
 
 // MARK: - Incremental accumulation
 
@@ -53,6 +65,10 @@ extension AlleleFrequencies {
     ///
     /// A gamete index of `0` is treated as absent: two zeros is an empty
     /// genotype (ignored), one zero is haploid (one allele counted).
+    ///
+    /// - Parameters:
+    ///   - left: The left allele index.
+    ///   - right: The right allele index.
     public mutating func add(left: UInt8, right: UInt8) {
         let lPresent = left != 0
         let rPresent = right != 0
@@ -69,6 +85,10 @@ extension AlleleFrequencies {
     }
 
     /// Reverses a previous `add(left:right:)` with the same indices.
+    ///
+    /// - Parameters:
+    ///   - left: The left allele index.
+    ///   - right: The right allele index.
     public mutating func remove(left: UInt8, right: UInt8) {
         let lPresent = left != 0
         let rPresent = right != 0
@@ -85,7 +105,6 @@ extension AlleleFrequencies {
     }
 }
 
-
 // MARK: - Counts and frequencies
 
 extension AlleleFrequencies {
@@ -99,25 +118,32 @@ extension AlleleFrequencies {
     }
 
     /// Returns the count for a specific allele index.
+    ///
+    /// - Parameter index: The allele index.
+    /// - Returns: The allele's count, or `0` for an out-of-range index.
     public func count(forIndex index: UInt8) -> Double {
         let i = Int(index)
         return i < counts.count ? counts[i] : 0.0
     }
 
     /// Returns the frequency of an allele index, or `NaN` when no data exists.
+    ///
+    /// - Parameter index: The allele index.
+    /// - Returns: The allele's frequency, or `NaN` if nothing has been counted.
     public func frequency(forIndex index: UInt8) -> Double {
         let n = N
         return n > 0 ? count(forIndex: index) / n : Double.nan
     }
 
     /// Frequencies for every non-null slot (`1..<count`), or `[]` when empty.
+    ///
+    /// - Returns: One frequency per non-null slot, in index order.
     public func frequencies() -> [Double] {
         let n = N
         guard n > 0 else { return [] }
         return (1..<counts.count).map { counts[$0] / n }
     }
 }
-
 
 // MARK: - Diversity statistics
 
@@ -144,7 +170,6 @@ extension AlleleFrequencies {
     }
 }
 
-
 // MARK: - Markdown rendering
 
 extension AlleleFrequencies {
@@ -154,6 +179,7 @@ extension AlleleFrequencies {
     /// - Parameters:
     ///   - codebook: The codebook used to order/label alleles.
     ///   - indices: Optional explicit allele indices; defaults to all non-null.
+    /// - Returns: A row like `| 0.2500 | 0.7500 |`.
     public func asMarkdownTableRow(codebook: AlleleCodebook, indices: [UInt8]? = nil) -> String {
         let idx = indices ?? codebook.alleleIndices
         let cells = idx.map { String(format: "%.4f", frequency(forIndex: $0)) }
@@ -161,6 +187,9 @@ extension AlleleFrequencies {
     }
 
     /// Renders a complete Markdown table (header + separator + frequency row).
+    ///
+    /// - Parameter codebook: The codebook used to order and label alleles.
+    /// - Returns: A three-line Markdown table.
     public func asMarkdownTable(codebook: AlleleCodebook) -> String {
         let idx = codebook.alleleIndices
         let header = "| " + idx.map { codebook.label(for: $0) }.joined(separator: " | ") + " |"

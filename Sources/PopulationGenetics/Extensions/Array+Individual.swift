@@ -8,11 +8,11 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Array+Individual.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-
 
 import Foundation
 import CoreLocation
@@ -30,7 +30,7 @@ extension Array where Element == Individual {
         for ind in self {
             if let lat = ind.latitude,
                 let lon = ind.longitude {
-                ret.append( CLLocationCoordinate2D(latitude: lat, longitude: lon))
+                ret.append(CLLocationCoordinate2D(latitude: lat, longitude: lon))
             }
         }
         return ret
@@ -53,12 +53,10 @@ extension Array where Element == Individual {
                 let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
                 let subtitle = String(format: "%.4f, %.4f", lat, lon)
                 let placard = MapPlacard(title: ind.name, subtitle: subtitle, coordinate: coord)
-                ret.append( placard)
+                ret.append(placard)
             }
         }
         return ret
     }
-
-
 
 }

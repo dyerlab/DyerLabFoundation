@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  ScatterPlot.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 2/10/24.
+//  Created by Rodney Dyer on 2024.02.10.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -23,10 +23,15 @@ import SwiftUI
 /// colors points by group and shows a legend; binding a `label` role and
 /// setting `showLabel` annotates each point.
 public struct ScatterPlot: View {
+    /// The table to plot; bind quantitative `x`/`y` roles (and optionally `series`/`label`).
     public var table: DataTable
+    /// The x-axis title.
     public var xLabel: String
+    /// The y-axis title.
     public var yLabel: String
+    /// Whether to annotate each point with its `label`-role value.
     public var showLabel: Bool
+    /// The point color when no `series` role is bound.
     public var pointColor: Color
 
     /// Creates a scatter plot.
@@ -70,6 +75,8 @@ public struct ScatterPlot: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     ScrollView {

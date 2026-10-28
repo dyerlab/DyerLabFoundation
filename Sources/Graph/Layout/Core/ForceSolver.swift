@@ -1,9 +1,20 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  ForceSolver.swift
-//  DyerLabFoundation
+//  Graph
 //
 //  Force computation for force-directed graph layout.
 //  Implements repulsion, attraction, center gravity, collision, and z-flattening forces.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -36,7 +47,7 @@ public func repulsiveForce(k: Float, distance: Float, strength: Float = 1.0) -> 
 ///   - strength: Attraction strength multiplier
 /// - Returns: Force magnitude (positive = pull, negative = push)
 public func attractiveForce(distance: Float, idealLength: Float, strength: Float = 1.0) -> Float {
-    return strength * (distance - idealLength)
+    strength * (distance - idealLength)
 }
 
 /// Pull toward origin to prevent drift.
@@ -48,7 +59,7 @@ public func attractiveForce(distance: Float, idealLength: Float, strength: Float
 ///   - strength: Center gravity strength
 /// - Returns: Force vector toward origin
 public func centerGravityForce(position: SIMD3<Float>, strength: Float) -> SIMD3<Float> {
-    return -position * strength
+    -position * strength
 }
 
 // MARK: - Complete Force Computation

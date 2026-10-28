@@ -16,6 +16,9 @@
 //  as raw `Data` here; `UIImage`/`NSImage` convenience lives in
 //  `ProjectStore+PlatformImage.swift`, gated per-platform.
 //
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import PresentationZen
@@ -23,6 +26,11 @@ import PresentationZen
 extension ProjectStore {
 
     /// Appends one result. Results are never updated in place; each call adds a new row.
+    ///
+    /// - Parameter result: The result to append.
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.results` component, ``PersistenceError/notOpen``, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func addResult(_ result: AnalysisResult) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.results, "results")
@@ -42,6 +50,11 @@ extension ProjectStore {
     }
 
     /// All results, in the order they were added.
+    ///
+    /// - Returns: The stored results.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.results` component,
+    ///   ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` for an unreadable row, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func results() async throws -> [AnalysisResult] {
         try requireComponent(.results, "results")
         let connection = try requireConnection()
@@ -57,6 +70,10 @@ extension ProjectStore {
     }
 
     /// A single result by id, or `nil` if none exists.
+    ///
+    /// - Parameter id: The result's identifier.
+    /// - Returns: The result, or `nil`.
+    /// - Throws: The same errors as ``results()``.
     public func result(id: UUID) async throws -> AnalysisResult? {
         try requireComponent(.results, "results")
         let connection = try requireConnection()
@@ -71,6 +88,13 @@ extension ProjectStore {
     /// Attaches a raw image to a result, referenceable from its Markdown body
     /// as `![alt](attachment:<image.name>)`. `(resultID, image.name)` must be
     /// unique — attaching the same name twice throws.
+    ///
+    /// - Parameters:
+    ///   - image: The image to attach.
+    ///   - resultID: The result to attach it to.
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.results` component, ``PersistenceError/notOpen``, or
+    ///   ``PersistenceError/sqliteError(code:message:)`` for a duplicate name or failed insert.
     public func attachImage(_ image: ResultImage, to resultID: UUID) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.results, "results")
@@ -88,6 +112,14 @@ extension ProjectStore {
     }
 
     /// The image attached to a result under the given `attachment:` name, or `nil`.
+    ///
+    /// - Parameters:
+    ///   - name: The `attachment:` name.
+    ///   - resultID: The result the image is attached to.
+    /// - Returns: The image, or `nil`.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.results` component,
+    ///   ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` for an unreadable row, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func image(named name: String, for resultID: UUID) async throws -> ResultImage? {
         try requireComponent(.results, "results")
         let connection = try requireConnection()

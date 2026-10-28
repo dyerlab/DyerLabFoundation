@@ -1,3 +1,11 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  BiallelicColumn.swift
 //  PopulationGenetics
@@ -10,6 +18,9 @@
 //      0b10 (2) = heterozygote  0b11 (3) = hom-alt (BB)
 //
 //  Allele indices in the codebook: 1 = reference, 2 = alternate.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -73,7 +84,7 @@ public struct BiallelicColumn: GenotypeColumn {
         self.packed = packedBytes
     }
 
-    // MARK: Bit access
+    // MARK: - Bit access
 
     @inline(__always)
     private static func writeCode(_ buffer: inout [UInt8], at ordinal: Int, _ code: UInt8) {
@@ -83,6 +94,9 @@ public struct BiallelicColumn: GenotypeColumn {
     }
 
     /// The raw 2-bit code at `ordinal` (0 missing, 1 AA, 2 AB, 3 BB).
+    ///
+    /// - Parameter ordinal: The individual ordinal.
+    /// - Returns: The 2-bit genotype code.
     @inline(__always)
     public func code(at ordinal: Int) -> UInt8 {
         let byte = ordinal >> 2
@@ -91,25 +105,36 @@ public struct BiallelicColumn: GenotypeColumn {
     }
 
     /// Sets the 2-bit code at `ordinal`.
+    ///
+    /// - Parameters:
+    ///   - ordinal: The individual ordinal.
+    ///   - code: The 2-bit genotype code.
     public mutating func setCode(at ordinal: Int, _ code: UInt8) {
         Self.writeCode(&packed, at: ordinal, code)
     }
 
     /// Alternate-allele dosage (0, 1, 2) or `nil` if missing.
+    ///
+    /// - Parameter ordinal: The individual ordinal.
+    /// - Returns: The dosage, or `nil` if missing.
     public func dosage(at ordinal: Int) -> UInt8? {
         let c = code(at: ordinal)
         return c == 0 ? nil : c - 1
     }
 
-    // MARK: GenotypeColumn
+    // MARK: - GenotypeColumn
 
     /// Returns `true` when the genotype at `ordinal` is missing (code == 0).
+    ///
+    /// - Parameter ordinal: The individual ordinal.
+    /// - Returns: `true` if the genotype is missing.
     public func isEmpty(at ordinal: Int) -> Bool {
         code(at: ordinal) == 0
     }
 
     /// Returns the two allele indices at `ordinal`, or `nil` if missing.
     ///
+    /// - Parameter ordinal: The individual ordinal.
     /// - Returns: `(1,1)` for AA, `(1,2)` for AB, `(2,2)` for BB, or `nil` for missing.
     public func alleles(at ordinal: Int) -> (UInt8, UInt8)? {
         switch code(at: ordinal) {

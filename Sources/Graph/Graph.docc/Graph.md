@@ -14,6 +14,9 @@ it the same way.
 - ``Graph`` — the graph itself: nodes, edges, and their relationships, with adjacency and centrality measures.
 - ``Node`` / ``Edge`` — the graph's vertices and connections.
 - ``Path`` — a path through the graph.
+- ``GraphSnapshot`` — an immutable, `Sendable` copy of a graph's nodes and edges, for carrying a graph across an
+  isolation boundary (an actor-backed store, a background task); ``GraphSnapshot/makeGraph()`` rebuilds a live
+  ``Graph`` with the same identifiers.
 
 ### Population-graph analysis
 
@@ -44,7 +47,7 @@ Ports of gstudio's genetic-gravity core (≥ 1.15), one sign convention througho
   ``LayoutConfiguration/algorithm`` or switched live with ``LayoutOrchestrator/setAlgorithm(_:)``.
 - ``KamadaKawaiSolver`` / ``KamadaKawaiWeighting`` — a port of igraph's `layout_with_kk()`. It is usable headless
   (`Graph.kamadaKawaiLayout(weighting:initial:maxIterations:)`) or animated by the orchestrator. The default
-  weighting matches gstudio's `layout = "kk"`.
+  weighting matches gstudio's `layout = "kk"`. ``KamadaKawaiError`` is thrown for non-positive edge lengths.
 - ``LayoutConfiguration`` — selects the algorithm and configures the force-directed simulation.
 - ``LayoutOrchestrator`` / ``LayoutState`` — drives the simulation loop and holds its running state.
 - ``SettleDetector`` — detects when a layout has stopped visibly moving (largest per-node move per frame below
@@ -68,7 +71,7 @@ inseparable from the layout engine that drives it.
 - ``RealityGraphView`` — a RealityKit-based 3D visualization, on iOS/macOS as a windowed scene and on visionOS as
   a volumetric one; the intended long-term replacement for ``GraphCanvasView`` across all three platforms (see the
   `realitykit_unification_decision` design note). Uses a headless `LayoutOrchestrator` precompute pass, then hands
-  live rendering/interaction to RealityKit's own physics via ``RealityGraphEntityBuilder``, configured by
+  live rendering/interaction to RealityKit's own physics via `RealityGraphEntityBuilder`, configured by
   ``RealityGraphOptions``.
 
 ### File import

@@ -15,6 +15,9 @@
 //  Mirrors gstudio's `to_mv()`: one numeric column per non-null allele per
 //  locus, valued as that allele's dosage divided by ploidy.
 //
+//  Created by Rodney Dyer on 2026.08.26.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 

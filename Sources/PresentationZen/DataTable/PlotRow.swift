@@ -7,13 +7,15 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  PlotRow.swift
+//  PresentationZen
 //
 //  The resolved, render-ready row a chart iterates. A `DataTable` projects
 //  its role mapping into `[PlotRow]`; the chart never touches the underlying
 //  data frame.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

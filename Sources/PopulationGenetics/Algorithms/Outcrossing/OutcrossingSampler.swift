@@ -10,8 +10,8 @@
 //  OutcrossingSampler.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/23/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -134,9 +134,15 @@ extension Outcrossing {
         ///   - matrix: The genotype matrix supplying both maternal and offspring genotypes.
         ///   - design: The maternal families to analyze.
         ///   - parameters: Tuning parameters for the chain.
-        ///   - hasNullModel: Per-locus null-allele flags, in ``GenotypeMatrix/loci`` order; defaults to no null alleles at any locus.
-        ///   - loci: Locus indices to estimate `t` from; defaults to every locus (`t_m`). Pass a single locus index for a `t_s` component.
-        public init(matrix: GenotypeMatrix, design: ParentageDesign, parameters: Parameters = Parameters(), hasNullModel: [Bool]? = nil, loci: [Int]? = nil) {
+        ///   - hasNullModel: Per-locus null-allele flags, in ``GenotypeMatrix/loci`` order; defaults to no null alleles
+        ///     at any locus.
+        ///   - loci: Locus indices to estimate `t` from; defaults to every locus (`t_m`). Pass a single locus index for
+        ///     a `t_s` component.
+        public init(matrix: GenotypeMatrix,
+                    design: ParentageDesign,
+                    parameters: Parameters = Parameters(),
+                    hasNullModel: [Bool]? = nil,
+                    loci: [Int]? = nil) {
             self.matrix = matrix
             self.design = design
             self.parameters = parameters
@@ -237,6 +243,11 @@ extension Outcrossing {
         /// Used by ``updateInbreedingHistories()``: a family's inbreeding
         /// history only affects how likely her *realized* genotype is under
         /// `F`, not how she transmits it to offspring.
+        ///
+        /// - Parameters:
+        ///   - familyIndex: The family's index in the design.
+        ///   - state: The current sampler state.
+        /// - Returns: The mother's log-likelihood.
         func motherLogLikelihood(familyIndex: Int, state: State) -> Double {
             let F = Outcrossing.inbreedingCoefficient(forIH: state.inbreedingHistories[familyIndex])
             var logLikelihood = 0.0
@@ -263,6 +274,11 @@ extension Outcrossing {
         /// The mixture over selfing/outcrossing is taken per offspring,
         /// after multiplying single-locus probabilities across every locus —
         /// see ``Outcrossing/probabilityOfOffspringGivenSelfing(_:givenMother:hasNullModel:)``.
+        ///
+        /// - Parameters:
+        ///   - familyIndex: The family's index in the design.
+        ///   - state: The current sampler state.
+        /// - Returns: The offspring's summed log-likelihood.
         func progenyLogLikelihood(familyIndex: Int, state: State) -> Double {
             let family = design.families[familyIndex]
             let t = state.t
@@ -276,11 +292,14 @@ extension Outcrossing {
                         continue // Missing data at this locus: no contribution (probability 1.0).
                     }
                     let mother = state.maternalGenotypes[familyIndex][j]
-                    selfingProb *= Outcrossing.probabilityOfOffspringGivenSelfing(
-                        offspringAlleles, givenMother: mother, hasNullModel: hasNullModel[j]
-                    )
+                    selfingProb *= Outcrossing.probabilityOfOffspringGivenSelfing(offspringAlleles,
+                                                                                  givenMother: mother,
+                                                                                  hasNullModel: hasNullModel[j])
                     outcrossingProb *= Outcrossing.probabilityOfOffspringGivenOutcrossing(
-                        offspringAlleles, givenMother: mother, frequencies: state.alleleFrequencies[j], hasNullModel: hasNullModel[j]
+                        offspringAlleles,
+                        givenMother: mother,
+                        frequencies: state.alleleFrequencies[j],
+                        hasNullModel: hasNullModel[j]
                     )
                 }
                 let offspringProb = (1.0 - t) * selfingProb + t * outcrossingProb
@@ -290,11 +309,20 @@ extension Outcrossing {
         }
 
         /// Log-likelihood of one family (mother and offspring together).
+        ///
+        /// - Parameters:
+        ///   - familyIndex: The family's index in the design.
+        ///   - state: The current sampler state.
+        /// - Returns: The family's log-likelihood.
         func familyLogLikelihood(familyIndex: Int, state: State) -> Double {
-            motherLogLikelihood(familyIndex: familyIndex, state: state) + progenyLogLikelihood(familyIndex: familyIndex, state: state)
+            motherLogLikelihood(familyIndex: familyIndex,
+                                state: state) + progenyLogLikelihood(familyIndex: familyIndex, state: state)
         }
 
         /// Log-likelihood of the whole population: every family's likelihood, summed.
+        ///
+        /// - Parameter state: The current sampler state.
+        /// - Returns: The population's log-likelihood.
         func populationLogLikelihood(state: State) -> Double {
             var total = 0.0
             for i in 0..<design.families.count {
@@ -529,7 +557,8 @@ extension Outcrossing {
             for (i, a) in sorted.enumerated() {
                 for b in sorted[i...] {
                     let feasible = offspring.allSatisfy { ordinal in
-                        guard let (l, r) = column.alleles(at: ordinal) else { return true } // Missing offspring genotype imposes no constraint.
+                        // Missing offspring genotype imposes no constraint.
+                        guard let (l, r) = column.alleles(at: ordinal) else { return true }
                         if l == a || l == b || r == a || r == b { return true }
                         // A homozygous offspring could be a masked null heterozygote.
                         return hasNullModel && l == r && (a == 0 || b == 0)

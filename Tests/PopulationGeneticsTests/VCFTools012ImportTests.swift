@@ -8,12 +8,13 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  VCFTools012ImportTests.swift
-// PopulationGenetics
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  PopulationGeneticsTests
 //
 //  Verifies importVCFTools012 against the bundled ExampleDataset.phylogSNPPanel
 //  (the phylog.012 triplet).
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

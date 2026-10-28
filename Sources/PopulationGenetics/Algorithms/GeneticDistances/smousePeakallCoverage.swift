@@ -10,8 +10,8 @@
 //  smousePeakallCoverage.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// A per-locus "was this pair actually scored" matrix: `1.0` at `(i, j)` when

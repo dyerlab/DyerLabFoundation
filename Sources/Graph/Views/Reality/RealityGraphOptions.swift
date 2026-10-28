@@ -1,6 +1,3 @@
-//
-//  RealityGraphOptions.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  RealityGraphOptions.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2026.08.09.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -39,6 +40,14 @@ public struct RealityGraphOptions: Equatable {
     /// physics takes over), vs. staying hidden until the layout has settled.
     public var showPrecomputeAnimation: Bool
 
+    /// Creates display options.
+    ///
+    /// - Parameters:
+    ///   - showLabels: Whether node name labels are drawn.
+    ///   - nodeSizeMultiplier: Multiplier applied to each node's `size`.
+    ///   - edgeThickness: Radius of the geometry used to draw an edge.
+    ///   - environmentLighting: Whether a default environment light is added.
+    ///   - showPrecomputeAnimation: Whether nodes move visibly before physics takes over.
     public init(showLabels: Bool = true, nodeSizeMultiplier: Double = 1.0, edgeThickness: Float = 0.01,
                 environmentLighting: Bool = true, showPrecomputeAnimation: Bool = true) {
         self.showLabels = showLabels

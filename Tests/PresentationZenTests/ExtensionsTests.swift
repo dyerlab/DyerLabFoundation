@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  ExtensionsTests.swift
+//  PresentationZenTests
 //
-//
-//  Created by Rodney Dyer on 2026-02-24.
+//  Created by Rodney Dyer on 2026.02.24.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

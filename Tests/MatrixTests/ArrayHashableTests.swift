@@ -7,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  ArrayHashableTests.swift
+//  MatrixTests
 //
 //  Adapted from the "Array+Hashable Tests" section of PopulationGenetics'
 //  ExtensionTests.swift. Renamed histogram() -> valueCounts() (collides
@@ -16,6 +17,9 @@
 //  which pulled genotypes from PopulationGeneticsPreviewData) is domain-specific
 //  and stays there; the mechanical behavior it was checking (non-empty result,
 //  counts sum to input length) is covered here without the domain fixture.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

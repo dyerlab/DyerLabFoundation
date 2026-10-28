@@ -1,6 +1,3 @@
-//
-//  Centrality.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,9 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Centrality.swift
+//  Graph
 //
-//  Created by Rodney Dyer on 5/21/25.
+//  Created by Rodney Dyer on 2025.05.21.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -31,10 +30,10 @@ import Foundation
 /// let outDegree = OutDegreeCentrality(graph: g)
 /// print("Node 0 has \(outDegree[0]) outgoing edges")
 /// ```
-public func OutDegreeCentrality( graph: Graph ) -> Vector {
-    var ret = Vector(repeating: 0.0, count: graph.cardinality )
+public func OutDegreeCentrality(graph: Graph) -> Vector {
+    var ret = Vector(repeating: 0.0, count: graph.cardinality)
     for edge in graph.edges {
-        if let idx = graph.nodes.firstIndex(where: { $0.id == edge.fromNode } ) {
+        if let idx = graph.nodes.firstIndex(where: { $0.id == edge.fromNode }) {
             ret[idx] += 1.0
         }
     }
@@ -47,10 +46,10 @@ public func OutDegreeCentrality( graph: Graph ) -> Vector {
 ///
 /// - Parameter graph: The graph to analyze
 /// - Returns: A vector where element i is the in-degree of node i
-public func InDegreeCentrality( graph: Graph ) -> Vector {
-    var ret = Vector(repeating: 0.0, count: graph.cardinality )
+public func InDegreeCentrality(graph: Graph) -> Vector {
+    var ret = Vector(repeating: 0.0, count: graph.cardinality)
     for edge in graph.edges {
-        if let idx = graph.nodes.firstIndex(where: { $0.id == edge.toNode } ) {
+        if let idx = graph.nodes.firstIndex(where: { $0.id == edge.toNode }) {
             ret[idx] += 1.0
         }
     }
@@ -63,12 +62,9 @@ public func InDegreeCentrality( graph: Graph ) -> Vector {
 ///
 /// - Parameter graph: The graph to analyze
 /// - Returns: A vector where element i is the total degree of node i
-public func TotalDegreeCentrality( graph: Graph ) -> Vector {
-    return OutDegreeCentrality(graph: graph) + InDegreeCentrality(graph: graph)
+public func TotalDegreeCentrality(graph: Graph) -> Vector {
+    OutDegreeCentrality(graph: graph) + InDegreeCentrality(graph: graph)
 }
-
-
-
 
 /// Computes closeness centrality for all nodes.
 ///
@@ -108,10 +104,6 @@ public func ClosenessCentrality(graph: Graph) -> Vector {
     return ret
 }
 
-
-
-
-
 /// Computes betweenness centrality for all nodes.
 ///
 /// Betweenness centrality measures how often a node appears on shortest paths
@@ -150,7 +142,6 @@ public func BetweennessCentrality(graph: Graph) -> Vector {
 
     return ret
 }
-
 
 /// Computes eigenvector centrality for all nodes.
 ///
@@ -192,7 +183,7 @@ public func EigenvectorCentrality(graph: Graph) -> Vector?  {
     var b_k = Vector(repeating: 1.0, count: n)
     let maxIterations = 1000
     let tolerance = 1e-6
-    
+
     for _ in 0..<maxIterations {
         let b_k1 = A .* b_k
         // Normalize by the scalar L2 norm (magnitude), not the unit vector.
@@ -208,6 +199,6 @@ public func EigenvectorCentrality(graph: Graph) -> Vector?  {
             break
         }
     }
-    
+
     return b_k
 }

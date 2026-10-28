@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  SymmetricUpperTriangle.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.14.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/14/26.
 //
 
 import Foundation
@@ -57,6 +56,7 @@ public extension SymmetricUpperTriangle where Element: AdditiveArithmetic {
     /// - Parameters:
     ///   - i: Row index (0..<count).
     ///   - j: Column index (0..<count).
+    /// - Returns: The element at `(i, j)`.
     subscript(_ i: Int, _ j: Int) -> Element {
         get {
             if i == j { return .zero }
@@ -115,6 +115,8 @@ public extension SymmetricUpperTriangle where Element == Double {
     }
 
     /// A dense N×N representation (symmetric, zero diagonal).
+    ///
+    /// - Returns: The values as nested row arrays.
     func dense() -> [[Double]] {
         var d = [[Double]](repeating: [Double](repeating: 0.0, count: count), count: count)
         for i in 0..<count {

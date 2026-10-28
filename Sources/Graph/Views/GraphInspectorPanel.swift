@@ -1,6 +1,3 @@
-//
-//  GraphInspectorPanel.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  GraphInspectorPanel.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2026.08.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -29,6 +30,12 @@ public struct GraphInspectorPanel: View {
     @Binding var camera: Camera2D
     @Binding var options: GraphLayoutOptions
 
+    /// Creates the inspector.
+    ///
+    /// - Parameters:
+    ///   - orchestrator: The layout simulation whose configuration the sliders edit.
+    ///   - camera: The pan/zoom state, updated by the zoom controls.
+    ///   - options: Display options, updated by the rendering sliders.
     public init(orchestrator: LayoutOrchestrator, camera: Binding<Camera2D>, options: Binding<GraphLayoutOptions>) {
         self.orchestrator = orchestrator
         self._camera = camera
@@ -57,7 +64,7 @@ public struct GraphInspectorPanel: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Layout")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Picker("Layout", selection: algorithm) {
                     ForEach(LayoutAlgorithm.allCases) { algorithm in
                         Text(algorithm.displayName).tag(algorithm)
@@ -69,26 +76,27 @@ public struct GraphInspectorPanel: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(budgetLabel)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Stepper(value: $orchestrator.iterationBudget, in: budgetRange, step: budgetStep) {
                     Text("\(orchestrator.iterationBudget)")
                         .monospacedDigit()
                 }
-                .help("Run length before the layout stops. If it stops while still moving, the control bar suggests a larger value.")
+                .help("Run length before the layout stops. If it stops while still moving, "
+                      + "the control bar suggests a larger value.")
             }
 
             Group {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Edge Width")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     Slider(value: $options.edgeLineWidth, in: 0.5...3.0)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Node Size")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     Slider(value: $options.nodeSizeMultiplier, in: 0.1...10.0)
                 }
 
@@ -97,21 +105,21 @@ public struct GraphInspectorPanel: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Repulsion: \(String(format: "%.1f", orchestrator.config.repulsionStrength))×")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Slider(value: $orchestrator.config.repulsionStrength, in: 0.1...3.0)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Attraction: \(String(format: "%.1f", orchestrator.config.attractionStrength))×")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Slider(value: $orchestrator.config.attractionStrength, in: 0.1...5.0)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Gravity: \(String(format: "%.1f", orchestrator.config.centerGravity))×")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Slider(value: $orchestrator.config.centerGravity, in: 0.0...3.0)
                     }
                 }
@@ -122,7 +130,7 @@ public struct GraphInspectorPanel: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Zoom: \(String(format: "%.1f", camera.zoom))×")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 HStack(spacing: 8) {
                     Button("-") {

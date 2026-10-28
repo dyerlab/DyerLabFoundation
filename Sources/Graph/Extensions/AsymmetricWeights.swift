@@ -1,6 +1,3 @@
-//
-//  AsymmetricWeights.swift
-//  DyerLabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,10 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  AsymmetricWeights.swift
+//  Graph
+//
 //  Direct ports of gstudio's `asymmetric_weights()` and `asymmetric_popgraph()`
 //  — a t-SNE-inspired local embedding that splits each undirected conditional
 //  genetic distance into its two directional shares. See
 //  `~/Coding/gstudio/R/asymmetric_weights.R` and `asymmetric_popgraph.R`.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix

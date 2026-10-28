@@ -7,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  ResamplingTests.swift
+//  MatrixTests
 //
 //  New coverage — `Resampling.subsampleTest` had no prior direct test
 //  anywhere: in PopulationGenetics it was only exercised indirectly through
@@ -15,6 +16,9 @@
 //  also locks in the reproducibility fix (a confirmed seeding bug in the
 //  pre-promotion rarefaction code) — `subsampleTest` requires a seed and
 //  stores it in the result, unlike the code it replaces.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -38,8 +42,16 @@ struct ResamplingTests {
     @Test func permutationTestSameSeedIsReproducible() async throws {
         let labels = Array(0..<20)
         let statistic: ([Int]) -> Double = { Double($0.reduce(0, +)) }
-        let a = Resampling.permutationTest(labels: labels, iterations: 100, seed: 42, tag: testTag, statistic: statistic)
-        let b = Resampling.permutationTest(labels: labels, iterations: 100, seed: 42, tag: testTag, statistic: statistic)
+        let a = Resampling.permutationTest(labels: labels,
+                                           iterations: 100,
+                                           seed: 42,
+                                           tag: testTag,
+                                           statistic: statistic)
+        let b = Resampling.permutationTest(labels: labels,
+                                           iterations: 100,
+                                           seed: 42,
+                                           tag: testTag,
+                                           statistic: statistic)
         #expect(a.values == b.values)
     }
 
@@ -55,7 +67,11 @@ struct ResamplingTests {
 
     @Test func subsampleTestDrawsExactlyTheRequestedSize() async throws {
         let population = Array(0..<100)
-        let result = Resampling.subsampleTest(population: population, size: 10, iterations: 30, seed: 1, tag: testTag) { sample in
+        let result = Resampling.subsampleTest(population: population,
+                                              size: 10,
+                                              iterations: 30,
+                                              seed: 1,
+                                              tag: testTag) { sample in
             Double(sample.count)
         }
         #expect(result.values.allSatisfy { $0 == 10.0 })
@@ -63,7 +79,11 @@ struct ResamplingTests {
 
     @Test func subsampleTestObservedIsFullPopulationStatistic() async throws {
         let population = Array(0..<50)
-        let result = Resampling.subsampleTest(population: population, size: 5, iterations: 10, seed: 1, tag: testTag) { sample in
+        let result = Resampling.subsampleTest(population: population,
+                                              size: 5,
+                                              iterations: 10,
+                                              seed: 1,
+                                              tag: testTag) { sample in
             Double(sample.count)
         }
         #expect(result.observed == 50.0)
@@ -72,21 +92,45 @@ struct ResamplingTests {
     @Test func subsampleTestSameSeedIsReproducible() async throws {
         let population = Array(0..<200)
         let statistic: ([Int]) -> Double = { Double($0.reduce(0, +)) }
-        let a = Resampling.subsampleTest(population: population, size: 20, iterations: 50, seed: 99, tag: testTag, statistic: statistic)
-        let b = Resampling.subsampleTest(population: population, size: 20, iterations: 50, seed: 99, tag: testTag, statistic: statistic)
+        let a = Resampling.subsampleTest(population: population,
+                                         size: 20,
+                                         iterations: 50,
+                                         seed: 99,
+                                         tag: testTag,
+                                         statistic: statistic)
+        let b = Resampling.subsampleTest(population: population,
+                                         size: 20,
+                                         iterations: 50,
+                                         seed: 99,
+                                         tag: testTag,
+                                         statistic: statistic)
         #expect(a.values == b.values)
     }
 
     @Test func subsampleTestDifferentSeedsDiffer() async throws {
         let population = Array(0..<200)
         let statistic: ([Int]) -> Double = { Double($0.reduce(0, +)) }
-        let a = Resampling.subsampleTest(population: population, size: 20, iterations: 50, seed: 1, tag: testTag, statistic: statistic)
-        let b = Resampling.subsampleTest(population: population, size: 20, iterations: 50, seed: 2, tag: testTag, statistic: statistic)
+        let a = Resampling.subsampleTest(population: population,
+                                         size: 20,
+                                         iterations: 50,
+                                         seed: 1,
+                                         tag: testTag,
+                                         statistic: statistic)
+        let b = Resampling.subsampleTest(population: population,
+                                         size: 20,
+                                         iterations: 50,
+                                         seed: 2,
+                                         tag: testTag,
+                                         statistic: statistic)
         #expect(a.values != b.values)
     }
 
     @Test func subsampleTestRecordsSizeAndSeed() async throws {
-        let result = Resampling.subsampleTest(population: Array(0..<30), size: 5, iterations: 8, seed: 3, tag: testTag) { _ in 0.0 }
+        let result = Resampling.subsampleTest(population: Array(0..<30),
+                                              size: 5,
+                                              iterations: 8,
+                                              seed: 3,
+                                              tag: testTag) { _ in 0.0 }
         #expect(result.size == 5)
         #expect(result.seed == 3)
         #expect(result.values.count == 8)
@@ -99,7 +143,11 @@ struct ResamplingTests {
         // `size` elements of whatever `population` it's given.
         let alleles = Array(repeating: "A", count: 40) + Array(repeating: "B", count: 40)
         let nominalSize = 10
-        let result = Resampling.subsampleTest(population: alleles, size: 2 * nominalSize, iterations: 20, seed: 5, tag: testTag) { sample in
+        let result = Resampling.subsampleTest(population: alleles,
+                                              size: 2 * nominalSize,
+                                              iterations: 20,
+                                              seed: 5,
+                                              tag: testTag) { sample in
             Double(sample.count)
         }
         #expect(result.values.allSatisfy { $0 == Double(2 * nominalSize) })

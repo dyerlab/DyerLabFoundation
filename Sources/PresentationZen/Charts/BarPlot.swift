@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  BarPlot.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 2/10/24.
+//  Created by Rodney Dyer on 2024.02.10.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -21,13 +21,21 @@ import SwiftUI
 /// role; a `series` role splits bars by color and a `label` role annotates
 /// them.
 public struct BarPlot: View {
+    /// The table to plot; bind categorical `x` and quantitative `y` roles (and optionally `series`/`label`).
     public var table: DataTable
+    /// The x-axis title.
     public var xLabel: String
+    /// The y-axis title.
     public var yLabel: String
+    /// Whether to annotate each bar with its `label`-role value, when present.
     public var showLabel: Bool
+    /// Whether to annotate each bar with its formatted `y` value (ignored when `showLabel` shows a real label).
     public var showValues: Bool
+    /// The `String(format:)` pattern used for `showValues` annotations.
     public var valueFormat: String
+    /// Whether to rotate x-axis category labels vertically, for long names.
     public var rotateLabels: Bool
+    /// The bar fill color when no `series` role is bound.
     public var barColor: Color
 
     /// Creates a bar plot.
@@ -99,6 +107,8 @@ public struct BarPlot: View {
         }
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     VStack(spacing: 25) {

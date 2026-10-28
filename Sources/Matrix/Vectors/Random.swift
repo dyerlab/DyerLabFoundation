@@ -7,11 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  
 //  Random.swift
-//  DLabMatrix
+//  Matrix
 //
-//  Created by Rodney Dyer on 6/15/21.
+//  Created by Rodney Dyer on 2021.06.15.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -42,7 +41,7 @@ public struct Random {
     /// let coordinate = Random.within(-180.0...180.0)
     /// ```
     public static func within<T>(_ range: ClosedRange<T>) -> T where T: FloatingPoint, T: ExpressibleByFloatLiteral {
-        return (range.upperBound - range.lowerBound) * (T(arc4random()) / T(UInt32.max)) + range.lowerBound
+        (range.upperBound - range.lowerBound) * (T(arc4random()) / T(UInt32.max)) + range.lowerBound
     }
 
 }

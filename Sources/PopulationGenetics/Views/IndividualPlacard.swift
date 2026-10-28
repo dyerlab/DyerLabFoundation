@@ -1,8 +1,17 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
 //
-//  IndividualRowView.swift
-// PopulationGenetics
+//         Making Population Genetic Software That Doesn't Suck
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  IndividualPlacard.swift
+//  PopulationGenetics
+//
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -16,8 +25,8 @@ struct IndividualPlacard: View {
     var individual: Individual
     var body: some View {
         HStack {
-            Text(individual.name )
-                .font( .title )
+            Text(individual.name)
+                .font(.title)
 
             if let lat = individual.latitude,
                 let lon = individual.longitude {
@@ -32,13 +41,14 @@ struct IndividualPlacard: View {
     }
 }
 
-
 #if DEBUG
-@available( macOS 15, *)
+
+// MARK: - Previews
+
 #Preview {
-    IndividualPlacard( individual: Individual(name: "Bob",
+    IndividualPlacard(individual: Individual(name: "Bob",
                                               latitude: 23.534,
-                                              longitude: -77.234 ) )
+                                              longitude: -77.234))
     .padding()
 }
 #endif

@@ -7,15 +7,19 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  DistanceVarianceDecompositionTests.swift
+//  MatrixTests
 //
 //  Adapted from PopulationGenetics' AMOVATests.swift, which covered the
 //  same distance-based variance decomposition under its population-genetics
 //  name (AMOVA / phi). Renamed here: AMOVA -> DistanceVarianceDecomposition,
 //  phi -> varianceRatio, AMOVAPermutationProgress -> the ...Progress type
 //  with observedPhi/lastPhi/runningMeanPhi -> observedRatio/lastRatio/
-//  runningMeanRatio. `permutationTest` now takes a required `tag:` since
+//  runningMeanRatio. `PermutationTest` now takes a required `tag:` since
 //  Matrix ships no predefined AnalysisTag values for this technique.
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -71,7 +75,8 @@ struct DistanceVarianceDecompositionTests {
     @Test func noStructureGivesLowRatio() async throws {
         // Every pairwise distance equal -> no among-group component.
         let n = 6
-        let flat = Array(repeating: Array(repeating: 4.0, count: n), count: n).enumerated().map { (i, row) -> [Double] in
+        let flat = Array(repeating: Array(repeating: 4.0, count: n),
+                         count: n).enumerated().map { (i, row) -> [Double] in
             var r = row; r[i] = 0; return r
         }
         let d = DistanceVarianceDecomposition(squaredDistances: flat)

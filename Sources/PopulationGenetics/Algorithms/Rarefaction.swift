@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Rarefaction.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/5/25.
+//  Created by Rodney Dyer on 2025.06.05.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -22,10 +23,10 @@ import Matrix
 /// resampling without replacement. This allows for fair comparison of diversity
 /// between populations with different sample sizes.
 ///
-/// Dispatches to `allelicRarefaction` for allele-pool-based metrics (`.A`,
-/// `.A95`, `.Ae`) and `genotypicRarefaction` for the rest. `.A`/`.A95`/`.Ae`
+/// Dispatches to `AllelicRarefaction` for allele-pool-based metrics (`.A`,
+/// `.A95`, `.Ae`) and `GenotypicRarefaction` for the rest. `.A`/`.A95`/`.Ae`
 /// also have an individual-based variant (preserves each individual's own
-/// allele pairing rather than pooling alleles) — call `genotypicRarefaction`
+/// allele pairing rather than pooling alleles) — call `GenotypicRarefaction`
 /// directly for that; this convenience wrapper always uses the allele-pool
 /// version for those three, matching the historical/default behavior.
 ///
@@ -37,7 +38,11 @@ import Matrix
 ///   - seed: PRNG seed, for reproducibility.
 /// - Returns: A `NullDistributionResult` (observed diversity at full sample
 ///   size vs. the distribution of rarefied estimates), or `nil` if invalid parameters.
-public func rarefaction(genotypes: [Genotype], type: DiversityType, size: Int, iterations: Int = 999, seed: UInt64) -> NullDistributionResult? {
+public func Rarefaction(genotypes: [Genotype],
+                        type: DiversityType,
+                        size: Int,
+                        iterations: Int = 999,
+                        seed: UInt64) -> NullDistributionResult? {
 
     guard type != .Undefined else { return nil }
 
@@ -46,16 +51,16 @@ public func rarefaction(genotypes: [Genotype], type: DiversityType, size: Int, i
     }
 
     if type.level == .Allelic {
-        return allelicRarefaction(genotypes: genotypes, type: type, size: size, iterations: iterations, seed: seed)
+        return AllelicRarefaction(genotypes: genotypes, type: type, size: size, iterations: iterations, seed: seed)
     } else {
-        return genotypicRarefaction(genotypes: genotypes, type: type, size: size, iterations: iterations, seed: seed)
+        return GenotypicRarefaction(genotypes: genotypes, type: type, size: size, iterations: iterations, seed: seed)
     }
 }
 
 /// Performs individual-based rarefaction by resampling whole genotypes (not
 /// decomposed alleles) without replacement — each sampled individual
 /// contributes both of its alleles together, preserving the pairing that
-/// `allelicRarefaction`'s allele-pool approach discards. This is the
+/// `AllelicRarefaction`'s allele-pool approach discards. This is the
 /// "individual-based" vs. "gene-based" rarefaction distinction discussed in
 /// the literature (e.g. Kalinowski 2004): the two can give different results
 /// for the same data, and neither is universally "more correct" — which one
@@ -64,7 +69,7 @@ public func rarefaction(genotypes: [Genotype], type: DiversityType, size: Int, i
 /// Supports two kinds of metric, both computed via `GenotypeFrequencies` on
 /// each subsample:
 /// - **Allelic** (`.A`, `.A95`, `.Ae`): the individual-based counterpart to
-///   what `allelicRarefaction` computes from an allele pool.
+///   what `AllelicRarefaction` computes from an allele pool.
 /// - **Genotypic** (`.Ho`, `.He`): single-population heterozygosity
 ///   statistics that only make sense computed from whole genotypes to begin
 ///   with — there's no allele-pool equivalent for these.
@@ -85,7 +90,11 @@ public func rarefaction(genotypes: [Genotype], type: DiversityType, size: Int, i
 ///   - seed: PRNG seed, for reproducibility.
 /// - Returns: A `NullDistributionResult`, or `nil` if `type` is unsupported,
 ///   or `size`/`genotypes` are invalid.
-public func genotypicRarefaction(genotypes: [Genotype], type: DiversityType, size: Int, iterations: Int = 999, seed: UInt64) -> NullDistributionResult? {
+public func GenotypicRarefaction(genotypes: [Genotype],
+                                 type: DiversityType,
+                                 size: Int,
+                                 iterations: Int = 999,
+                                 seed: UInt64) -> NullDistributionResult? {
     guard type == .A || type == .A95 || type == .Ae || type == .Ho || type == .He else { return nil }
     guard !genotypes.isEmpty, size > 0, size < genotypes.count else { return nil }
 
@@ -134,7 +143,11 @@ public func genotypicRarefaction(genotypes: [Genotype], type: DiversityType, siz
 ///   values. If `size`/`genotypes` don't leave enough real (non-missing)
 ///   alleles to draw from, `observed` is `.nan` and `values` is empty rather
 ///   than throwing — check `values.isEmpty` before use.
-public func allelicRarefaction(genotypes: [Genotype], type: DiversityType, size: Int, iterations: Int = 999, seed: UInt64) -> NullDistributionResult {
+public func AllelicRarefaction(genotypes: [Genotype],
+                               type: DiversityType,
+                               size: Int,
+                               iterations: Int = 999,
+                               seed: UInt64) -> NullDistributionResult {
     let N = genotypes.count
 
     // Only non-missing alleles are eligible for resampling — a genotype with an
@@ -144,7 +157,7 @@ public func allelicRarefaction(genotypes: [Genotype], type: DiversityType, size:
     // non-optional `String`, so `compactMap` here would silently do nothing —
     // an explicit `filter` is required.
     var alleles = genotypes.map { $0.leftAllele }.filter { !$0.isEmpty }
-    alleles.append( contentsOf: genotypes.map { $0.rightAllele }.filter { !$0.isEmpty } )
+    alleles.append(contentsOf: genotypes.map { $0.rightAllele }.filter { !$0.isEmpty })
 
     // `size >= N * 2` catches the common diploid-complete case cheaply; the
     // `alleles.count` check additionally guards against missing/haploid
@@ -169,7 +182,7 @@ public func allelicRarefaction(genotypes: [Genotype], type: DiversityType, size:
                     ctr += 1.0
                 }
                 else if type == .Ae {
-                    ctr += ( f * f )
+                    ctr += (f * f)
                 }
             }
 

@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  Array+CLLocationCoordinate2D.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
+//  Created by Rodney Dyer on 2025.05.30.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 5/30/25.
 //
 
 import Foundation
@@ -50,19 +49,17 @@ public extension Array where Element == CLLocationCoordinate2D {
                 maxLon = location.longitude;
             }
         }
-        return (minLon, maxLon, minLat, maxLat )
+        return (minLon, maxLon, minLat, maxLat)
     }
 
     /// Returns the centroid of the values
+    ///
     /// - Returns: A `CLLocationCoordinate2D` representing the center of the array of values.
     var center: CLLocationCoordinate2D? {
         guard !self.isEmpty else { return nil }
         let range = self.bounds()
-        return CLLocationCoordinate2DMake( CLLocationDegrees( ( range.2 + range.3 ) * 0.5),
-                                           CLLocationDegrees( ( range.0 + range.1 ) * 0.5) );
+        return CLLocationCoordinate2DMake(CLLocationDegrees((range.2 + range.3) * 0.5),
+                                           CLLocationDegrees((range.0 + range.1) * 0.5));
     }
-
-
-
 
 }

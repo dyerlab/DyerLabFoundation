@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 The Dyer Laboratory.  All Rights Reserved.
-//
 //  PlacardMapView.swift
-//  GeneticStudio
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 4/30/24.
+//  Created by Rodney Dyer on 2024.04.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import MapKit
@@ -32,36 +31,35 @@ public struct PlacardMapView: View {
 
     /// The map, with a circular icon annotation for each placard.
     public var body: some View {
-        VStack{
+        VStack {
             Map {
-                ForEach( placards ) { item in
-                    
-                    Annotation( item.title,
+                ForEach(placards) { item in
+
+                    Annotation(item.title,
                                 coordinate: item.coordinate,
                                 anchor: .center,
                                 content: {
                         ZStack {
                             Circle()
-                                .fill( .secondary )
+                                .fill(.secondary)
                             Image(systemName: item.icon)
-                                .foregroundColor( .red )
+                                .foregroundStyle(.red)
                                 .bold()
                         }
                     }
                     )
-                    
+
                 }
             }
-            .mapControlVisibility( .automatic )
-            .mapStyle( .hybrid )
+            .mapControlVisibility(.automatic)
+            .mapStyle(.hybrid)
         }
-       
 
     }
 }
 
+// MARK: - Previews
+
 #Preview {
-    PlacardMapView( placards: MapPlacard.randomSites )
+    PlacardMapView(placards: MapPlacard.randomSites)
 }
-
-

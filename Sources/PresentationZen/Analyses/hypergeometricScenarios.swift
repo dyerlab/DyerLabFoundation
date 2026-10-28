@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  hypergeometricScenarios.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Foundation
@@ -45,7 +44,10 @@ import Matrix
 ///     observedSuccesses: 1
 /// )
 /// ```
-public func hypergeometricScenarios(populationSize: Int, successesInPopulation: Int, draws: Int, observedSuccesses: Int) -> DataTable {
+public func hypergeometricScenarios(populationSize: Int,
+                                    successesInPopulation: Int,
+                                    draws: Int,
+                                    observedSuccesses: Int) -> DataTable {
 
     let scenarioNames = ["atLeast", "exact", "lessThan"]
 

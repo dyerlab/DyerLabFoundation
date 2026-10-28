@@ -10,8 +10,8 @@
 //  OutcrossingMath.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/23/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -95,7 +95,8 @@ extension Outcrossing {
     /// - Parameters:
     ///   - offspring: Offspring genotype (allele-index pair; `0` denotes missing/null).
     ///   - mother: Maternal genotype (allele-index pair).
-    ///   - frequencies: Population allele frequencies at this locus, indexed to match the codebook (index `0` is the null-allele frequency).
+    ///   - frequencies: Population allele frequencies at this locus, indexed to match the codebook (index `0` is the
+    ///     null-allele frequency).
     ///   - hasNullModel: Whether the locus is modeled with a null allele at index `0`.
     /// - Returns: The probability of the offspring genotype arising by outcrossing.
     public static func probabilityOfOffspringGivenOutcrossing(
@@ -212,7 +213,8 @@ extension Outcrossing {
     /// - Parameters:
     ///   - mother: Maternal genotype (allele-index pair). `(0, 0)` (fully missing) returns `1.0`.
     ///   - frequencies: Population allele frequencies at this locus, indexed to match the codebook.
-    ///   - F: The maternal inbreeding coefficient, derived from her inbreeding history (see ``inbreedingCoefficient(forIH:)``).
+    ///   - F: The maternal inbreeding coefficient, derived from her inbreeding history (see
+    ///     ``inbreedingCoefficient(forIH:)``).
     /// - Returns: The probability of the maternal genotype.
     public static func probabilityOfMother(
         _ mother: (UInt8, UInt8),

@@ -15,6 +15,9 @@
 //  magnitude (an estimate, not a hypothesis test). Replaces the former
 //  `asymmetry_jackknife()`. See `~/Coding/gstudio/R/asymmetry_ci.R`.
 //
+//  Created by Rodney Dyer on 2026.10.07.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 import Graph
@@ -24,7 +27,7 @@ import Foundation
 /// ``AsymmetryCI(graph:data:groups:resamples:confidence:pendants:tol:seed:)`` —
 /// mirrors a row of gstudio's `asymmetry_ci()` table.
 public struct EdgeAsymmetryInterval: Sendable, Equatable {
-    /// Edge's first endpoint (``Graph/undirectedEdgeList()`` order).
+    /// Edge's first endpoint (`Graph.undirectedEdgeList()` order).
     public let from: String
     /// Edge's second endpoint.
     public let to: String
@@ -86,7 +89,7 @@ public struct AsymmetryCIResult: Sendable {
 ///   - seed: RNG seed, equivalent to R's `set.seed(seed)`.
 /// - Returns: The per-edge intervals, or `nil` if `confidence` is out of range,
 ///   `groups` lacks individuals for some graph node,
-///   ``GraphAsymmetries(graph:bandwidth:scale:)`` cannot be computed for
+///   `GraphAsymmetries(graph:bandwidth:scale:)` cannot be computed for
 ///   `graph`, or no resample produced a valid graph (gstudio stops in each case).
 public func AsymmetryCI(graph: Graph,
                         data: Matrix,
@@ -152,8 +155,8 @@ public func AsymmetryCI(graph: Graph,
             from: edgeList[i].from, to: edgeList[i].to,
             delta: observedDelta[i],
             bootMean: values.isEmpty ? .nan : values.reduce(0, +) / Double(values.count),
-            confLow: values.isEmpty ? .nan : EmpiricalQuantile(values, probability: tail),
-            confHigh: values.isEmpty ? .nan : EmpiricalQuantile(values, probability: 1.0 - tail),
+            confLow: values.isEmpty ? .nan : empiricalQuantile(values, probability: tail),
+            confHigh: values.isEmpty ? .nan : empiricalQuantile(values, probability: 1.0 - tail),
             edgeSupport: Double(values.count) / Double(succeeded))
     }
 

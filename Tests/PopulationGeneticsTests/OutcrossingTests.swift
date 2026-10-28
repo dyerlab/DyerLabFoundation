@@ -8,18 +8,19 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  OutcrossingTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Rodney Dyer on 7/23/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import PopulationGenetics
 
-final class OutcrossingTests: XCTestCase {
+struct OutcrossingTests {
 
-    func testOutcrossingRun() {
+    @Test func outcrossingRun() {
         // Create a dummy matrix and design
         let loci = [
             Locus(name: "L1"),
@@ -56,9 +57,9 @@ final class OutcrossingTests: XCTestCase {
 
         let result = matrix.runOutcrossing(design: design, parameters: params)
 
-        XCTAssertEqual(result.samples.count, 90)
-        XCTAssert(result.meanT >= 0.0 && result.meanT <= 1.0)
-        XCTAssert(result.meanF >= 0.0 && result.meanF <= 1.0)
+        #expect(result.samples.count == 90)
+        #expect(result.meanT >= 0.0 && result.meanT <= 1.0)
+        #expect(result.meanF >= 0.0 && result.meanF <= 1.0)
     }
 
     // MARK: - Offspring probability math
@@ -69,18 +70,18 @@ final class OutcrossingTests: XCTestCase {
     /// `ms` or the population's own null); an apparent homozygote for any
     /// *other* allele is reachable only the first way. These must not collapse
     /// to the same formula.
-    func testOutcrossingProbabilityMomHetWithNullAllele() {
+    @Test func outcrossingProbabilityMomHetWithNullAllele() {
         let frequencies = [0.2, 0.3, 0.5] // [null, allele 1, allele 2]
 
         let matching = Outcrossing.probabilityOfOffspringGivenOutcrossing(
             (2, 2), givenMother: (0, 2), frequencies: frequencies, hasNullModel: true
         )
-        XCTAssertEqual(matching, 0.5 * (0.5 / 0.8) + 0.5 * (0.5 + 0.2), accuracy: 1e-12)
+        #expect(abs(matching - (0.5 * (0.5 / 0.8) + 0.5 * (0.5 + 0.2))) <= 1e-12)
 
         let nonMatching = Outcrossing.probabilityOfOffspringGivenOutcrossing(
             (1, 1), givenMother: (0, 2), frequencies: frequencies, hasNullModel: true
         )
-        XCTAssertEqual(nonMatching, 0.5 * (0.3 / 0.8), accuracy: 1e-12)
+        #expect(abs(nonMatching - (0.5 * (0.3 / 0.8))) <= 1e-12)
     }
 
     /// Mother heterozygous for two real (non-null) alleles, at a locus that
@@ -88,18 +89,18 @@ final class OutcrossingTests: XCTestCase {
     /// homozygote matching one of her alleles must include the null-allele
     /// correction (pollen could have supplied the invisible null instead) —
     /// unlike the standard (no null model) case.
-    func testOutcrossingProbabilityMomHetWithoutNullAlleleAtNullModeledLocus() {
+    @Test func outcrossingProbabilityMomHetWithoutNullAlleleAtNullModeledLocus() {
         let frequencies = [0.2, 0.3, 0.5] // [null, allele 1, allele 2]
 
         let withNullModel = Outcrossing.probabilityOfOffspringGivenOutcrossing(
             (1, 1), givenMother: (1, 2), frequencies: frequencies, hasNullModel: true
         )
-        XCTAssertEqual(withNullModel, 0.5 * (0.3 + 0.2), accuracy: 1e-12)
+        #expect(abs(withNullModel - (0.5 * (0.3 + 0.2))) <= 1e-12)
 
         let standardModel = Outcrossing.probabilityOfOffspringGivenOutcrossing(
             (1, 1), givenMother: (1, 2), frequencies: frequencies, hasNullModel: false
         )
-        XCTAssertEqual(standardModel, 0.5 * 0.3, accuracy: 1e-12)
+        #expect(abs(standardModel - (0.5 * 0.3)) <= 1e-12)
     }
 
     // MARK: - Multilocus mixing
@@ -111,7 +112,7 @@ final class OutcrossingTests: XCTestCase {
     /// as though selfed or outcrossed independently, which is a different
     /// (wrong) model and destroys the cross-locus correlation multilocus
     /// outcrossing-rate estimators rely on.
-    func testProgenyLogLikelihoodMixesAtTheMultilocusLevel() {
+    @Test func progenyLogLikelihoodMixesAtTheMultilocusLevel() {
         var cbA = AlleleCodebook()
         cbA.register("100")
         cbA.register("102")
@@ -142,7 +143,7 @@ final class OutcrossingTests: XCTestCase {
         // Correct (mixture-of-products): (1-t)*(1.0*1.0) + t*(0.4*0.7) = 0.64.
         // The bug this guards against (product-of-mixtures) would instead give
         // (0.5*1.0 + 0.5*0.4) * (0.5*1.0 + 0.5*0.7) = 0.595.
-        XCTAssertEqual(exp(logLikelihood), 0.64, accuracy: 1e-9)
+        #expect(abs(exp(logLikelihood) - 0.64) <= 1e-9)
     }
 
     // MARK: - Convergence sanity
@@ -193,7 +194,7 @@ final class OutcrossingTests: XCTestCase {
         return (matrix, ParentageDesign(families: families))
     }
 
-    func testMostlySelfingDataRecoversLowOutcrossingRate() {
+    @Test func mostlySelfingDataRecoversLowOutcrossingRate() {
         let (matrix, design) = makeMatingSystemMatrix(allSelfed: true)
 
         var params = Outcrossing.Parameters()
@@ -203,10 +204,10 @@ final class OutcrossingTests: XCTestCase {
         params.seed = 42
 
         let result = matrix.runOutcrossing(design: design, parameters: params)
-        XCTAssertLessThan(result.meanT, 0.35)
+        #expect(result.meanT < 0.35)
     }
 
-    func testMostlyOutcrossingDataRecoversHighOutcrossingRate() {
+    @Test func mostlyOutcrossingDataRecoversHighOutcrossingRate() {
         let (matrix, design) = makeMatingSystemMatrix(allSelfed: false)
 
         var params = Outcrossing.Parameters()
@@ -216,7 +217,7 @@ final class OutcrossingTests: XCTestCase {
         params.seed = 42
 
         let result = matrix.runOutcrossing(design: design, parameters: params)
-        XCTAssertGreaterThan(result.meanT, 0.65)
+        #expect(result.meanT > 0.65)
     }
 
     // MARK: - Single-locus outcrossing rate (t_s)
@@ -227,7 +228,7 @@ final class OutcrossingTests: XCTestCase {
     /// seed the chains must produce bit-identical results. This pins down
     /// that the `loci:` restriction doesn't silently change behavior when
     /// there's nothing to restrict.
-    func testSingleLocusMatchesMultilocusForOneLocusMatrix() {
+    @Test func singleLocusMatchesMultilocusForOneLocusMatrix() {
         let (matrix, design) = makeMatingSystemMatrix(allSelfed: false)
 
         var params = Outcrossing.Parameters()
@@ -239,14 +240,14 @@ final class OutcrossingTests: XCTestCase {
         let multilocus = matrix.runOutcrossing(design: design, parameters: params)
         let singleLocus = matrix.runOutcrossing(atLocus: 0, design: design, parameters: params)
 
-        XCTAssertEqual(multilocus.meanT, singleLocus.meanT, accuracy: 1e-12)
-        XCTAssertEqual(multilocus.meanF, singleLocus.meanF, accuracy: 1e-12)
+        #expect(abs(multilocus.meanT - singleLocus.meanT) <= 1e-12)
+        #expect(abs(multilocus.meanF - singleLocus.meanF) <= 1e-12)
     }
 
     /// `runSingleLocusOutcrossing` estimates `t` independently at every
     /// locus, so it must return one result per locus, each restricted to
     /// only that locus's information.
-    func testRunSingleLocusOutcrossingReturnsOneResultPerLocus() {
+    @Test func runSingleLocusOutcrossingReturnsOneResultPerLocus() {
         var cbA = AlleleCodebook()
         cbA.register("100")
         cbA.register("102")
@@ -273,9 +274,9 @@ final class OutcrossingTests: XCTestCase {
 
         let results = matrix.runSingleLocusOutcrossing(design: design, parameters: params)
 
-        XCTAssertEqual(results.count, 2)
+        #expect(results.count == 2)
         for result in results {
-            XCTAssert(result.meanT >= 0.0 && result.meanT <= 1.0)
+            #expect(result.meanT >= 0.0 && result.meanT <= 1.0)
         }
     }
 }

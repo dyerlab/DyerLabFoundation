@@ -7,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  RealityGraphEntityBuilderTests.swift
+//  GraphTests
+//
+//  Created by Rodney Dyer on 2026.08.09.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 

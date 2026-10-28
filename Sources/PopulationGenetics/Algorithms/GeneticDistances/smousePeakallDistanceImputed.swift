@@ -10,8 +10,8 @@
 //  smousePeakallDistanceImputed.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 7/13/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// Smouse–Peakall squared-distance matrix for a single locus, with any
@@ -95,6 +95,10 @@ public func smousePeakallDistanceImputed(column: any GenotypeColumn) -> GeneticD
 /// counterpart to `accumulateDistanceAndCoverage`. No separate coverage
 /// accumulator is needed here: imputation means every pair is scored at
 /// every locus, so coverage is uniformly `lociArray.count`.
+///
+/// - Parameters:
+///   - column: The locus to add.
+///   - distance: The running distance total, updated in place.
 func accumulateImputedDistance(column: any GenotypeColumn, into distance: inout GeneticDistanceMatrix) {
     let n = column.count
 

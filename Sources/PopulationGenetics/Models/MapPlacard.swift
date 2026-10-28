@@ -7,13 +7,13 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 The Dyer Laboratory.  All Rights Reserved.
-//
 //  MapPlacard.swift
-//  GeneticStudio
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/2/24.
-//-
+//  Created by Rodney Dyer on 2024.05.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
+
 import Foundation
 import CoreLocation
 
@@ -51,9 +51,8 @@ public struct MapPlacard {
     }
 }
 
-
 extension MapPlacard: Identifiable, Hashable, Equatable {
-    
+
     /// Two placards are equal if they share the same `id`, or — when IDs differ — if
     /// their coordinates match exactly.
     ///
@@ -62,13 +61,14 @@ extension MapPlacard: Identifiable, Hashable, Equatable {
     ///   - rhs: The right-hand placard.
     /// - Returns: `true` if the placards represent the same map point.
     static public func == (lhs: MapPlacard, rhs: MapPlacard) -> Bool {
-        
+
         if lhs.id != rhs.id {
-            return lhs.coordinate.latitude == rhs.coordinate.latitude && lhs.coordinate.longitude == rhs.coordinate.longitude
+            return lhs.coordinate.latitude == rhs.coordinate.latitude
+                && lhs.coordinate.longitude == rhs.coordinate.longitude
         }
         return true
     }
-    
+
     /// Hashes the placard's coordinate into the supplied hasher.
     ///
     /// Must hash the same property `==` actually keys equality on. Two
@@ -82,21 +82,27 @@ extension MapPlacard: Identifiable, Hashable, Equatable {
     ///
     /// - Parameter hasher: The hasher to feed.
     public func hash(into hasher: inout Hasher) {
-        hasher.combine( coordinate.latitude )
-        hasher.combine( coordinate.longitude )
+        hasher.combine(coordinate.latitude)
+        hasher.combine(coordinate.longitude)
     }
-    
-}
 
+}
 
 extension MapPlacard {
 
     /// A small set of sample placards near Richmond, VA, useful for previews and testing.
     static public var randomSites: [MapPlacard] {
         return [
-            MapPlacard(title: "RVA", subtitle: "Richmond Virginia", coordinate: CLLocationCoordinate2D(latitude: 37.5407, longitude: -77.4360 ) ),
-            MapPlacard(title: "COTU", subtitle: "Ashland Virginia", coordinate: CLLocationCoordinate2D(latitude: 37.7590, longitude: -77.480 ), icon: "mug" ),
-            MapPlacard(title: "Hopewell", subtitle: "Hopwell Virginia", coordinate: CLLocationCoordinate2D(latitude: 37.3043, longitude: -77.2872 ) ),
+            MapPlacard(title: "RVA",
+                       subtitle: "Richmond Virginia",
+                       coordinate: CLLocationCoordinate2D(latitude: 37.5407, longitude: -77.4360)),
+            MapPlacard(title: "COTU",
+                       subtitle: "Ashland Virginia",
+                       coordinate: CLLocationCoordinate2D(latitude: 37.7590, longitude: -77.480),
+                       icon: "mug"),
+            MapPlacard(title: "Hopewell",
+                       subtitle: "Hopwell Virginia",
+                       coordinate: CLLocationCoordinate2D(latitude: 37.3043, longitude: -77.2872)),
         ]
     }
 }

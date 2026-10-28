@@ -1,6 +1,3 @@
-//
-//  PGraphImport.swift
-//  DyerlabFoundation
 //                      _                 _       _
 //                   __| |_   _  ___ _ __| | __ _| |__
 //                  / _` | | | |/ _ \ '__| |/ _` | '_ \
@@ -10,6 +7,10 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  PGraphImport.swift
+//  Graph
+//
+//  Created by Rodney Dyer on 2026.08.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
@@ -37,6 +38,8 @@ extension Graph {
     ///
     /// - Parameter text: The raw `.pgraph` file contents.
     /// - Returns: The parsed graph.
+    /// - Throws: A ``GraphImportError`` — `.malformedHeader`, `.truncatedFile`, `.malformedNodeLine`,
+    ///   `.malformedEdgeLine` or `.unknownNode` — naming the offending line.
     public static func importPGraph(text: String) throws -> Graph {
         var lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         while let last = lines.last, last.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -96,6 +99,10 @@ extension Graph {
     }
 
     /// Parses a `.pgraph` file at the given URL. See ``importPGraph(text:)`` for the format.
+    ///
+    /// - Parameter url: The location of the `.pgraph` file.
+    /// - Returns: The parsed graph.
+    /// - Throws: Any error from reading the file, or a ``GraphImportError`` from parsing it.
     public static func importPGraph(contentsOf url: URL) throws -> Graph {
         try importPGraph(text: try String(contentsOf: url, encoding: .utf8))
     }

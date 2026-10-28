@@ -5,17 +5,18 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  StudentT.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Matrix
 //
 //  Student's t distribution and the regularized incomplete beta function it
 //  depends on. Added to support the two-sided Pearson correlation test used by
 //  `Graph`'s `TestCongruence` (a port of gstudio's `test_congruence()`), which
 //  reproduces R's `cor.test(method = "pearson")` p-value exactly.
+//
+//  Created by Rodney Dyer on 2026.09.02.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -104,6 +105,7 @@ private func betaContinuedFraction(_ x: Double, _ a: Double, _ b: Double) -> Dou
 /// - Parameters:
 ///   - t: The value at which to evaluate the CDF.
 ///   - degreesOfFreedom: `df > 0`.
+/// - Returns: `P(T ≤ t)`, or `.nan` if `degreesOfFreedom` is not positive.
 public func studentTCDF(_ t: Double, degreesOfFreedom: Double) -> Double {
     guard degreesOfFreedom > 0 else { return .nan }
     if t == 0 { return 0.5 }
@@ -120,6 +122,7 @@ public func studentTCDF(_ t: Double, degreesOfFreedom: Double) -> Double {
 /// - Parameters:
 ///   - t: The observed t statistic.
 ///   - degreesOfFreedom: `df > 0`.
+/// - Returns: The two-sided p-value in `[0, 1]`, or `.nan` if `degreesOfFreedom` is not positive.
 public func studentTTwoSidedPValue(_ t: Double, degreesOfFreedom: Double) -> Double {
     guard degreesOfFreedom > 0 else { return .nan }
     return min(1.0, 2.0 * studentTCDF(-abs(t), degreesOfFreedom: degreesOfFreedom))
@@ -128,6 +131,9 @@ public func studentTTwoSidedPValue(_ t: Double, degreesOfFreedom: Double) -> Dou
 /// The Pearson product-moment correlation coefficient between two equal-length
 /// vectors.
 ///
+/// - Parameters:
+///   - x: The first variable.
+///   - y: The second variable, the same length as `x`.
 /// - Returns: `r ∈ [-1, 1]`, or `.nan` if the vectors differ in length, have
 ///   fewer than two elements, or either has zero variance.
 public func pearsonCorrelation(_ x: Vector, _ y: Vector) -> Double {

@@ -5,21 +5,20 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  NullDistributionResult.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/13/26.
+//  Matrix
 //
 //  The shared shape behind every "observed value vs. a distribution of
 //  comparison values" analysis: a permutation test (observed vs.
-//  label-shuffled nulls) and rarefaction (observed vs. estimates from
+//  label-shuffled nulls) and Rarefaction (observed vs. estimates from
 //  repeated resampling at a reduced size) are mechanically the same
 //  computation — resample, recompute, collect, then ask where the observed
 //  value sits in that distribution.
+//
+//  Created by Rodney Dyer on 2026.07.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// An observed statistic together with a distribution of comparison values
@@ -95,6 +94,9 @@ extension NullDistributionResult {
     /// the same mechanics serve both interpretations, computed on demand
     /// (never stored) so it can't drift out of sync with `values` and so the
     /// caller picks the direction that matches their actual question.
+    ///
+    /// - Parameter direction: Which tail counts as "at least as extreme" (default `.greaterOrEqual`).
+    /// - Returns: The p-value in `(0, 1]`, or `.nan` if `observed` or the distribution is undefined.
     public func pValue(direction: ComparisonDirection = .greaterOrEqual) -> Double {
         // Checked once up front rather than left to propagate through the
         // arithmetic below: `min(1.0, .nan)` returns `1.0`, not `.nan` — the

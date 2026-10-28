@@ -1,6 +1,14 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  ProjectStoreRegressionTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Regression coverage for the bug that motivated splitting ProjectStore
 //  into five independent components: writeGeneticData/writeGraph used to be
@@ -8,6 +16,9 @@
 //  create(overwrite:true) + write, which silently discarded whatever
 //  graph/results/log/matrices data the file already held. Also covers the
 //  new `.matrices` component (generic named `Matrix` attachments).
+//
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import CoreLocation
@@ -59,7 +70,7 @@ struct ProjectStoreRegressionTests {
         try await store.addMatrix(try JSONEncoder().encode(matrix), name: "Fst distances")
 
         // Simulate an edit + re-save, exactly what a document's second save does.
-        let edited = GenotypeMatrix(individuals: [Individual(name: "i0"), Individual(name: "i1"), Individual(name: "i2")],
+        let edited = GenotypeMatrix(individuals: ["i0", "i1", "i2"].map { Individual(name: $0) },
                                      loci: [Locus(name: "snp1", location: 100, contig: "1")],
                                      columns: [BiallelicColumn(codebook: AlleleCodebook(alleles: ["G", "A"]),
                                                                 codes: [1, 2, 3])])

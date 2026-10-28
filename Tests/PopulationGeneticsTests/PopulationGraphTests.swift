@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PopulationGraphTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Validates `PopulationGraph()` for numerical identity against gstudio's real
 //  `popgraph()` (Dyer & Nason 2004). gstudio's own `test-popgraph.R` carries no
@@ -26,6 +26,9 @@
 //  `Fixtures/popgraph_<name>_fixture.json` is the real edge list and node
 //  sizes from `popgraph(x = to_mv(<name>[,-metadata]), groups = <name>$Population)`
 //  (R/gstudio/igraph 1.13/2.3.3) — not a hand-derived or synthetic expectation.
+//
+//  Created by Rodney Dyer on 2026.08.26.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing

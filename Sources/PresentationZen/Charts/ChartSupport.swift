@@ -7,14 +7,16 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  ChartSupport.swift
+//  PresentationZen
 //
 //  Shared helpers for the chart layer. The `seriesStyle` modifier keeps
 //  color/legend branching at the View level so the `Chart { }` content
 //  builders stay free of `_ConditionalContent`, which is required on the
 //  macOS 14 / iOS 17 deployment floor.
+//
+//  Created by Rodney Dyer on 2026.06.23.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import SwiftUI
@@ -37,6 +39,11 @@ extension View {
     /// The `if/else` here is at the View level (not inside a chart-content
     /// builder), so it produces a `View`'s `_ConditionalContent` — which is
     /// available on the deployment floor — not a `ChartContent` one.
+    ///
+    /// - Parameters:
+    ///   - hasSeries: Whether a ``DataColumnRole/series`` column is bound.
+    ///   - soloColor: The single mark color used when no series is bound.
+    /// - Returns: The chart with the matching color scale and legend.
     @ViewBuilder
     func seriesStyle(hasSeries: Bool, soloColor: Color) -> some View {
         if hasSeries {

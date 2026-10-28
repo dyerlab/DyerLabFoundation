@@ -5,14 +5,13 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  anovaTable.swift
-//  DyerLabFoundation
+//  PresentationZen
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Foundation
@@ -39,7 +38,7 @@ public func anovaTable(_ fit: LinearModelFit) -> DataTable {
 
 /// Formats a regression model's df/SS/MS/F breakdown.
 ///
-/// - Parameter result: A ``RegressionResult`` produced by `dateRegression(_:)`.
+/// - Parameter result: A ``RegressionResult`` produced by `DateRegression(_:)`.
 /// - Returns: The ANOVA source table, or `nil` if `result` was built directly
 public func anovaTable(_ result: RegressionResult) -> DataTable? {
     result.fit.map(anovaTable)
@@ -51,7 +50,7 @@ public func anovaTable(_ result: RegressionResult) -> DataTable? {
 /// contract as `BoxPlot` — the two are natural companions, since a box plot
 /// visualizes exactly what this tests. Builds the design matrix via
 /// `Matrix.DesignMatrix(strata:)` and fits it with the same
-/// `linearModelFit(designMatrix:response:)` core used by `dateRegression`.
+/// `linearModelFit(designMatrix:response:)` core used by `DateRegression`.
 ///
 /// - Parameter table: A ``DataTable`` whose `x` role is a categorical (group)
 ///   column and whose `y` role is the numeric response.
@@ -81,6 +80,7 @@ public func anovaTable(_ table: DataTable) -> DataTable? {
 /// mean-square, and F-statistic breakdown, with an empirical p-value on the
 /// `Model` row in place of an assumed F-distribution.
 ///
+/// - Parameter result: The permutation test to tabulate.
 /// - Returns: The ANOVA source table with an added `p` column (`Double.nan`
 ///   on the `Residual`/`Total` rows, matching how `ms`/`f` are already
 ///   padded there).
@@ -102,6 +102,7 @@ public func anovaTable(_ result: PermutationTestResult) -> DataTable {
 /// permutation test, as a raw single-column `DataTable` ready for binning
 /// and charting.
 ///
+/// - Parameter result: The permutation test whose null distribution to extract.
 /// - Returns: A `DataTable` with one `msA` column (one row per permutation)
 ///   and its `.y` role already bound, e.g.
 ///   `Histogram(nullDistributionTable(result), bins: 20)`.

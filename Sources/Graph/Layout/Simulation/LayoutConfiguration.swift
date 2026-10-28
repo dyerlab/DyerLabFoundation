@@ -1,8 +1,19 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  LayoutConfiguration.swift
-//  DyerLabFoundation
+//  Graph
 //
 //  Force-directed layout configuration parameters.
+//
+//  Created by Rodney Dyer on 2026.06.22.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Matrix
@@ -13,28 +24,6 @@ import UIKit
 #elseif os(macOS)
 import AppKit
 #endif
-
-/// A graph layout algorithm ``LayoutOrchestrator`` can run.
-public enum LayoutAlgorithm: String, CaseIterable, Identifiable, Sendable {
-    /// Force-directed: springs along edges, repulsion between every pair,
-    /// annealed by a cooling schedule.
-    case fruchtermanReingold
-
-    /// Stress layout: springs between every pair, sized to their
-    /// shortest-path distance (see ``KamadaKawaiSolver``). Tends to spread
-    /// clusters further apart, and matches R's `igraph::layout_with_kk()`.
-    case kamadaKawai
-
-    public var id: Self { self }
-
-    /// Human-readable name for pickers.
-    public var displayName: String {
-        switch self {
-        case .fruchtermanReingold: "Fruchterman–Reingold"
-        case .kamadaKawai: "Kamada–Kawai"
-        }
-    }
-}
 
 /// Configuration parameters for graph layout algorithms.
 ///
@@ -348,6 +337,9 @@ public struct LayoutConfiguration {
     /// `k` is deliberately not auto-derived from the graph's own edge weights here —
     /// pass a `k` sized to your own data's typical edge weight if it differs much
     /// from lopho's (roughly, aim for `meanEdgeWeight * k` in the low hundreds).
+    ///
+    /// - Parameter k: The base spring length (default `30`).
+    /// - Returns: A configuration tuned for distance-weighted edges.
     public static func distanceWeightedGraph(k: Double = 30.0) -> LayoutConfiguration {
         var config = LayoutConfiguration()
         config.k = k

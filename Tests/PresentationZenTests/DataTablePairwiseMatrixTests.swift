@@ -7,7 +7,8 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  DataTablePairwiseMatrixTests.swift
+//  PresentationZenTests
 //
 //  Adapted from PopulationGenetics' PairwiseExportTests.swift, which
 //  exercised DataTable(pairwise:) via its own domain markers (PhiSTKind,
@@ -15,6 +16,9 @@
 //  logic under test doesn't depend on what the measures mean. Column names
 //  updated: StratumA/StratumB -> GroupA/GroupB (the "Stratum" naming was
 //  domain-specific and didn't belong at this layer).
+//
+//  Created by Rodney Dyer on 2026.07.14.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation

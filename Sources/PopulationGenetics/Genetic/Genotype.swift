@@ -8,9 +8,10 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Genotype.swift
-// PopulationGenetics
+//  PopulationGenetics
 //
-//  Created by Rodney Dyer on 5/30/25.
+//  Created by Rodney Dyer on 2025.05.30.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -42,13 +43,16 @@ public struct Genotype: Codable, Hashable, Sendable, Identifiable {
     /// - Parameters:
     ///   - leftAllele: The first allele string.
     ///   - rightAllele: The second allele string.
-    ///   - leftLingage: Lineage tracking for the left allele (defaults to `UnknownLineage`).
+    ///   - leftLineage: Lineage tracking for the left allele (defaults to `UnknownLineage`).
     ///   - rightLineage: Lineage tracking for the right allele (defaults to `UnknownLineage`).
-    public init(leftAllele: String, rightAllele: String, leftLingage: Int = Genotype.UnknownLineage, rightLineage: Int = Genotype.UnknownLineage) {
+    public init(leftAllele: String,
+                rightAllele: String,
+                leftLineage: Int = Genotype.UnknownLineage,
+                rightLineage: Int = Genotype.UnknownLineage) {
         self.id = UUID()
         self.leftAllele = leftAllele
         self.rightAllele = rightAllele
-        self.leftLineage = leftLingage
+        self.leftLineage = leftLineage
         self.rightLineage = rightLineage
     }
 
@@ -64,12 +68,12 @@ public struct Genotype: Codable, Hashable, Sendable, Identifiable {
 
     /// Indicates whether this genotype has no alleles.
     public var isEmpty: Bool {
-        return leftAllele.isEmpty && rightAllele.isEmpty
+        leftAllele.isEmpty && rightAllele.isEmpty
     }
 
     /// Indicates whether this genotype is heterozygous (two different alleles).
     public var isHeterozygote: Bool {
-        return !isEmpty && leftAllele != rightAllele
+        !isEmpty && leftAllele != rightAllele
     }
 
 }
@@ -86,7 +90,7 @@ extension Genotype: Equatable {
     ///   - rhs: The right-hand genotype.
     /// - Returns: `true` if alleles match, `false` otherwise.
     static public func == (lhs: Genotype, rhs: Genotype) -> Bool {
-        return lhs.leftAllele == rhs.leftAllele && lhs.rightAllele == rhs.rightAllele
+        lhs.leftAllele == rhs.leftAllele && lhs.rightAllele == rhs.rightAllele
     }
 
 }
@@ -95,11 +99,10 @@ extension Genotype: CustomStringConvertible {
 
     /// Returns a string representation of the genotype in the format "leftAllele:rightAllele".
     public var description: String {
-        return "\(leftAllele):\(rightAllele)"
+        "\(leftAllele):\(rightAllele)"
     }
 
 }
-
 
 public extension Genotype {
 
@@ -114,7 +117,8 @@ public extension Genotype {
     /// Indicates the allele originated from the paternal parent (value: 1).
     static var PaternalLineage: Int { 1 }
 
-    /// Indicates the allele cannot be distinguished between parents (e.g., parent and offspring are both the same heterozygote) (value: 2).
+    /// Indicates the allele cannot be distinguished between parents (e.g., parent and offspring are both the same
+    /// heterozygote) (value: 2).
     static var AmbiguousLineage: Int { 2 }
 
     /// Indicates the allele does not match either parent, suggesting misassignment (value: 3).
@@ -130,7 +134,7 @@ public extension Genotype {
     ///
     /// - Parameter lineage: The lineage value to map to a color.
     /// - Returns: A `Color` representing the lineage.
-    static func colorForLineage( lineage: Int ) -> Color {
+    static func colorForLineage(lineage: Int) -> Color {
         switch lineage {
         case Genotype.MaternalLineage:
             return .pink

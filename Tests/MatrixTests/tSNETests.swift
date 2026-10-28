@@ -7,29 +7,23 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
+//  tSNETests.swift
+//  MatrixTests
+//
+//  Created by Rodney Dyer on 2026.02.03.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  File.swift
-//  MatrixStuff
-//
-//  Created by Rodney Dyer on 2/3/26.
-//
-
 
 import Testing
 import SceneKit
 import CoreGraphics
-
 @testable import Matrix
 
 struct tSNETests {
-    
-    
-    
-    
+
     @Test
     func exampleTSNEWithMatrix() {
-        
+
         // Create a sample data matrix: 5 points in 2D space
         // Points 0-2 form one cluster, points 3-4 form another cluster
         let dataValues: Vector = [
@@ -39,7 +33,7 @@ struct tSNETests {
             5.0, 5.0,      // Point 3
             5.1, 5.0       // Point 4
         ]
-        
+
         let dataMatrix = Matrix(5, 2, dataValues)
         let targetPerplexity = 3.0
 
@@ -50,18 +44,17 @@ struct tSNETests {
         )
 
         // The symmetric affinity matrix P sums to 1 with a zero diagonal.
-        #expect( abs(affinities.sum - 1.0) < 1e-9 )
-        #expect( affinities.trace == 0.0 )
+        #expect(abs(affinities.sum - 1.0) < 1e-9)
+        #expect(affinities.trace == 0.0)
 
         // Row sums should be similar across rows.
         let rowSumVar = affinities.rowSum.variance
-        #expect( rowSumVar < 0.001 )
+        #expect(rowSumVar < 0.001)
     }
-    
-    
+
     @Test
-    func testWithLargerDataset() {
-        
+    func withLargerDataset() {
+
         // Create a dataset with two well-separated clusters
         // Cluster 1: 15 points around (0, 0)
         // Cluster 2: 15 points around (10, 10)
@@ -88,14 +81,14 @@ struct tSNETests {
             targetPerplexity: targetPerplexity
         )
 
-        #expect( affinities.rows == 30 && affinities.cols == 30 )
-        #expect( abs(affinities.sum - 1.0) < 1e-9 )
-        #expect( affinities.trace == 0.0 )
+        #expect(affinities.rows == 30 && affinities.cols == 30)
+        #expect(abs(affinities.sum - 1.0) < 1e-9)
+        #expect(affinities.trace == 0.0)
 
         // Cluster structure: a within-cluster pair (0,1) should have a much higher
         // affinity than a cross-cluster pair (0,15). This is the property the test
         // previously only printed but never asserted.
-        #expect( affinities[0, 1] > affinities[0, 15] )
+        #expect(affinities[0, 1] > affinities[0, 15])
     }
 
     @Test

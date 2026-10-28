@@ -5,20 +5,19 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  PermutationTestResult.swift
-//  DyerLabFoundation
+//  Matrix
 //
+//  Created by Rodney Dyer on 2026.07.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
-//  Created by Rodney Dyer on 7/4/26.
 //
 
 import Foundation
 
 /// The result of a randomization test for a general linear model, computed by
-/// ``permutationTest(designMatrix:response:permutations:)``.
+/// ``PermutationTest(designMatrix:response:permutations:)``.
 ///
 /// Rather than assuming an F-distribution, the response is repeatedly
 /// shuffled against the fixed design matrix to build an empirical null
@@ -45,6 +44,12 @@ public struct PermutationTestResult: Sendable {
         return Double(atLeastAsExtreme + 1) / Double(permutations + 1)
     }
 
+    /// Creates a result from a fit and its null distribution.
+    ///
+    /// - Parameters:
+    ///   - observed: The fit to the unpermuted data.
+    ///   - nullDistribution: The model mean square from each permutation.
+    ///   - permutations: The number of permutations performed.
     public init(observed: LinearModelFit, nullDistribution: Vector, permutations: Int) {
         self.observed = observed
         self.nullDistribution = nullDistribution

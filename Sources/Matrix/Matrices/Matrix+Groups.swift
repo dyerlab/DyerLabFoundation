@@ -5,18 +5,19 @@
 //                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
 //                        |_ _/
 //
-//                     Making Software That Doesn't Suck
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  Matrix+Groups.swift
-//  DyerLabFoundation
-//
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//  Matrix
 //
 //  Group-wise reductions on `Matrix` rows, keyed by an external group label
 //  per row (a "strata" vector, same shape as the categorical grouping
 //  `Matrix.DesignMatrix(strata:)` already consumes). These mirror R's
 //  `tapply`-style per-group reductions used throughout canonical discriminant
 //  analysis.
+//
+//  Created by Rodney Dyer on 2026.08.26.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
@@ -37,6 +38,8 @@ extension Matrix {
     /// Implements R's `tapply(mv, list(groups, col(mv)), mean)` (`pop.means`).
     ///
     /// - Precondition: `strata.count == rows`.
+    /// - Parameter strata: The group label of each row.
+    /// - Returns: A `K × P` matrix of group means, rows in sorted label order.
     public func groupMeans(strata: [String]) -> Matrix {
         precondition(strata.count == rows, "strata must have one label per row")
         let groups = Self.sortedGroups(strata)
@@ -64,6 +67,8 @@ extension Matrix {
     /// broadcast.
     ///
     /// - Precondition: `strata.count == rows`.
+    /// - Parameter strata: The group label of each row.
+    /// - Returns: An `N × P` matrix whose row `i` is the mean of row `i`'s group.
     public func groupMeansBroadcast(strata: [String]) -> Matrix {
         precondition(strata.count == rows, "strata must have one label per row")
         let H = Matrix.IdempotentHatMatrix(strata: strata)
@@ -78,6 +83,8 @@ extension Matrix {
     /// Implements `centroid_variance()`.
     ///
     /// - Precondition: `strata.count == rows`.
+    /// - Parameter strata: The group label of each row.
+    /// - Returns: The within-group variance sum of each group, in sorted label order.
     public func centroidVariance(strata: [String]) -> Vector {
         precondition(strata.count == rows, "strata must have one label per row")
         let groups = Self.sortedGroups(strata)

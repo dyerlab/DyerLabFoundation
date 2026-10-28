@@ -8,44 +8,45 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  CorrelatedPaternityTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Rodney Dyer on 7/24/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.07.24.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import PopulationGenetics
 
-final class CorrelatedPaternityTests: XCTestCase {
+struct CorrelatedPaternityTests {
 
     // MARK: - matchProbability
 
-    func testMatchProbabilityResolvedPair() {
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.resolved(1), .resolved(1)), 1.0)
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.resolved(1), .resolved(2)), 0.0)
+    @Test func matchProbabilityResolvedPair() {
+        #expect(GenotypeMatrix.matchProbability(.resolved(1), .resolved(1)) == 1.0)
+        #expect(GenotypeMatrix.matchProbability(.resolved(1), .resolved(2)) == 0.0)
     }
 
-    func testMatchProbabilityResolvedAndAmbiguous() {
+    @Test func matchProbabilityResolvedAndAmbiguous() {
         // Resolved allele 1 is one of the ambiguous candidates: half-credit.
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.resolved(1), .ambiguous(1, 2)), 0.5)
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .resolved(1)), 0.5)
+        #expect(GenotypeMatrix.matchProbability(.resolved(1), .ambiguous(1, 2)) == 0.5)
+        #expect(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .resolved(1)) == 0.5)
         // Resolved allele 3 matches neither candidate.
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.resolved(3), .ambiguous(1, 2)), 0.0)
+        #expect(GenotypeMatrix.matchProbability(.resolved(3), .ambiguous(1, 2)) == 0.0)
     }
 
-    func testMatchProbabilityAmbiguousPair() {
+    @Test func matchProbabilityAmbiguousPair() {
         // One shared candidate out of four cross combinations.
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(2, 3)), 0.25)
+        #expect(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(2, 3)) == 0.25)
         // Identical candidate sets: two of four combinations match (1==1, 2==2).
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(1, 2)), 0.5)
+        #expect(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(1, 2)) == 0.5)
         // No shared candidates.
-        XCTAssertEqual(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(3, 4)), 0.0)
+        #expect(GenotypeMatrix.matchProbability(.ambiguous(1, 2), .ambiguous(3, 4)) == 0.0)
     }
 
-    func testMatchProbabilityUninformativePairsReturnNil() {
-        XCTAssertNil(GenotypeMatrix.matchProbability(.missing, .resolved(1)))
-        XCTAssertNil(GenotypeMatrix.matchProbability(.impossible, .ambiguous(1, 2)))
+    @Test func matchProbabilityUninformativePairsReturnNil() {
+        #expect(GenotypeMatrix.matchProbability(.missing, .resolved(1)) == nil)
+        #expect(GenotypeMatrix.matchProbability(.impossible, .ambiguous(1, 2)) == nil)
     }
 
     // MARK: - End-to-end estimation
@@ -92,7 +93,7 @@ final class CorrelatedPaternityTests: XCTestCase {
     /// used differ enough across families that the pollen pool as a whole
     /// stays evenly diverse. r_p should read as (approximately) a single
     /// effective father: `r_p ≈ 1`, `effectiveNumberOfPollenDonors ≈ 1`.
-    func testSingleFatherPerFamilyGivesMaximalCorrelatedPaternity() {
+    @Test func singleFatherPerFamilyGivesMaximalCorrelatedPaternity() {
         let (matrix, design) = makeSireMatrix(paternalAlleles: [
             [1, 1, 1, 1],
             [2, 2, 2, 2],
@@ -102,9 +103,9 @@ final class CorrelatedPaternityTests: XCTestCase {
 
         let result = matrix.correlatedPaternity(design: design)
 
-        XCTAssertEqual(result.rp, 1.0, accuracy: 1e-9)
-        XCTAssertEqual(result.effectiveNumberOfPollenDonors ?? .nan, 1.0, accuracy: 1e-9)
-        XCTAssertEqual(result.informativePairCount, 4 * 6) // C(4,2) pairs per family, 4 families.
+        #expect(abs(result.rp - 1.0) <= 1e-9)
+        #expect(abs((result.effectiveNumberOfPollenDonors ?? .nan) - 1.0) <= 1e-9)
+        #expect(result.informativePairCount == 4 * 6) // C(4,2) pairs per family, 4 families.
     }
 
     /// Every family's offspring cycle through all four alleles evenly — no
@@ -112,7 +113,7 @@ final class CorrelatedPaternityTests: XCTestCase {
     /// often than the population's own diversity would predict by chance.
     /// r_p should read well below the single-father scenario (and can go
     /// negative, since this is an unbiased moment estimator, not a bounded one).
-    func testManyFathersPerFamilyGivesLowCorrelatedPaternity() {
+    @Test func manyFathersPerFamilyGivesLowCorrelatedPaternity() {
         let (manyFathersMatrix, manyFathersDesign) = makeSireMatrix(paternalAlleles: [
             [1, 2, 3, 4, 1, 2, 3, 4],
         ])
@@ -127,11 +128,11 @@ final class CorrelatedPaternityTests: XCTestCase {
         let manyFathersResult = manyFathersMatrix.correlatedPaternity(design: manyFathersDesign)
         let singleFatherResult = singleFatherMatrix.correlatedPaternity(design: singleFatherDesign)
 
-        XCTAssertLessThan(manyFathersResult.rp, singleFatherResult.rp)
-        XCTAssertNil(manyFathersResult.effectiveNumberOfPollenDonors) // r_p <= 0 here.
+        #expect(manyFathersResult.rp < singleFatherResult.rp)
+        #expect(manyFathersResult.effectiveNumberOfPollenDonors == nil) // r_p <= 0 here.
     }
 
-    func testCorrelatedPaternityPerFamilyReturnsOneResultPerFamily() {
+    @Test func correlatedPaternityPerFamilyReturnsOneResultPerFamily() {
         let (matrix, design) = makeSireMatrix(paternalAlleles: [
             [1, 1, 1, 1],
             [2, 2, 2, 2],
@@ -141,22 +142,22 @@ final class CorrelatedPaternityTests: XCTestCase {
 
         let results = matrix.correlatedPaternityPerFamily(design: design)
 
-        XCTAssertEqual(results.count, 4)
+        #expect(results.count == 4)
         // Each family is internally a single perfectly-matching sire, same as the pooled case.
         for result in results {
-            XCTAssertEqual(result.rp, 1.0, accuracy: 1e-9)
-            XCTAssertEqual(result.informativePairCount, 6)
+            #expect(abs(result.rp - 1.0) <= 1e-9)
+            #expect(result.informativePairCount == 6)
         }
     }
 
-    func testFamiliesWithoutAGenotypedMotherContributeNothing() {
+    @Test func familiesWithoutAGenotypedMotherContributeNothing() {
         let (matrix, design) = makeSireMatrix(paternalAlleles: [[1, 1, 1, 1]])
         let familyWithoutMother = MaternalFamily(id: "F_no_mom", mother: nil, offspring: design.families[0].offspring)
         let mixedDesign = ParentageDesign(families: [familyWithoutMother])
 
         let result = matrix.correlatedPaternity(design: mixedDesign)
-        XCTAssertEqual(result.informativePairCount, 0)
-        XCTAssertTrue(result.rp.isNaN)
-        XCTAssertNil(result.effectiveNumberOfPollenDonors)
+        #expect(result.informativePairCount == 0)
+        #expect(result.rp.isNaN)
+        #expect(result.effectiveNumberOfPollenDonors == nil)
     }
 }

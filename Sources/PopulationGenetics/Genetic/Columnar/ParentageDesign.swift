@@ -10,8 +10,8 @@
 //  ParentageDesign.swift
 //  PopulationGenetics
 //
-//  Created by Rodney Dyer on 6/28/26.
-//  Copyright (c) 2026 DyerLab LLC.  All Rights Reserved.
+//  Created by Rodney Dyer on 2026.06.28.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 /// A collection of maternal families — the parentage sampling design.
@@ -34,6 +34,9 @@ public struct ParentageDesign: Sendable {
     public var offspringOrdinals: [Int] { families.flatMap(\.offspring) }
 
     /// Returns the family with the given label, or `nil`.
+    ///
+    /// - Parameter id: The family label.
+    /// - Returns: The family, or `nil`.
     public func family(id: String) -> MaternalFamily? {
         families.first { $0.id == id }
     }

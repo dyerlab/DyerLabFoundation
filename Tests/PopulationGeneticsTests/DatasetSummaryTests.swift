@@ -1,10 +1,21 @@
+//                      _                 _       _
+//                   __| |_   _  ___ _ __| | __ _| |__
+//                  / _` | | | |/ _ \ '__| |/ _` | '_ \
+//                 | (_| | |_| |  __/ |  | | (_| | |_) |
+//                  \__,_|\__, |\___|_|  |_|\__,_|_.__/
+//                        |_ _/
+//
+//         Making Population Genetic Software That Doesn't Suck
 //
 //  DatasetSummaryTests.swift
-//  PopulationGenetics
+//  PopulationGeneticsTests
 //
 //  Exercises DatasetSummary — the cheap meta-table classification read by
 //  ProjectStore.readSummary(), used e.g. by an "Open Recent" file picker to
 //  choose an icon without decoding the full dataset.
+//
+//  Created by Rodney Dyer on 2026.07.15.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import CoreLocation
@@ -128,7 +139,10 @@ struct DatasetSummaryTests {
         try await store.writeGeneticData(matrix: makeSNPMatrix())
 
         let graph = Graph()
-        graph.addNode(name: "A", size: 1.0, color: .red, coordinate: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4))
+        graph.addNode(name: "A",
+                      size: 1.0,
+                      color: .red,
+                      coordinate: CLLocationCoordinate2D(latitude: 37.5, longitude: -77.4))
         graph.addNode(name: "B", size: 2.0, color: .blue)
         graph.addEdge(from: "A", to: "B", weight: 1.0, symmetric: false)
         try await store.writeGraph(graph)

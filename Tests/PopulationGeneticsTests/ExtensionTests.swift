@@ -7,12 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2025 RJ Dyer.  All Rights Reserved.
-//
 //  ExtensionTests.swift
-// PopulationGenetics
+//  PopulationGeneticsTests
 //
-//  Created by Claude Code on 1/13/26.
+//  Created by Rodney Dyer on 2026.01.13.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Testing
@@ -20,11 +19,12 @@ import CoreLocation
 import Matrix
 @testable import PopulationGenetics
 
+@MainActor
 struct ExtensionTests {
 
     // MARK: - Array+Individual Tests
 
-    @Test func testIndividualCoordinatesExtraction() async throws {
+    @Test func individualCoordinatesExtraction() async throws {
         let ind1 = Individual(name: "Ind1", latitude: 37.7749, longitude: -122.4194)
         let ind2 = Individual(name: "Ind2", latitude: 40.7128, longitude: -74.0060)
         let ind3 = Individual(name: "Ind3") // No coordinates
@@ -39,7 +39,7 @@ struct ExtensionTests {
         #expect(coords[1].longitude == -74.0060)
     }
 
-    @Test func testIndividualCoordinatesWithNoSpatialData() async throws {
+    @Test func individualCoordinatesWithNoSpatialData() async throws {
         let ind1 = Individual(name: "Ind1")
         let ind2 = Individual(name: "Ind2")
 
@@ -49,7 +49,7 @@ struct ExtensionTests {
         #expect(coords.isEmpty)
     }
 
-    @Test func testIndividualCoordinatesWithAllSpatial() async throws {
+    @Test func individualCoordinatesWithAllSpatial() async throws {
         let ind1 = Individual(name: "Ind1", latitude: 37.0, longitude: -122.0)
         let ind2 = Individual(name: "Ind2", latitude: 38.0, longitude: -123.0)
         let ind3 = Individual(name: "Ind3", latitude: 39.0, longitude: -124.0)
@@ -60,7 +60,7 @@ struct ExtensionTests {
         #expect(coords.count == 3)
     }
 
-    @Test func testIndividualPlacards() async throws {
+    @Test func individualPlacards() async throws {
         let ind1 = Individual(name: "Ind1", latitude: 37.0, longitude: -122.0)
         let ind2 = Individual(name: "Ind2", latitude: 38.0, longitude: -123.0)
 
@@ -74,7 +74,7 @@ struct ExtensionTests {
         #expect(placards[1].subtitle == "38.0000, -123.0000")
     }
 
-    @Test func testIndividualPlacardsWithNoSpatialData() async throws {
+    @Test func individualPlacardsWithNoSpatialData() async throws {
         let ind1 = Individual(name: "Ind1")
         let ind2 = Individual(name: "Ind2")
 
@@ -84,7 +84,7 @@ struct ExtensionTests {
         #expect(placards.isEmpty) // No spatial data means no placards
     }
 
-    @Test func testIndividualPlacardsWithRealData() async throws {
+    @Test func individualPlacardsWithRealData() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -107,7 +107,7 @@ struct ExtensionTests {
     // piece with genuine PopulationGenetics domain content (real allele
     // data), so it's the only one that stays here.
 
-    @Test func testValueCountsWithAlleleData() async throws {
+    @Test func valueCountsWithAlleleData() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let genotypes = dataStore.getGenotypesFor(locusName: "LTRS")
@@ -125,7 +125,7 @@ struct ExtensionTests {
 
     // MARK: - Real Data Integration Tests
 
-    @Test func testRealDataCoordinateExtraction() async throws {
+    @Test func realDataCoordinateExtraction() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         let individuals = dataStore.fetchIndividuals()
@@ -141,7 +141,7 @@ struct ExtensionTests {
         }
     }
 
-    @Test func testRealDataPlacardGeneration() async throws {
+    @Test func realDataPlacardGeneration() async throws {
         let dataStore = PopulationGeneticsPreviewData.shared.dataStore
 
         // Get individuals from a specific stratum

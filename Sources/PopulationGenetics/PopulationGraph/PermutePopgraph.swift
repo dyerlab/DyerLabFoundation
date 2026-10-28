@@ -25,6 +25,9 @@
 //  `asymmetry_ci()`, formerly `asymmetry_jackknife()`, already used), which is both correct for any input
 //  order and exactly reproducible here via `RMersenneTwister`.
 //
+//  Created by Rodney Dyer on 2026.09.11.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Matrix
 import Graph
@@ -119,6 +122,9 @@ public func PermutePopgraph(data: Matrix,
     let denominator = Double(completed)
     return edgeList.map { edge in
         let count = hitCount[unorderedEdgeKey(edge.from, edge.to)] ?? 0
-        return EdgeStability(from: edge.from, to: edge.to, weight: edge.weight, probability: Double(count) / denominator)
+        return EdgeStability(from: edge.from,
+                             to: edge.to,
+                             weight: edge.weight,
+                             probability: Double(count) / denominator)
     }
 }

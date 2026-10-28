@@ -27,6 +27,9 @@
 //          let matrix = try JSONDecoder().decode(Matrix.self, from: data)
 //      }
 //
+//  Created by Rodney Dyer on 2026.07.25.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
+//
 
 import Foundation
 import PresentationZen
@@ -34,6 +37,14 @@ import PresentationZen
 extension ProjectStore {
 
     /// Appends one named matrix. Never updated in place; each call adds a new row.
+    ///
+    /// - Parameters:
+    ///   - data: The encoded matrix.
+    ///   - name: The label to store it under.
+    ///   - description: Optional longer description.
+    /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
+    ///   without a `.matrices` component, ``PersistenceError/notOpen``, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func addMatrix(_ data: Data, name: String, description: String? = nil) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.matrices, "matrices")
@@ -54,6 +65,11 @@ extension ProjectStore {
 
     /// Metadata for every stored matrix, in the order they were added. Fetch
     /// the payload separately via `matrixData(named:)`.
+    ///
+    /// - Returns: The stored matrices' metadata.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.matrices` component,
+    ///   ``PersistenceError/notOpen``, ``PersistenceError/corruptData(_:)`` for an unreadable row, or
+    ///   ``PersistenceError/sqliteError(code:message:)``.
     public func matrices() async throws -> [StoredMatrixInfo] {
         try requireComponent(.matrices, "matrices")
         let connection = try requireConnection()
@@ -69,6 +85,11 @@ extension ProjectStore {
     }
 
     /// The most recently added matrix stored under `name`, or `nil` if none exists.
+    ///
+    /// - Parameter name: The label to look up.
+    /// - Returns: The encoded matrix, or `nil`.
+    /// - Throws: ``PersistenceError/componentNotPresent(_:)`` without a `.matrices` component,
+    ///   ``PersistenceError/notOpen``, or ``PersistenceError/sqliteError(code:message:)``.
     public func matrixData(named name: String) async throws -> Data? {
         try requireComponent(.matrices, "matrices")
         let connection = try requireConnection()

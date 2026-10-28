@@ -7,11 +7,11 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
-//
 //  Histogram.swift
+//  PresentationZen
 //
-//  Created by Rodney Dyer on 3/29/24.
+//  Created by Rodney Dyer on 2024.03.29.
+//  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Charts
@@ -36,12 +36,20 @@ public struct Histogram: View {
         case tabular
     }
 
+    /// The raw (unbinned) data; bind the value column to `y`.
     public var table: DataTable
+    /// The column to bin/summarize; defaults to the column bound to `y`.
     public var column: String?
+    /// The number of equal-width bins, for ``Style/continuous``/``Style/discrete``.
     public var bins: Int
+    /// The x-axis title.
     public var xLabel: String
+    /// The y-axis title.
     public var yLabel: String
+    /// Whether to draw a smoothed area (``Style/continuous``), discrete bars (``Style/discrete``), or a statistics
+    /// table (``Style/tabular``). Defaults to ``Style/continuous``.
     public var style: Style
+    /// The number of decimal places shown in ``Style/tabular``'s value column.
     public var digits: Int
 
     private let curGradient = LinearGradient(
@@ -119,7 +127,7 @@ public struct Histogram: View {
     }
 }
 
-
+// MARK: - Previews
 
 #Preview {
     VStack(spacing: 25) {
