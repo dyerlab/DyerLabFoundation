@@ -24,10 +24,17 @@ public struct GenotypeImportLayout: Sendable {
     /// is the family's mother (adult), others are offspring.
     public var offspringColumn: String
 
-    /// Value in `offspringColumn` that marks the maternal (adult) row.
+    /// Value in `offspringColumn` that marks the maternal (adult) row. Numeric
+    /// values match numerically, so `0.0` and `00` also mark a mother when this is `"0"`.
     public var motherMarker: String
 
-    /// Optional individual-name column; if `nil`, names are synthesized as `family_offspringID`.
+    /// Header(s) of the hierarchical stratum columns, ordered outer to inner
+    /// (e.g. `["Region", "Population"]`). Every individual — mother or
+    /// offspring — is tagged with one `StratumReference` per configured level.
+    public var strataColumns: [String]
+
+    /// Optional individual-name column; if `nil`, a mother is named by her
+    /// family ID and each offspring as `family_offspringID`.
     public var nameColumn: String?
 
     /// Optional latitude / longitude columns (parsed as `Double`) for spatial work.
@@ -36,7 +43,7 @@ public struct GenotypeImportLayout: Sendable {
     public var longitudeColumn: String?
 
     /// Explicit locus columns, in order. If `nil`, every column that is not a
-    /// metadata column (family/offspring/name/lat/lon) is treated as a locus.
+    /// metadata column (family/offspring/strata/name/lat/lon) is treated as a locus.
     public var locusColumns: [String]?
 
     /// Allele separator within a genotype cell.
@@ -48,7 +55,9 @@ public struct GenotypeImportLayout: Sendable {
     ///   - familyColumn: Header of the family / momID column (default: `"momID"`).
     ///   - offspringColumn: Header of the offspring-id column (default: `"OffspringID"`).
     ///   - motherMarker: Value in `offspringColumn` that marks the maternal row (default: `"0"`).
-    ///   - nameColumn: Optional individual-name column; synthesised from family+offspringID if `nil`.
+    ///   - strataColumns: Stratum column headers, outer to inner (default none).
+    ///   - nameColumn: Optional individual-name column; if `nil`, mothers are named by family and
+    ///     offspring as `family_offspringID`.
     ///   - latitudeColumn: Optional latitude column name.
     ///   - longitudeColumn: Optional longitude column name.
     ///   - locusColumns: Explicit ordered locus column names; auto-detected if `nil`.
@@ -57,6 +66,7 @@ public struct GenotypeImportLayout: Sendable {
         familyColumn: String = "momID",
         offspringColumn: String = "OffspringID",
         motherMarker: String = "0",
+        strataColumns: [String] = [],
         nameColumn: String? = nil,
         latitudeColumn: String? = nil,
         longitudeColumn: String? = nil,
@@ -66,6 +76,7 @@ public struct GenotypeImportLayout: Sendable {
         self.familyColumn = familyColumn
         self.offspringColumn = offspringColumn
         self.motherMarker = motherMarker
+        self.strataColumns = strataColumns
         self.nameColumn = nameColumn
         self.latitudeColumn = latitudeColumn
         self.longitudeColumn = longitudeColumn

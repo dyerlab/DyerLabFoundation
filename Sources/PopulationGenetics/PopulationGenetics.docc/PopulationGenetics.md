@@ -24,6 +24,7 @@ logic lives.
 - ``PopGenStore`` — a facade over the columnar core: growable staging arrays supporting incremental `add`/`set` mutation, for SwiftUI apps, importers, and simulations.
 - ``ImportedDataset`` — the result of importing raw data: a `GenotypeMatrix` plus parentage/strata.
 - `importPopulationTable`, `importMicrosatTable`, `importVCFTools012` — real-data importers for population/strata tables, microsatellite family tables, and vcftools `--012` SNP panels, configured via ``PopulationImportLayout`` / ``GenotypeImportLayout``.
+- ``GenotypeTableLayout`` — detects a genotype CSV's column roles from its header (partitions outer to inner with Population last, ID, Offspring, coordinates, loci), decides adult vs. parent/offspring, and imports through the matching importer.
 - ``ExampleDataset`` — bundled sample datasets (`arapat.csv`, `cornus.csv`, the `phylog.012` triplet) imported through these same real import paths, so downstream apps can draw on real data without shipping their own copy. See ``ExampleData`` for raw-text access to the underlying resource files.
 
 ### Analysis

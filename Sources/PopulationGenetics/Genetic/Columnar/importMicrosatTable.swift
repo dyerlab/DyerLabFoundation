@@ -21,7 +21,8 @@ import Foundation
 /// - Parameters:
 ///   - csv: The raw CSV text (header row required).
 ///   - layout: Column-role configuration.
-/// - Returns: The parsed matrix and parentage design (individual ordinals follow row order).
+/// - Returns: The parsed matrix, parentage design (individual ordinals follow row order)
+///   and each individual's stratum lineage.
 /// - Throws: ``GenotypeImportError/emptyInput``, ``GenotypeImportError/missingColumn(_:)``,
 ///   ``GenotypeImportError/malformedGenotype(locus:row:value:)`` or
 ///   ``GenotypeImportError/duplicateMother(family:)``.
@@ -43,12 +44,14 @@ public func importMicrosatTable(csv: String, layout: GenotypeImportLayout = .ini
 
     let familyIdx = try require(layout.familyColumn)
     let offspringIdx = try require(layout.offspringColumn)
+    let strataIdx = try layout.strataColumns.map { try require($0) }
     let nameIdx = try layout.nameColumn.map { try require($0) }
     let latIdx = try layout.latitudeColumn.map { try require($0) }
     let lonIdx = try layout.longitudeColumn.map { try require($0) }
 
     let metadata = Set([layout.familyColumn, layout.offspringColumn,
-                        layout.nameColumn, layout.latitudeColumn, layout.longitudeColumn].compactMap { $0 })
+                        layout.nameColumn, layout.latitudeColumn, layout.longitudeColumn].compactMap { $0 }
+                       + layout.strataColumns)
     let locusNames: [String]
     if let explicit = layout.locusColumns {
         for name in explicit where columnIndex[name] == nil { throw GenotypeImportError.missingColumn(name) }
@@ -63,6 +66,16 @@ public func importMicrosatTable(csv: String, layout: GenotypeImportLayout = .ini
     var rights = [[UInt8]](repeating: [], count: locusNames.count)
 
     var individuals: [Individual] = []
+    var strata: [UUID: [StratumReference]] = [:]
+    var strataCatalog: [String: [String: UUID]] = [:]
+
+    // Spreadsheets often write the marker back as "0.0" or "00".
+    let markerValue = Double(layout.motherMarker)
+    func isMother(_ value: String) -> Bool {
+        if value == layout.motherMarker { return true }
+        guard let markerValue, let number = Double(value) else { return false }
+        return number == markerValue
+    }
 
     var familyOrder: [String] = []
     var familyMother: [String: Int] = [:]
@@ -80,10 +93,23 @@ public func importMicrosatTable(csv: String, layout: GenotypeImportLayout = .ini
         let family = cell(row, familyIdx)
         let offspringValue = cell(row, offspringIdx)
 
-        let name = nameIdx.map { cell(row, $0) } ?? "\(family)_\(offspringValue)"
+        // A mother is named by her family ID alone; her offspring add their number.
+        let name = nameIdx.map { cell(row, $0) }
+            ?? (isMother(offspringValue) ? family : "\(family)_\(offspringValue)")
         let lat = latIdx.flatMap { Double(cell(row, $0)) }
         let lon = lonIdx.flatMap { Double(cell(row, $0)) }
-        individuals.append(Individual(name: name, latitude: lat, longitude: lon))
+        let individual = Individual(name: name, latitude: lat, longitude: lon)
+        individuals.append(individual)
+
+        var lineage: [StratumReference] = []
+        for (level, colIndex) in zip(layout.strataColumns, strataIdx) {
+            let stratumName = cell(row, colIndex)
+            guard !stratumName.isEmpty else { continue }
+            let stratumID = strataCatalog[level]?[stratumName] ?? UUID()
+            strataCatalog[level, default: [:]][stratumName] = stratumID
+            lineage.append(StratumReference(id: stratumID, level: level, name: stratumName))
+        }
+        if !lineage.isEmpty { strata[individual.id] = lineage }
 
         for (j, colIndex) in locusIdx.enumerated() {
             let raw = cell(row, colIndex)
@@ -102,7 +128,7 @@ public func importMicrosatTable(csv: String, layout: GenotypeImportLayout = .ini
             familyOrder.append(family)
             familyOffspring[family] = []
         }
-        if offspringValue == layout.motherMarker {
+        if isMother(offspringValue) {
             if familyMother[family] != nil { throw GenotypeImportError.duplicateMother(family: family) }
             familyMother[family] = ordinal
         } else {
@@ -127,5 +153,5 @@ public func importMicrosatTable(csv: String, layout: GenotypeImportLayout = .ini
     }
     let parentage = ParentageDesign(families: families)
 
-    return ImportedDataset(matrix: matrix, parentage: parentage)
+    return ImportedDataset(matrix: matrix, parentage: parentage, strata: strata)
 }
