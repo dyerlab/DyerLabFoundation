@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import Matrix
 
 /// Correlated paternity (`r_p`) for a maternal family or population: how
 /// much more likely two of a mother's outcrossed offspring are to share a
@@ -165,4 +166,18 @@ extension GenotypeMatrix {
             return nil // .missing or .impossible on either side.
         }
     }
+}
+
+// MARK: - AnalysisOutcome
+
+extension CorrelatedPaternity: AnalysisOutcome {
+
+    /// Always `AnalysisType.correlatedPaternity`.
+    public var analysisType: AnalysisType { .correlatedPaternity }
+
+    /// `AnalysisType.correlatedPaternity`'s default tag.
+    public var tag: AnalysisTag { AnalysisType.correlatedPaternity.tag }
+
+    /// The correlated-paternity estimate, ``rp``.
+    public var statistic: Double { rp }
 }

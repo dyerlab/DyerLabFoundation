@@ -32,9 +32,30 @@ extension ProjectStore {
     /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
     ///   without a `.log` component, ``PersistenceError/notOpen``, or ``PersistenceError/sqliteError(code:message:)``.
     public func appendLog(_ entry: LogEntry) async throws {
+        try await appendLog([entry])
+    }
+
+    /// Appends several log entries in order, in one transaction: all are
+    /// added or none are.
+    ///
+    /// - Parameter entries: The entries to append.
+    /// - Throws: As ``appendLog(_:)-(LogEntry)``.
+    public func appendLog(_ entries: [LogEntry]) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.log, "log")
         let connection = try requireConnection()
+        try connection.beginTransaction()
+        do {
+            for entry in entries { try insertLog(entry, connection: connection) }
+            try setMetaFlag(LogSchemaComponent.hasFlagKey, to: true, connection: connection)
+            try connection.commit()
+        } catch {
+            try? connection.rollback()
+            throw error
+        }
+    }
+
+    private func insertLog(_ entry: LogEntry, connection: SQLiteConnection) throws {
         let ordinal = try nextLogOrdinal(connection: connection)
         let stmt = try connection.prepare("""
             INSERT INTO log_entries (ordinal, uuid, timestamp, log_type, analysis_tag, message)
@@ -47,7 +68,6 @@ extension ProjectStore {
         stmt.bindOptional(entry.analysisTag?.rawValue, at: 5)
         stmt.bind(entry.message, at: 6)
         _ = try stmt.step()
-        try setMetaFlag(LogSchemaComponent.hasFlagKey, to: true, connection: connection)
     }
 
     /// All log entries, in the order they were added.

@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import Matrix
 
 extension Outcrossing {
 
@@ -157,5 +158,26 @@ extension GenotypeMatrix {
         (0..<locusCount).map {
             runOutcrossing(atLocus: $0, design: design, parameters: parameters, hasNullModel: hasNullModel)
         }
+    }
+}
+
+// MARK: - AnalysisOutcome
+
+extension Outcrossing.Result: AnalysisOutcome {
+
+    /// Always `AnalysisType.outcrossing`.
+    public var analysisType: AnalysisType { .outcrossing }
+
+    /// `AnalysisType.outcrossing`'s default tag.
+    public var tag: AnalysisTag { AnalysisType.outcrossing.tag }
+
+    /// The posterior mean outcrossing rate, ``meanT``.
+    public var statistic: Double { meanT }
+
+    /// The 95% credible interval for `t`, or `nil` with no retained samples.
+    public var interval: ClosedRange<Double>? {
+        guard !samples.isEmpty else { return nil }
+        let (lower, upper) = credibleIntervalT(percentile: 0.95)
+        return lower...upper
     }
 }

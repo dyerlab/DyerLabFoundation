@@ -40,6 +40,7 @@ Ports of gstudio's genetic-gravity core (≥ 1.15), one sign convention througho
 - ``SourceSinkTest(graph:x:gamma:permutations:null:interior:edgeMargin:returnNull:seed:)`` — Spearman `r(S, x)` between source-sink scores and a covariate, against a Moran spectral randomization null on the graph (default), a permutation of `S`, or a supplied adjacency (`source_sink_test()`).
 - ``IsolationByGraphDistance(graph:separation:permutations:seed:)`` — cGD against separation with a Mantel permutation test (`ibgd(mode = "cgd")`).
 - ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)`` — does directed pGD with forward/reverse slopes fit better than cGD? Reports `ΔR²` and the slope ratio; no p-value (`ibgd(mode = "pgd")`).
+- ``IsolationByGraphDistanceAnalysis`` / ``DirectionalIsolationByGraphDistanceAnalysis`` — the same two tests as `Matrix` `Analysis` conformers (the functions above delegate to them), whose outcomes also carry each pair's points and fitted lines (forward and reverse for pGD) for plotting.
 
 ### Layout
 

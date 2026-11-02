@@ -45,6 +45,14 @@ extension AnalysisTag {
     /// distance-based variance decomposition. See `AMOVAResult.phi`.
     public static let amovaPhiST = AnalysisTag("amovaPhiST")
 
+    /// This package's label for Weir & Cockerham's θ — the same variance ratio
+    /// as `.amovaPhiST`, computed from a single locus's distances.
+    public static let weirCockerhamTheta = AnalysisTag("weirCockerhamTheta")
+
+    /// This package's label for 2Gener's Φ_FT — AMOVA among the paternal
+    /// gametes of different mothers (Smouse et al. 2001).
+    public static let twoGenerPhiFT = AnalysisTag("twoGenerPhiFT")
+
     /// This package's label for rarefaction at a specific diversity metric.
     /// Unlike `.amovaPhiST`, this encodes real data (`type`) into the tag's
     /// `rawValue` — different diversity metrics need distinguishable tags,

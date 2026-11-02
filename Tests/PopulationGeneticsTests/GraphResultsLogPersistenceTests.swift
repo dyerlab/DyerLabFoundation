@@ -252,6 +252,24 @@ struct GraphResultsLogPersistenceTests {
 
     // MARK: - Log
 
+    @Test func analysisReportIsAppendedAsMethodsNotesThenResults() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, projectName: "test-project")
+        let report = AnalysisReport(analysisType: .amova, tag: .amovaPhiST, options: AnalysisOptions(iterations: 9),
+                                    methods: "Methods text.", results: "Results text.",
+                                    notes: [AnalysisNote(.warning, "One offspring was dropped.")])
+        try await store.appendLog(report: report)
+
+        let entries = try await store.logEntries()
+        #expect(entries.map(\.logType) == [.methods, .warning, .results])
+        #expect(entries.map(\.message) == ["Methods text.", "One offspring was dropped.", "Results text."])
+        #expect(entries.allSatisfy { $0.analysisTag == .amovaPhiST })
+        await store.close()
+    }
+
     @Test func roundTripPreservesLogEntriesInInsertionOrder() async throws {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url) }

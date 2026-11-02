@@ -56,4 +56,10 @@ public struct LogType: Sendable, Equatable, Hashable, CustomStringConvertible {
 
     /// A neutral, informational note not covered by the above.
     public static let info = LogType("info")
+
+    /// An analysis's methods, written as a manuscript Methods passage.
+    public static let methods = LogType("methods")
+
+    /// An analysis's results, written as a manuscript Results passage.
+    public static let results = LogType("results")
 }

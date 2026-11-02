@@ -31,6 +31,16 @@ about graphs, charts, or genetics.
 - `MoranSpectralRandomization` — Moran spectral randomization ("singleton", Wagner & Dray 2015): null replicates of a node-level variable that keep its mean, variance and spectral power on a weight matrix (gstudio's `msr_null()`; seeded draws match R's when the Moran eigenvalues are distinct).
 - ``RMersenneTwister`` — a Mersenne-Twister that reproduces R's `set.seed()` / `runif()` / `sample()` bit-for-bit, for exact-parity testing of resampling ports against R.
 
+### Analysis framework
+
+- ``Analysis`` / ``AnalysisOutcome`` — the common interface for every analysis: a `Sendable` value holding its validated operands, run with ``AnalysisOptions`` (iterations and seed) to give an outcome that reports its statistic, comparison distribution, interval and p-value the same way across techniques.
+- ``AnalysisType`` — an open catalogue of techniques, each listing its ``AnalysisOperand``s by role and ``AnalysisOperandKind``. Matrix defines `mantel`, `amova` and `rarefaction`; other modules add their own.
+- ``MantelAnalysis`` / ``MantelOutcome`` — a port of vegan's `mantel()`, Pearson or Spearman (``CorrelationMethod``), matching R permutation by permutation for the same seed. Pairs with a non-finite response (e.g. `Inf` conditional genetic distance) are left out; named ``PairwiseMatrix`` operands are matched by group name.
+- ``RarefactionAnalysis`` / ``RarefactionOutcome`` — rarefaction of any statistic over subsamples of a fixed size.
+- ``PairwiseScatter`` / ``PairwiseSeries`` / ``PairwisePoint`` / ``RegressionLine`` — plot-ready pairwise points with fitted lines, produced by any ``PairwiseScatterRepresentable`` outcome (Mantel and the isolation-by-distance family) and drawn by PresentationZen's `PairwiseScatterPlot`.
+- ``VarianceDecompositionAnalysis`` / ``VarianceDecompositionOutcome`` — ``DistanceVarianceDecomposition`` as an analysis (AMOVA, single-locus θ, 2Gener's Φ_FT differ only in the distances and tag).
+- ``AnalysisReport`` / ``AnalysisReportTemplate`` / ``AnalysisNote`` / ``AnalysisRun`` — every analysis reports itself. `perform(options:)` runs it and fills its template's `{key}` placeholders: the Methods passage from the data and options, the Results passage from the estimates. The report also carries the notes recording decisions made about the data (values dropped or imputed). A placeholder without a value is left visible as `{key}`, and an app can pass its own template to change the wording. PresentationZen turns a report into log entries (`.methods`, the notes, then `.results`).
+
 ### Regression & probability
 
 - ``LinearModelFit`` — standardized linear-model fitting.

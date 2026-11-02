@@ -101,29 +101,15 @@ public func IsolationByGraphDistance(graph: Graph,
                                      separation: GraphSeparation,
                                      permutations: Int = 999,
                                      seed: Int) -> IsolationByGraphDistanceResult? {
-    guard let geometry = separationGeometry(graph, separation, needsForward: false) else { return nil }
-    let n = geometry.X.count
-    let C = graph.weightedDistanceMatrix()
-    let pairs = upperPairs(C, n)
-    guard pairs.count >= 3 else { return nil }
-
-    let cgd = pairs.map { C[$0.0, $0.1] }
-    let separationValues = pairs.map { geometry.X[$0.0][$0.1] }
-    let observed = pearsonCorrelation(cgd, separationValues)
-
-    var rng = RMersenneTwister(seed: seed)
-    var exceed = 0
-    for _ in 0..<permutations {
-        let idx = rng.sampleIndicesNoReplacement(n: n)                  // R: sample.int(n)
-        let permuted = pairs.map { geometry.X[idx[$0.0]][idx[$0.1]] }
-        if pearsonCorrelation(cgd, permuted) >= observed { exceed += 1 }
-    }
-
-    return IsolationByGraphDistanceResult(statistic: observed,
-                                          pValue: Double(1 + exceed) / Double(1 + permutations),
-                                          pairs: pairs.count, permutations: permutations,
-                                          r2: observed * observed,
-                                          slope: simpleSlope(response: cgd, predictor: separationValues))
+    guard let analysis = IsolationByGraphDistanceAnalysis(graph: graph, separation: separation),
+          let outcome = analysis.run(options: AnalysisOptions(iterations: permutations,
+                                                              seed: UInt64(truncatingIfNeeded: seed))),
+          let slope = outcome.mantel.line?.slope else { return nil }
+    return IsolationByGraphDistanceResult(statistic: outcome.statistic,
+                                          pValue: outcome.pValue ?? 1,
+                                          pairs: outcome.mantel.pairCount, permutations: permutations,
+                                          r2: outcome.statistic * outcome.statistic,
+                                          slope: slope)
 }
 
 /// Directional isolation by graph distance — a port of gstudio's
@@ -144,47 +130,15 @@ public func IsolationByGraphDistance(graph: Graph,
 public func DirectionalIsolationByGraphDistance(graph: Graph,
                                                 separation: GraphSeparation,
                                                 gamma: Double = 0.5) -> DirectionalIsolationByGraphDistanceResult? {
-    guard let geometry = separationGeometry(graph, separation, needsForward: true),
-          let forward = geometry.forward,
-          let P = PartitionedGeneticDistance(graph: graph, gamma: gamma) else { return nil }
-    let n = geometry.X.count
-
-    // cGD R², over unordered connected pairs (as the cGD test).
-    let C = graph.weightedDistanceMatrix()
-    let pairs = upperPairs(C, n)
-    guard pairs.count >= 3 else { return nil }
-    let rCGD = pearsonCorrelation(pairs.map { C[$0.0, $0.1] }, pairs.map { geometry.X[$0.0][$0.1] })
-
-    // pGD fit over ordered pairs with a hypothesized direction (column-major, as R).
-    var response: [Double] = []
-    var design: [Double] = []
-    for j in 0..<n {
-        for i in 0..<n where i != j && P[i, j].isFinite && (forward[i][j] || forward[j][i]) {
-            let d = geometry.X[i][j]
-            let reverse = forward[i][j] ? 0.0 : 1.0
-            response.append(P[i, j])
-            design.append(contentsOf: [1.0, d, d * reverse])
-        }
-    }
-    let count = response.count
-    guard count > 3, let fit = linearModelFit(designMatrix: Matrix(count, 3, design), response: response) else {
-        return nil
-    }
-    // summary.lm: adj R² = 1 − (1 − R²)(n − 1)/(n − p), intercept included.
-    let adjusted = 1.0 - (1.0 - fit.r2) * Double(count - 1) / Double(count - 3)
-    let forwardSlope = fit.coefficients[1]
-    let reverseSlope = fit.coefficients[1] + fit.coefficients[2]
-    let r2CGD = rCGD * rCGD
-    return DirectionalIsolationByGraphDistanceResult(deltaR2: adjusted - r2CGD, pairs: count,
-                                                     r2CGD: r2CGD, adjustedR2PGD: adjusted,
-                                                     forwardSlope: forwardSlope, reverseSlope: reverseSlope,
-                                                     slopeRatio: forwardSlope / reverseSlope, gamma: gamma)
+    DirectionalIsolationByGraphDistanceAnalysis(graph: graph, separation: separation, gamma: gamma)?
+        .run(options: AnalysisOptions(iterations: 0))?
+        .result
 }
 
 // MARK: - Internals
 
 /// Separation `X[i][j]` and (when available) the forward indicator, in node order.
-private func separationGeometry(_ graph: Graph, _ separation: GraphSeparation,
+func separationGeometry(_ graph: Graph, _ separation: GraphSeparation,
                                 needsForward: Bool) -> (X: [[Double]], forward: [[Bool]]?)? {
     let names = graph.nodes.map { $0.name }
     let n = names.count
@@ -217,20 +171,4 @@ private func reorder(_ matrix: Matrix, to names: [String]) -> Matrix? {
     let cols = names.compactMap { matrix.colNames.firstIndex(of: $0) }
     guard rows.count == n, cols.count == n else { return nil }
     return matrix.submatrix(rows, cols)
-}
-
-/// Unordered pairs `(i, j)`, `i < j`, with finite distance — R's
-/// `upper.tri(C) & is.finite(C)`, in its column-major order.
-private func upperPairs(_ C: Matrix, _ n: Int) -> [(Int, Int)] {
-    var pairs: [(Int, Int)] = []
-    for j in 0..<n { for i in 0..<j where C[i, j].isFinite { pairs.append((i, j)) } }
-    return pairs
-}
-
-/// Least-squares slope of `response` on `predictor` (`coef(lm(y ~ x))[2]`).
-private func simpleSlope(response y: [Double], predictor x: [Double]) -> Double {
-    let mx = x.reduce(0, +) / Double(x.count), my = y.reduce(0, +) / Double(y.count)
-    let sxy = zip(x, y).reduce(0.0) { $0 + ($1.0 - mx) * ($1.1 - my) }
-    let sxx = x.reduce(0.0) { $0 + ($1 - mx) * ($1 - mx) }
-    return sxy / sxx
 }

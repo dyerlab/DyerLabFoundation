@@ -137,6 +137,57 @@ decision, confirmed 2026-07-14: **`Sources/PopulationGenetics/` in this repo is 
   them in the same repo, not an argument for putting genetics code inside `Matrix`/`Graph`/`PresentationZen`
   themselves.
 
+### Analysis framework (2026-11-02)
+
+Analyses share one interface, defined in `Sources/Matrix/Analysis/`, because every one of them takes matrices or vectors:
+- `Analysis` is a `Sendable` value holding already-checked inputs. Its failable `init` returns `nil` on unusable input
+  (per the Swift Coding Protocol, analyses don't throw). `run(options: AnalysisOptions)` takes `iterations` and `seed`
+  and returns an `AnalysisOutcome?`.
+- `AnalysisOutcome` reports `statistic`, `distribution` (`NullDistributionResult?`, either a permutation null or
+  resampled estimates), `interval`, `testDirection` and `pValue`. Outcomes that aren't tests (rarefaction, outcrossing,
+  correlated paternity, directional IBGD) return `nil` for `pValue`.
+- `AnalysisType` (the technique, with its `operands`) and `AnalysisOperandKind` are **open string-backed structs, not
+  enums**, so modules above Matrix can add their own with `static let` extensions:
+  - Matrix: `.mantel`, `.amova`, `.rarefaction`
+  - PopulationGenetics: `.outcrossing`, `.correlatedPaternity`, `.isolationByDistance`
+  - Graph: `.isolationByGraphDistance`, `.directionalIsolationByGraphDistance`
+  `AnalysisTag` is still the open label for a particular *use* of a technique (`.amovaPhiST` vs `.weirCockerhamTheta`).
+- Conformers by target:
+  - Matrix: `MantelAnalysis`, `VarianceDecompositionAnalysis`, generic `RarefactionAnalysis<Unit>`
+  - PopulationGenetics: `AMOVAAnalysis` (an alias), `DiversityRarefactionAnalysis`, `OutcrossingAnalysis`,
+    `CorrelatedPaternityAnalysis`, `IsolationByDistanceAnalysis`
+  - Graph: `IsolationByGraphDistanceAnalysis`, `DirectionalIsolationByGraphDistanceAnalysis`. The legacy
+    `IsolationByGraphDistance(...)`/`DirectionalIsolationByGraphDistance(...)` functions now delegate to these.
+- `MantelAnalysis` is a port of vegan's `mantel()`. It permutes the *predictor* (vegan's first argument) using
+  `RMersenneTwister`, so it matches vegan permutation by permutation for n ≥ 8 (smaller n is fully enumerated by
+  vegan). It skips pairs whose response isn't finite (`Inf` cGD between disconnected nodes). Fixtures:
+  `Tests/MatrixTests/Fixtures/generate_mantel_fixtures.R`.
+- `TwoGenerAnalysis` (PopulationGenetics, `Algorithms/TwoGener/`) follows Smouse et al. (2001) eqs. 1–7: each paternal
+  gamete is an allele vector and d² = ½Σ(Y_g − Y_h)² summed over loci. Decisions confirmed with the user on 2026-11-02:
+  - Pollen-pool frequencies are estimated study-wide, never per mother. The default is EM; `.paternalAverage` (an
+    ambiguous gamete counts ½ to each candidate) is the original 2Gener/GenAlEx estimate, kept as an option.
+  - A missing mother or offspring genotype at a locus is imputed as the pollen-pool frequency vector.
+  - An offspring incompatible with its mother at *any* locus is dropped entirely.
+  - Every decision is an `AnalysisNote` (`.assumption`/`.warning`) in `TwoGenerAnalysis.notes`, carried into the
+    report by `perform(options:)` and persisted with `ProjectStore.appendLog(report:)`.
+  The source papers (Smouse et al. 2001; Dyer et al. 2004, StAMOVA) are kept as local PDFs in the repo root, which
+  `.gitignore` excludes.
+- Every analysis reports itself (added 2026-11-02 at the user's request: the log should hold manuscript-ready text
+  for every run). `Analysis` requires `static var reportTemplate` (an `AnalysisReportTemplate` of Methods and Results
+  text with `{key}` placeholders) and `methodsValues(options:)` (values from the data and options), with optional
+  `notes: [AnalysisNote]` for decisions made about the data. `AnalysisOutcome` requires `resultsValues` (values from
+  the estimates). `perform(options:template:)` returns an `AnalysisRun` (outcome + `AnalysisReport`). A missing value
+  stays visible as `{key}`. Common keys: `analysis`, `tag`, `iterations`, `seed`, `statistic`, `pValue`, `interval`.
+  Use `AnalysisReport.number/count/pValue/permutationSentence/sentenceCase` so all reports format alike. Each
+  conformer's template lives in `<Type>+Report.swift`; wrappers (IBD, IBGD, TwoGener) reuse their inner Mantel/AMOVA
+  values and set its labels (`responseLabel`, `statisticLabel`, `unitLabel`, ...). PresentationZen's
+  `AnalysisReport.logEntries` gives `.methods`, the notes, then `.results` (new `LogType`s);
+  `ProjectStore.appendLog(report:)` writes them in one transaction. The citations in the templates were written from
+  memory, so check them before publishing. In particular, BORICE is cited as Koelling, Monnahan & Kelly 2012, while
+  the `OutcrossingMath.swift` comment says "Ritland & Ritland's BORICE".
+- Pairwise outcomes conform to `PairwiseScatterRepresentable` and expose a `PairwiseScatter` (series of `PairwisePoint`
+  plus a `RegressionLine`), which PresentationZen's `PairwiseScatterPlot` draws.
+
 ### Swift version & platforms
 
 Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v18), .macOS(.v15), .visionOS(.v2)` (raised from `.iOS(.v17), .macOS(.v14)` on 2026-08-09 to add visionOS and support `RealityGraphView`'s `RealityView`/`PhysicsDistanceJoint` usage — those APIs require exactly this floor). No per-symbol `@available` gating is needed anywhere in the package as a result, since every target's minimum already matches.

@@ -18,6 +18,8 @@ this target.
 ### Charts
 
 - ``BarPlot``, ``BoxPlot``, ``DistributionPlot``, ``Histogram``, ``NumberLine``, ``PiePlot``, ``ScatterPlot``, ``ScatterPlotWithTrendline``, ``TemporalScatterPlot``, ``TimeSeriesPlot`` — chart views, all built on `DataTable` / `PlotRow`.
+- ``PairwiseScatterPlot`` — draws a `Matrix` `PairwiseScatter` (the isolation-by-distance family of outcomes): one colour per series, fitted lines, and a hover/tap tooltip naming each pair.
+- `AnalysisReport.logEntries` — an analysis report (`Matrix`) as ``LogEntry`` values in manuscript order: the Methods passage (`.methods`), the notes, then the Results passage (`.results`), all tagged with the analysis's tag.
 
 ### Matrix & Graph views
 
