@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  Array+Double.swift
-//  PresentationZen
+//  DyerlabCore
 //
 //  Created by Rodney Dyer on 2024.04.04.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.

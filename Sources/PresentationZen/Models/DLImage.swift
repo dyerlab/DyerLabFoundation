@@ -55,8 +55,9 @@ public extension DLImage {
     /// Scales this image proportionally so its width doesn't exceed `maxWidth`.
     ///
     /// - Parameter maxWidth: The maximum output width (default: 1280).
-    /// - Returns: The scaled image, or `self` unchanged if the scaled render fails.
+    /// - Returns: The scaled image, or `self` unchanged if it is already narrow enough or the scaled render fails.
     func resizeKeepingAspect(maxWidth: CGFloat = 1280) -> DLImage {
+        guard self.size.width > maxWidth else { return self }
         let scale = maxWidth / self.size.width
         let newHeight = self.size.height * scale
         UIGraphicsBeginImageContext(CGSize(width: maxWidth, height: newHeight))
@@ -64,6 +65,18 @@ public extension DLImage {
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return newImage ?? self
+    }
+
+    /// The image scaled to at most `maxWidth` and encoded as JPEG, or `nil` if encoding fails.
+    ///
+    /// Use this rather than ``data`` for photos that will be stored or synced:
+    /// a full-resolution PNG photo is often tens of megabytes.
+    /// - Parameters:
+    ///   - maxWidth: The maximum width (default: 1280).
+    ///   - quality: JPEG compression quality from 0 to 1 (default: 0.8).
+    /// - Returns: The encoded image data.
+    func compressedData(maxWidth: CGFloat = 1280, quality: CGFloat = 0.8) -> Data? {
+        resizeKeepingAspect(maxWidth: maxWidth).jpegData(compressionQuality: quality)
     }
 
 }
@@ -109,6 +122,7 @@ public extension DLImage {
     /// - Parameter maxWidth: The maximum output width (default: 1280).
     /// - Returns: The scaled image.
     func resizeKeepingAspect(maxWidth: CGFloat = 1280) -> DLImage {
+        guard self.size.width > maxWidth else { return self }
         let scale = maxWidth / self.size.width
         let newHeight = self.size.height * scale
 
@@ -120,6 +134,18 @@ public extension DLImage {
         draw(in: NSRect(origin: .zero, size: newSize), from: NSZeroRect, operation: .copy, fraction: 1)
         image.unlockFocus()
         return image
+    }
+
+    /// The image scaled to at most `maxWidth` and encoded as JPEG, or `nil` if encoding fails.
+    ///
+    /// - Parameters:
+    ///   - maxWidth: The maximum width (default: 1280).
+    ///   - quality: JPEG compression quality from 0 to 1 (default: 0.8).
+    /// - Returns: The encoded image data.
+    func compressedData(maxWidth: CGFloat = 1280, quality: CGFloat = 0.8) -> Data? {
+        guard let tiff = resizeKeepingAspect(maxWidth: maxWidth).tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff) else { return nil }
+        return rep.representation(using: .jpeg, properties: [.compressionFactor: quality])
     }
 
 }

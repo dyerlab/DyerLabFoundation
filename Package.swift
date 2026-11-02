@@ -18,8 +18,10 @@ let package = Package(
         .iOS(.v18),
         .macOS(.v15),
         .visionOS(.v2),
+        .watchOS(.v11),
     ],
     products: [
+        .library(name: "DyerlabCore",        targets: ["DyerlabCore"]),
         .library(name: "Matrix",             targets: ["Matrix"]),
         .library(name: "Graph",              targets: ["Graph"]),
         .library(name: "PresentationZen",    targets: ["PresentationZen"]),
@@ -29,6 +31,15 @@ let package = Package(
     ],
     targets: [
         // MARK: - Library targets
+
+        // UI-free extensions (array statistics, dates, natural language) that
+        // build on every platform, including watchOS.
+        .target(
+            name: "DyerlabCore",
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
 
         .target(
             name: "Matrix",
@@ -55,7 +66,7 @@ let package = Package(
 
         .target(
             name: "PresentationZen",
-            dependencies: ["Matrix", "Graph"],
+            dependencies: ["DyerlabCore", "Matrix", "Graph"],
             resources: [ .process("PresentationZen.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -91,6 +102,14 @@ let package = Package(
         ),
 
         // MARK: - Test targets
+
+        .testTarget(
+            name: "DyerlabCoreTests",
+            dependencies: ["DyerlabCore"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
 
         .testTarget(
             name: "MatrixTests",
