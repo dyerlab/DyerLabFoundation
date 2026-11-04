@@ -13,7 +13,7 @@
 //  saveSnapshot/loadSnapshot: the read/write pair for "persist (or
 //  reconstruct) everything a document currently holds in memory, in one
 //  call" — a generalization of `save(_:...)`/`load(from:)` (ProjectStore.swift)
-//  that covers all five `StoreComponents`, not just `.geneticData`. Meant for
+//  that covers all six `StoreComponents`, not just `.geneticData`. Meant for
 //  a document-style caller's Cmd+S/autosave path, not for incremental
 //  mutation — hold a `ProjectStore` open via `openOrCreate(at:)` and call
 //  `writeGeneticData`/`writeGraph`/`addResult`/`appendLog`/`addMatrix`
@@ -49,6 +49,7 @@ extension ProjectStore {
     ///   - results: Every analysis result to store.
     ///   - logEntries: Every log entry to store.
     ///   - matrices: Every named matrix attachment to store.
+    ///   - rasters: Every raster layer to store; names must be unique, since a later layer replaces an earlier one.
     ///   - projectName: The project's name, written unconditionally.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
@@ -60,7 +61,7 @@ extension ProjectStore {
     ///   replacing `url`. In either case `url` is left unchanged.
     public static func saveSnapshot(dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
                                      results: [AnalysisResult] = [], logEntries: [LogEntry] = [],
-                                     matrices: [MatrixAttachment] = [],
+                                     matrices: [MatrixAttachment] = [], rasters: [RasterAttachment] = [],
                                      projectName: String, species: String? = nil, description: String? = nil,
                                      metadata: [String: String] = [:], to url: URL) async throws {
         var components: StoreComponents = []
@@ -69,6 +70,7 @@ extension ProjectStore {
         if !results.isEmpty { components.insert(.results) }
         if !logEntries.isEmpty { components.insert(.log) }
         if !matrices.isEmpty { components.insert(.matrices) }
+        if !rasters.isEmpty { components.insert(.rasters) }
 
         let tempURL = url.deletingLastPathComponent()
             .appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
@@ -94,6 +96,9 @@ extension ProjectStore {
             }
             for matrix in matrices {
                 try await store.addMatrix(matrix.data, name: matrix.name, description: matrix.description)
+            }
+            for attachment in rasters {
+                try await store.writeRaster(attachment.raster, description: attachment.description)
             }
             await store.close()
         } catch {
@@ -133,11 +138,20 @@ extension ProjectStore {
             }
         }
 
+        var rasters: [RasterAttachment] = []
+        if present.contains(.rasters) {
+            for info in try await store.rasters() {
+                if let raster = try await store.raster(named: info.name) {
+                    rasters.append(RasterAttachment(raster: raster, description: info.description))
+                }
+            }
+        }
+
         await store.close()
         guard let projectName = metadata[MetadataKey.projectName] else {
             throw PersistenceError.corruptData("missing \(MetadataKey.projectName) in project_metadata")
         }
         return ProjectSnapshot(projectName: projectName, metadata: metadata, dataset: dataset, graph: graph,
-                                results: results, logEntries: logEntries, matrices: matrices)
+                                results: results, logEntries: logEntries, matrices: matrices, rasters: rasters)
     }
 }

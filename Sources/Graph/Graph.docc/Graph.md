@@ -69,6 +69,8 @@ inseparable from the layout engine that drives it.
 - ``GraphControlPanel`` / ``GraphInspectorPanel`` — the stats/play/pause/reset/reheat bar and the rendering/physics-slider sidebar, also independently previewable.
 - ``GraphLayoutOptions`` — the display/chrome options (labels, inspector/controls visibility, edge width, node size) shared across the three views above.
 - ``MapView`` — a MapKit-backed spatial view for graphs whose nodes carry geographic coordinates.
+- ``RasterMapView`` — a satellite map with a Matrix `Raster` drawn over it (resampled to Web Mercator, missing cells transparent, with a legend) and an optional graph on top. Crop the raster to ``Graph/studyArea(buffer:minimum:)`` on import.
+- ``RasterOpacitySlider`` — a compact opacity slider to float over a ``RasterMapView``. `Raster.bajaElevation` is bundled WorldClim elevation over the lopho study area, for pairing with `Graph.lophoGraph` in examples.
 - ``RealityGraphView`` — a RealityKit-based 3D visualization, on iOS/macOS as a windowed scene and on visionOS as
   a volumetric one; the intended long-term replacement for ``GraphCanvasView`` across all three platforms (see the
   `realitykit_unification_decision` design note). Uses a headless `LayoutOrchestrator` precompute pass, then hands

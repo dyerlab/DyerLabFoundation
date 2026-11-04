@@ -17,6 +17,76 @@ Alternatively: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
 
 This path has moved before (was `/Users/rodney/Downloads/Xcode-beta.app` as of 2026-08-xx; back to `/Applications/Xcode-beta.app` as of 2026-08-31; Xcode-beta gone and release `/Applications/Xcode.app` used as of 2026-10-23) — if `swift build` fails with "missing DEVELOPER_DIR path", run `mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode'"` to find its current location rather than assuming it's gone.
 
+## Working conventions
+
+These were agreed with the user over many sessions. They also live in Claude's per-machine memory, which doesn't
+travel between workstations, so they're repeated here.
+
+- **Commits and versions:** the user makes every commit. Leave changes uncommitted and don't offer to commit.
+  Don't create or suggest version tags unless asked.
+- **Sole developer:** the user is the only developer on this package and its consumers (Linguistics,
+  GeneticStudio, gstudio). Flag breaking changes, but their "confirmed compatible" is enough; no feature-branch
+  gating is needed.
+- **Thoroughness over speed.** Ground every claim in the code you've read. Raise genuine judgment calls as
+  questions, bundled together rather than one at a time. Architecture discussion counts as part of the work.
+- **R parity:** R parity is checked with fixtures that R scripts write to `Tests/*/Fixtures/`.
+  - Where the R code is gstudio's own (with `RMersenneTwister`), parity is bit-exact.
+  - Where exact parity would mean porting a third-party library's internals (igraph, for example), functional
+    equivalence is fine: port the documented algorithm, and test invariants plus statistical agreement.
+- **Extensible categories** use open string-backed structs (`AnalysisTag`, `LogType`, `AnalysisType`), not
+  closed enums.
+- **SwiftUI:** keep views shallow. Avoid single-child wrapper containers, and extract blocks repeated 3+ times into
+  small subviews, so Xcode previews keep working.
+- **Swift Coding Protocol** (the user's Bear note): a file header, one declaration per file, DocC on every public
+  symbol, Swift Testing, `LocalizedError`, and previews for views. Analyses return `nil` from a failable init;
+  they don't throw.
+- **Plans not yet started:** the gravity-field plot (`GravityFieldPlan.md` in the repo root; the renderer is still
+  the user's call: 2D `Canvas` or RealityKit) and a multi-topology "chromosome walk" persistence schema (deferred
+  until that app exists).
+
+## Current state and next steps (handoff, 2026-11-04)
+
+**Everything since commit `fb7b8b9` is uncommitted.** That covers four pieces of work:
+- the GeoTIFF reader and `Raster` (2026-11-03);
+- the `.rasters` ProjectStore component;
+- `RasterMapView`, the Baja elevation demo tab and `RasterOpacitySlider`;
+- native UTM/Albers projections and the RSP work (2026-11-04).
+
+`git status` lists all of it. The full suite passed, with 866 tests:
+
+| Target | Tests |
+|---|---|
+| DyerlabFoundation | 101 |
+| Matrix | 398 |
+| Graph | 221 |
+| PresentationZen | 129 |
+| (one-test bundle) | 1 |
+| PopulationGenetics | 16 |
+
+Matrix built for the iOS and visionOS simulators, and DocC had 0 diagnostics.
+
+**Environment notes for a new machine**
+- R fixture scripts need `terra`, `jsonlite` and, for `generate_rsp_fixtures.R`, `gdistance` (1.6.5 was used).
+  Install with `install.packages("gdistance")`. The committed JSON fixtures mean R is only needed to regenerate
+  them.
+- `swift test -c release` doesn't build, because `PopulationGeneticsPreviewData` is debug-only. Time things in a
+  debug build or in a standalone `swiftc -O` script.
+
+**Next steps for the RSP work** (see "Resistance distances" below for what exists):
+1. An `Analysis` conformer for RSP distances, with a `reportTemplate` and the `CellGraph.notes` carried into the
+   report.
+2. A helper that averages the directed `[i][j]`/`[j][i]` distances into a symmetric matrix for `MantelAnalysis` and
+   IBGD.
+3. Fitting θ and resistance contrast against population graphs: the edge-tension objective from the user's note,
+   "Randomized Shortest Paths (RSP) and the θ Parameter.pdf", in the repo root (git-ignored, so copy it across by
+   hand). One feature-wise surface r = 1 + s·x at a time, over a grid of (log θ, log contrast).
+4. **Choose a better worked example with the user.** The bundled Baja DEM / arapat isn't suitable: it stops at
+   30° N, which cuts the peninsula off from Sonora.
+
+Other open items:
+- Lambert conformal conic (Mexico/INEGI's EPSG:6372) is still rejected. It would be about the same effort as Albers.
+- The analysis-template citations were written from memory and need checking before publication.
+
 ## Architecture
 
 DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes four library products plus an umbrella:
@@ -37,7 +107,8 @@ All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: 
 
 ```
 Sources/
-  Matrix/          — Matrices/, Vectors/, Algorithms/, Protocols/, Types/, Operators.swift
+  Matrix/          — Matrices/, Vectors/, Algorithms/, Analysis/, Protocols/, Types/, Raster/, Resistance/,
+                     Operators.swift
   Graph/           — Models/{Graph,Node,Edge,Path}.swift, Extensions/{Adjacency,Centrality}.swift
                      Extensions/  ← also the downstream popgraph-analysis ports (domain-neutral, so
                                     here not in PopulationGenetics): GraphAsymmetries, AsymmetricWeights /
@@ -187,6 +258,84 @@ Analyses share one interface, defined in `Sources/Matrix/Analysis/`, because eve
   the `OutcrossingMath.swift` comment says "Ritland & Ritland's BORICE".
 - Pairwise outcomes conform to `PairwiseScatterRepresentable` and expose a `PairwiseScatter` (series of `PairwisePoint`
   plus a `RegressionLine`), which PresentationZen's `PairwiseScatterPlot` draws.
+
+### Rasters (2026-11-03; projections 2026-11-04)
+
+`Sources/Matrix/Raster/` holds `Raster` (a `Sendable` struct, not a `Matrix` subclass: single band, `[Float]`
+row-major with the northernmost row first, `Float.nan` = missing, laid out over a `RasterExtent` in a
+`CoordinateReferenceSystem`), `GeographicBounds`, `RasterColorRamp`, the projections (`MapProjection`, `Ellipsoid`),
+and a self-contained GeoTIFF reader (`importGeoTIFF`, `TIFFFile`, `TIFFImageLayout`, `TIFFDecompression`,
+`GeoKeyDirectory`, `GeoTIFFGeoreference`). Decisions confirmed with the user:
+- Univariate only. Categorical data such as NLCD comes in one class per raster layer; multi-band files are rejected.
+- Coordinate systems, with no PROJ/GDAL dependency (PROJ would add about 15 MB per app plus XCFramework
+  maintenance on five platforms; decided 2026-11-04):
+  - Geographic: EPSG:4326 or EPSG:4269. Datum shifts are ignored (1–2 m).
+  - Projected in metres: Transverse Mercator (UTM) and Albers equal-area, written natively. TM uses Karney's
+    (2011) order-6 Krüger series, not Snyder's (which loses millimetres a few degrees off the central meridian).
+    Albers uses Snyder (1987) on the ellipsoid. Both match PROJ to under 1 mm forward and 1e-9° inverse
+    (`Fixtures/generate_projection_fixtures.R`, 12 systems including a southern cone and a single-parallel cone).
+  - Recognised EPSG codes are in `MapProjection+EPSG.swift`: WGS 84, NAD83, NAD83(2011) and ETRS89 UTM, and NAD83
+    Albers for CONUS (5070 is NLCD's), Alaska, California and BC. User-defined TM/Albers GeoKeys are read too, and
+    GDAL puts Albers' origin in the natural-origin keys. Anything else (e.g. Mexico's LCC, EPSG:6372, which is
+    INEGI's) is rejected with a hint to `terra::project()` first. Lambert conformal conic would be about the same
+    effort as Albers if Baja/INEGI data need it.
+  - Projected rasters keep their own grid; nothing is resampled on import. `cropTo:` projects the study area and
+    takes the enclosing grid rectangle.
+  - `CoordinateReferenceSystem.definition` is "EPSG:n", or a PROJ string for a code-less projection, so it can be
+    passed straight to terra/sf as `crs`. `init(definition:)` parses both.
+- Rasters are cropped on import (`cropTo:`, usually `graph.studyArea()`, a 10% buffered box); only the overlapping
+  strips/tiles are decoded. The reader handles classic/BigTIFF, strips/tiles, none/LZW/Deflate/PackBits,
+  predictors 2/3, 8–32-bit ints and 32/64-bit floats, and GDAL_NODATA. Fixtures:
+  `Tests/MatrixTests/Fixtures/generate_geotiff_fixtures.R` (terra writes each layout, including UTM, CONUS Albers
+  and custom TM/Albers; tests compare cell by cell), plus `geotiff/alt_baja.tif`, a real WorldClim 30-arc-second DEM
+  of Baja California, checked against terra whole, cropped to the arapat study area, and at each arapat population.
+  The projected crop boxes avoid edges that land exactly on cell boundaries, because terra snaps lower and upper
+  edges there with different tolerances.
+- `Raster.cellSize(atRow:)` gives ground sizes because 4326 cells aren't square. A projected raster returns its grid
+  metres, which carry the projection's own scale error (<0.1% in a UTM zone, up to ~1.3% for CONUS Albers).
+  Resistance modeling (planned) must use it rather than counting cells.
+- Display: `RasterMapView` (Graph/Views) wraps `MKMapView` because SwiftUI `Map` has no image overlay.
+  `RasterOverlay` resamples each pixel of a Web Mercator grid over `Raster.geographicBounds` to the cell under it
+  (nearest neighbour), which handles geographic and projected rasters alike.
+- Persistence: the `.rasters` `StoreComponents` case (`ProjectStore+Rasters.swift`). Layers are keyed by name and
+  replaced in place, unlike `.matrices`. `data` is a little-endian Float32 blob, the extent columns are in the
+  layer's own units, and `crs` is the definition text, so gstudio can rebuild a `terra` raster in R with
+  `crs = row$crs` without this package. The recipe is in `RastersSchemaComponent.swift`'s header (verified with
+  RSQLite + terra for geographic layers on 2026-11-03, and for EPSG and custom projected layers on 2026-11-04).
+  Change that layout only together with gstudio's reader.
+
+### Resistance distances (2026-11-04)
+
+`Sources/Matrix/Resistance/` builds a `CellGraph` from a resistance `Raster` on the raster's own grid (no
+reprojection) and computes least-cost and randomized-shortest-path (`RandomizedShortestPaths`) distances between
+sites. Decisions confirmed with the user:
+- A step costs its ground length times the mean resistance of the two cells, which is gdistance's
+  `transition(r, function(x) 1/mean(x))` followed by `geoCorrection(type = "c")`. Lon/lat lengths are Vincenty
+  geodesics between cell centres (`Ellipsoid.distance`), matching raster::pointDistance to under 1e-9. Projected
+  rasters use grid metres. `.cellSteps` (1 and √2) is an option for gauging the bias. 8 neighbours by default.
+  Missing or infinite cells are impassable; separate regions give `.infinity`.
+- The reference walk is `.areaCorrected` by default: steps between rows are also weighted by cos(latitude), as
+  geoCorrection type "r" does, but **only in the walk, not the costs**. Stock gdistance can't do this, because its
+  type "r" stretches the costs too. `.conductance` reproduces stock `rSPDistance()` after type "c" exactly.
+- Each destination is absorbing (its row of W is zeroed) and solved on its own region, so I − W stays well
+  conditioned as θ → 0. Measures: `.freeEnergy` (−log z/θ, one solve per destination), `.expectedCost` (gdistance
+  "total") and `.netExpectedCost` (gdistance "net"). Distances are directed. θ = 0 is allowed except for free
+  energy. Underflow at large θ returns `nil` rather than `.infinity`.
+- `CellGraph.notes` are `AnalysisNote`s: assumptions, plus warnings for multiple regions, cells ≥ 0.5°, latitude
+  beyond 60°, and cell counting (with the 1 − cos φ bias).
+- Solver: `SparseSquareSystem` uses Accelerate sparse LU (QR before macOS 15.5/iOS 18.5/visionOS 2.5). Two LU bugs
+  were found on macOS 27.2 and worked around: multi-column *transposed* solves give wrong columns after the first
+  (so they're solved one column at a time), and concurrent LU factorizations segfault (so all factorizations are
+  serialised by a lock). LU is still about 3× faster than QR at 360k cells. A 128k-node Baja graph takes about
+  0.25 s per destination.
+- Fixtures: `Tests/MatrixTests/Fixtures/generate_rsp_fixtures.R` (gdistance 1.6.5), with UTM queen/rook and lon/lat
+  grids at 30° N and 60° N. It checks step costs, costDistance and all three measures for both walks at several θ
+  to 1e-8. Resistances are multiples of 1/8 so Float32 holds R's doubles exactly. The θ limits (θ = 0 gives the
+  walk's expected hitting cost; large θ gives least cost, decreasing monotonically) are tested against independent
+  dense and Dijkstra solutions.
+- Not done yet: an `Analysis` conformer, θ/contrast fitting against population graphs, and a worked example. The
+  bundled Baja DEM is unsuitable as the example because it stops at 30° N, which cuts the peninsula off from
+  Sonora; a better example is still to be chosen.
 
 ### Swift version & platforms
 

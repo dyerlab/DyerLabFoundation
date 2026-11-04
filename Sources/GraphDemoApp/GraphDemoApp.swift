@@ -14,7 +14,8 @@
 //  target, showing the bundled lopho population graph via the non-spatial (Canvas-
 //  based) GraphLayoutView. On visionOS this opens as an ordinary flat window
 //  (WindowGroup's default), not a `.windowStyle(.volumetric)` scene — deliberately
-//  non-spatial, as a baseline for the eventual RealityGraphView demo.
+//  non-spatial, as a baseline for the eventual RealityGraphView demo. A second
+//  tab shows the same graph over the bundled Baja elevation raster.
 //
 //  This target exists to let the views in this package actually be run and looked
 //  at (Xcode's canvas #Preview mechanism can't stand in for a real per-platform
@@ -32,7 +33,14 @@ import SwiftUI
 struct GraphDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            GraphLayoutView(graph: Graph.lophoGraph, configuration: .distanceWeightedGraph())
+            TabView {
+                Tab("Layout", systemImage: "point.3.connected.trianglepath.dotted") {
+                    GraphLayoutView(graph: Graph.lophoGraph, configuration: .distanceWeightedGraph())
+                }
+                Tab("Elevation", systemImage: "mountain.2") {
+                    ElevationDemoView()
+                }
+            }
         }
     }
 }

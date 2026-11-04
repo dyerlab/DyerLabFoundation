@@ -72,6 +72,8 @@ public struct DatasetSummary: Sendable, Equatable {
     public var hasLog: Bool?
     /// `nil` if the file's `.matrices` component wasn't created at all.
     public var hasMatrices: Bool?
+    /// `nil` if the file's `.rasters` component wasn't created at all.
+    public var hasRasters: Bool?
 
     /// Initializes a dataset summary.
     ///
@@ -88,10 +90,11 @@ public struct DatasetSummary: Sendable, Equatable {
     ///   - hasResults: `nil` if the `.results` component wasn't created.
     ///   - hasLog: `nil` if the `.log` component wasn't created.
     ///   - hasMatrices: `nil` if the `.matrices` component wasn't created.
+    ///   - hasRasters: `nil` if the `.rasters` component wasn't created.
     public init(projectName: String, species: String?, description: String? = nil, createdAt: Date,
                 individualCount: Int? = nil, locusCount: Int? = nil, markerComposition: MarkerComposition? = nil,
                 hasParentage: Bool? = nil, hasGraph: Bool? = nil, hasResults: Bool? = nil, hasLog: Bool? = nil,
-                hasMatrices: Bool? = nil) {
+                hasMatrices: Bool? = nil, hasRasters: Bool? = nil) {
         self.projectName = projectName
         self.species = species
         self.description = description
@@ -104,5 +107,6 @@ public struct DatasetSummary: Sendable, Equatable {
         self.hasResults = hasResults
         self.hasLog = hasLog
         self.hasMatrices = hasMatrices
+        self.hasRasters = hasRasters
     }
 }

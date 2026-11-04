@@ -11,7 +11,7 @@
 //  PopulationGenetics
 //
 //  A SQLite-backed store for a project's data: genetic data, a population
-//  graph, results/images, a log, and generic named matrices — five equal,
+//  graph, results/images, a log, generic named matrices, and raster layers — six equal,
 //  independently optional components (`StoreComponents`). No component is
 //  privileged; a file can hold any subset, including zero genetic data.
 //
@@ -95,6 +95,7 @@ public actor ProjectStore {
         if components.contains(.results) { try ResultsSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.log) { try LogSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.matrices) { try MatricesSchemaComponent.createSchema(in: newConnection) }
+        if components.contains(.rasters) { try RastersSchemaComponent.createSchema(in: newConnection) }
         connection = newConnection
         presentComponents = components
         mode = .readWrite
@@ -132,6 +133,10 @@ public actor ProjectStore {
         if try MatricesSchemaComponent.isPresent(in: newConnection) {
             try MatricesSchemaComponent.validateSchemaVersion(of: newConnection)
             found.insert(.matrices)
+        }
+        if try RastersSchemaComponent.isPresent(in: newConnection) {
+            try RastersSchemaComponent.validateSchemaVersion(of: newConnection)
+            found.insert(.rasters)
         }
         connection = newConnection
         presentComponents = found

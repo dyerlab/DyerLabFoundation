@@ -41,6 +41,20 @@ about graphs, charts, or genetics.
 - ``VarianceDecompositionAnalysis`` / ``VarianceDecompositionOutcome`` — ``DistanceVarianceDecomposition`` as an analysis (AMOVA, single-locus θ, 2Gener's Φ_FT differ only in the distances and tag).
 - ``AnalysisReport`` / ``AnalysisReportTemplate`` / ``AnalysisNote`` / ``AnalysisRun`` — every analysis reports itself. `perform(options:)` runs it and fills its template's `{key}` placeholders: the Methods passage from the data and options, the Results passage from the estimates. The report also carries the notes recording decisions made about the data (values dropped or imputed). A placeholder without a value is left visible as `{key}`, and an app can pass its own template to change the wording. PresentationZen turns a report into log entries (`.methods`, the notes, then `.results`).
 
+### Rasters
+
+- ``Raster`` — a single-band `Float` grid, northernmost row first, with `Float.nan` for missing cells, laid out in longitude/latitude or in a UTM or Albers projection (``Raster/crs``). Point lookup by longitude/latitude, cropping to a study area or an ``RasterExtent``, ground cell sizes (``Raster/cellSize(atRow:)``) and conversion to a ``Matrix``. Categorical layers such as NLCD come in one class per raster.
+- ``CoordinateReferenceSystem`` — geographic (EPSG:4326, 4269) or projected by a ``MapProjection``: Transverse Mercator (every UTM zone) or Albers equal-area, on an ``Ellipsoid`` (WGS 84 or GRS 80). Written without PROJ and matched to it to a millimetre. Recognises the common UTM and NAD83 Albers EPSG codes (``CoordinateReferenceSystem/init(epsg:)``), and reads and writes PROJ strings (``CoordinateReferenceSystem/init(definition:)``, ``CoordinateReferenceSystem/definition``) for exchange with R's `terra` and `sf`.
+- ``GeographicBounds`` — a longitude/latitude box: a study area, buffered with ``GeographicBounds/buffered(by:minimum:)``, or the area a raster covers (``Raster/geographicBounds``). ``RasterExtent`` is the same box in a raster's own coordinates.
+- ``importGeoTIFF(contentsOf:name:cropTo:)`` / ``importGeoTIFF(data:name:cropTo:)`` — reads a single-band GeoTIFF (classic or BigTIFF; stripped or tiled; uncompressed, LZW, Deflate or PackBits, with any predictor; 8–32-bit integers or 32/64-bit floats) in a supported coordinate system, by EPSG code or custom parameters, decoding only the blocks that overlap the crop area. Tested against files written by `terra`/GDAL. ``RasterImportError`` lists what it rejects.
+- ``RasterColorRamp`` — colour ramps (`terrain`, `viridis`, `grayscale`) and ``RasterColorRamp/makeImage(raster:valueRange:)`` / ``RasterColorRamp/makeImage(raster:valueRange:width:height:cellIndex:)`` for drawing a raster as a `CGImage`, directly or resampled onto another grid.
+
+### Resistance distances
+
+- ``CellGraph`` — the graph of a resistance raster's cells on its own grid, joined to their ``CellGraph/Neighbours/four`` or ``CellGraph/Neighbours/eight`` neighbours. A step costs its ground length (the geodesic between cell centres, or grid metres) times the mean resistance of the two cells, as gdistance's `geoCorrection(type = "c")`. Missing cells are impassable. ``CellGraph/node(longitude:latitude:)`` places sites, ``CellGraph/leastCostDistances(from:to:)`` gives least-cost distances, and ``CellGraph/notes`` records how the graph was built and warns about coarse cells, high latitudes and cell counting.
+- ``RandomizedShortestPaths`` — randomized-shortest-path distances at a given θ: ``RandomizedShortestPaths/Measure/freeEnergy``, ``RandomizedShortestPaths/Measure/expectedCost`` or ``RandomizedShortestPaths/Measure/netExpectedCost``, matching gdistance's `rSPDistance()`. The reference walk can be area-corrected on longitude/latitude rasters (``CellGraph/ReferenceWalk/areaCorrected``, the default) without changing step costs.
+- ``Ellipsoid/distance(fromLongitude:latitude:toLongitude:latitude:)`` — the geodesic distance between two points (Vincenty).
+
 ### Regression & probability
 
 - ``LinearModelFit`` — standardized linear-model fitting.

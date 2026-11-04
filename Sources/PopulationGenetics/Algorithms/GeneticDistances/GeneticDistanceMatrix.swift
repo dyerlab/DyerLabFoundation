@@ -86,4 +86,23 @@ public struct GeneticDistanceMatrix: Sendable, Equatable {
     public func dense() -> [[Double]] {
         storage.dense()
     }
+
+    /// A labelled, dense `Matrix` copy (symmetric, zero diagonal), e.g. for
+    /// storing with `ProjectStore.addMatrix(_:labels:name:description:)`.
+    ///
+    /// - Parameter labels: One name per individual, in ordinal order; used for
+    ///   both row and column names.
+    /// - Returns: The `count × count` matrix, or `nil` if `labels.count != count`.
+    public func asMatrix(labels: [String]) -> Matrix? {
+        guard labels.count == count else { return nil }
+        let matrix = Matrix(count, count, labels, labels)
+        for i in 0..<count {
+            for j in (i + 1)..<count {
+                let d = storage[i, j]
+                matrix[i, j] = d
+                matrix[j, i] = d
+            }
+        }
+        return matrix
+    }
 }

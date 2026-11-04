@@ -15,7 +15,7 @@
 //  `species`, `description`) alongside any keys an app adds. Kept apart from
 //  `meta`, which is the store's own bookkeeping (schema versions, `has_*`
 //  flags, counts), so an app key can never clobber a reserved one there.
-//  Unlike the five `StoreComponents`, this table is part of every file.
+//  Unlike the six `StoreComponents`, this table is part of every file.
 //
 //  Created by Rodney Dyer on 2026.10.24.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.

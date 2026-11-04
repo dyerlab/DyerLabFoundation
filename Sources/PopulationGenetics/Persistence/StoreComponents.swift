@@ -10,7 +10,7 @@
 //  StoreComponents.swift
 //  PopulationGenetics
 //
-//  Which of `ProjectStore`'s five independently-optional data kinds a given
+//  Which of `ProjectStore`'s six independently-optional data kinds a given
 //  file should hold. No component is privileged — a file can be genetic
 //  data alone, graph+log alone, or any other combination. Each selected
 //  component gets its own tables and its own schema-version row in `meta`;
@@ -43,7 +43,9 @@ public struct StoreComponents: OptionSet, Sendable {
     public static let log = StoreComponents(rawValue: 1 << 3)
     /// Named, generic `Matrix` attachments (e.g. a derived distance matrix).
     public static let matrices = StoreComponents(rawValue: 1 << 4)
+    /// Named single-band `Raster` layers (elevation, a land-cover class, ...).
+    public static let rasters = StoreComponents(rawValue: 1 << 5)
 
     /// Every component.
-    public static let all: StoreComponents = [.geneticData, .graph, .results, .log, .matrices]
+    public static let all: StoreComponents = [.geneticData, .graph, .results, .log, .matrices, .rasters]
 }

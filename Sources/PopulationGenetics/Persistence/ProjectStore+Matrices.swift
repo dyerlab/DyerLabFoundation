@@ -63,6 +63,27 @@ extension ProjectStore {
         try setMetaFlag(MatricesSchemaComponent.hasFlagKey, to: true, connection: connection)
     }
 
+    /// Appends a genetic distance matrix (e.g. `GenotypeMatrix.geneticDistance()`,
+    /// the AMOVA distance) as a labelled `Matrix`, so it reads back with
+    /// `matrixData(named:)` like any other stored matrix.
+    ///
+    /// - Parameters:
+    ///   - distances: The distances to store.
+    ///   - labels: One name per individual, in ordinal order (e.g. `genotypes.individuals.map(\.name)`).
+    ///   - name: The label to store it under.
+    ///   - description: Optional longer description.
+    /// - Throws: ``PersistenceError/invalidMatrix(_:)`` if `labels.count` doesn't match
+    ///   `distances.count`, plus everything `addMatrix(_:name:description:)` throws.
+    public func addMatrix(
+        _ distances: GeneticDistanceMatrix, labels: [String], name: String, description: String? = nil
+    ) async throws {
+        guard let matrix = distances.asMatrix(labels: labels) else {
+            throw PersistenceError.invalidMatrix(
+                "\(labels.count) labels for a distance matrix of \(distances.count) individuals")
+        }
+        try await addMatrix(try JSONEncoder().encode(matrix), name: name, description: description)
+    }
+
     /// Metadata for every stored matrix, in the order they were added. Fetch
     /// the payload separately via `matrixData(named:)`.
     ///

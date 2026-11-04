@@ -146,4 +146,41 @@ struct ProjectStoreRegressionTests {
 
         #expect(decoded == second)
     }
+
+    @Test func addGeneticDistanceMatrixStoresLabelledSymmetricMatrix() async throws {
+        let url = temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        var distances = GeneticDistanceMatrix(count: 3)
+        distances[0, 1] = 2.0
+        distances[0, 2] = 4.0
+        distances[1, 2] = 6.0
+        let labels = ["i0", "i1", "i2"]
+
+        let store = ProjectStore()
+        try await store.create(at: url, overwrite: true, components: .matrices, projectName: "test-project")
+        try await store.addMatrix(distances, labels: labels, name: "AMOVA distance",
+                                   description: "Smouse–Peakall squared distance")
+        await #expect(throws: PersistenceError.self) {
+            try await store.addMatrix(distances, labels: ["i0"], name: "bad")
+        }
+        await store.close()
+
+        let reader = ProjectStore()
+        try await reader.open(at: url, mode: .readOnly)
+        let infos = try await reader.matrices()
+        let data = try #require(try await reader.matrixData(named: "AMOVA distance"))
+        let decoded = try JSONDecoder().decode(Matrix.self, from: data)
+        await reader.close()
+
+        #expect(infos.map(\.name) == ["AMOVA distance"])
+        #expect(infos[0].description == "Smouse–Peakall squared distance")
+        #expect(decoded.rowNames == labels)
+        #expect(decoded.colNames == labels)
+        for i in 0..<3 {
+            for j in 0..<3 {
+                #expect(decoded[i, j] == distances[i, j])
+            }
+        }
+    }
 }

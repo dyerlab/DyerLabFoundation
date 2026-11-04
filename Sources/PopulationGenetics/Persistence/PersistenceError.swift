@@ -34,6 +34,8 @@ public enum PersistenceError: LocalizedError, Equatable {
     case componentNotPresent(String)
     /// A project-metadata change was rejected, e.g. removing the project name.
     case invalidMetadata(String)
+    /// A matrix couldn't be stored, e.g. its labels don't match its size.
+    case invalidMatrix(String)
 
     /// A user-presentable description of the failure.
     public var errorDescription: String? {
@@ -54,6 +56,8 @@ public enum PersistenceError: LocalizedError, Equatable {
             "The project file has no \(component) data."
         case .invalidMetadata(let detail):
             "The project details couldn't be changed: \(detail)."
+        case .invalidMatrix(let detail):
+            "The matrix couldn't be saved: \(detail)."
         }
     }
 }

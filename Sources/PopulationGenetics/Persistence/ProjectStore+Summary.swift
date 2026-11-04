@@ -93,6 +93,7 @@ extension ProjectStore {
             hasGraph: values[GraphSchemaComponent.hasFlagKey].map { $0 == "true" },
             hasResults: values[ResultsSchemaComponent.hasFlagKey].map { $0 == "true" },
             hasLog: values[LogSchemaComponent.hasFlagKey].map { $0 == "true" },
-            hasMatrices: values[MatricesSchemaComponent.hasFlagKey].map { $0 == "true" })
+            hasMatrices: values[MatricesSchemaComponent.hasFlagKey].map { $0 == "true" },
+            hasRasters: values[RastersSchemaComponent.hasFlagKey].map { $0 == "true" })
     }
 }

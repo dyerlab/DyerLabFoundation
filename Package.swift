@@ -95,7 +95,7 @@ let package = Package(
 
         .executableTarget(
             name: "GraphDemoApp",
-            dependencies: ["Graph"],
+            dependencies: ["Graph", "Matrix"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
