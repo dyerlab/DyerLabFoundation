@@ -45,6 +45,7 @@ logic lives.
 
 - ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Six equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, named generic matrices, and raster layers (``ProjectStore/writeRaster(_:description:)``, stored as plain little-endian `Float32` blobs that gstudio reads for `terra`) — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
 - ``ProjectStore/appendLog(report:)`` — appends an analysis report (`Matrix`'s `AnalysisReport` from `perform(options:)`) to a project's log in one transaction: the Methods passage, the notes, then the Results passage.
+- ``GraphsFile`` — reads and saves `.graphs` files: one population graph and what was derived from it, with no genotypes, in the same schema as ``ProjectStore``. ``GraphNodeAttributeUpdate`` replaces named node attributes while keeping everything else in the file.
 - ``DatasetSummary`` — a cheap `meta`-table classification of a `ProjectStore` file's contents (project identity plus which components are present) without decoding the full dataset.
 - ``PopulationGraphDataset`` — a persisted population graph with its per-node strata and node, edge and graph
   values. The graph is held as a `Sendable` `GraphSnapshot`; call ``PopulationGraphDataset/makeGraph()`` for a live

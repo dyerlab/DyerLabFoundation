@@ -42,7 +42,16 @@ travel between workstations, so they're repeated here.
   they don't throw.
 - **Plans not yet started:** the gravity-field plot (`GravityFieldPlan.md` in the repo root; the renderer is still
   the user's call: 2D `Canvas` or RealityKit) and a multi-topology "chromosome walk" persistence schema (deferred
-  until that app exists).
+  until that app exists). That app will hold many graphs with the same nodes but different edge sets, each built
+  from a different subset of loci, so each graph needs its own list of SNP reference names, and a table rather than
+  JSON lists at that scale. Expected shape: shared nodes, a `graphs` table, and `graph_schema_version` 2, with
+  existing files migrating so their edges become graph 1. All apps keep using `ProjectStore`'s schemes.
+- **`.graphs` files (2026-11-05):** `GraphsFile` is a `ProjectStore` file with the graph, results, log, matrices and
+  rasters components and no genetic data, holding one graph. The pgraph app imports `.pgraph` and saves this format;
+  the gstudio R package is to read and write it too. A graph's SNP names live in the `graph.loci` metadata key, read
+  through `graphLocusReferences()`, because `graph_loci` needs the `loci` table. Whatever replaces a file's graph must
+  also update that key. Saves go through `GraphsFile.update`, which starts from the file on disk and replaces only the
+  named node attributes. Text attributes are stored as single-level `node_strata`.
 
 ## Current state and next steps (handoff, 2026-11-04)
 

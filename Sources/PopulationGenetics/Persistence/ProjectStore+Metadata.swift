@@ -31,6 +31,9 @@ extension ProjectStore {
         public static let species = "species"
         /// Free-text description of what this project is focused on.
         public static let description = "description"
+        /// The names of the loci the graph was built from, as a JSON array.
+        /// See ``ProjectStore/graphLocusReferences()``.
+        public static let graphLocusReferences = "graph.loci"
     }
 
     /// Every project-metadata pair in the file, reserved keys included.
