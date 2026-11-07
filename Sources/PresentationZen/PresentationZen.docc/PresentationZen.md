@@ -21,6 +21,25 @@ this target.
 - ``PairwiseScatterPlot`` — draws a `Matrix` `PairwiseScatter` (the isolation-by-distance family of outcomes): one colour per series, fitted lines, and a hover/tap tooltip naming each pair.
 - `AnalysisReport.logEntries` — an analysis report (`Matrix`) as ``LogEntry`` values in manuscript order: the Methods passage (`.methods`), the notes, then the Results passage (`.results`), all tagged with the analysis's tag.
 
+### Plots and their exports
+
+- ``DataPlot`` — a `DataTable` drawn in a standard ``PlotForm``. Other modules build the table and choose the form; the drawing and every export come from here.
+- `DataTable.toR()` — the table as a tibble. `DataTable.csvText` and `DataTable.tabSeparatedText` give it as text for a file or a spreadsheet.
+- ``RFigureChunk`` — ggplot2 code that redraws a plot, with its anchor and caption, to paste into an R chunk.
+- `View.pngData(_:)` / ``PlotImageFormat`` — any view, usually a chart, rendered to a PNG.
+- ``PlotExportMenu`` / ``PlotExportOutput`` / ``PlotExportFile`` / ``PlotExportError`` — the copy and export menu, and what it produces. Clipboard outputs are handled here; saving a file is left to the app, since file dialogs differ by platform.
+
+### Stored figures
+
+- ``StoredFigure`` / ``FigureColumn`` / ``FigureGenerator`` — a figure kept in a project file by any program: values, how they're drawn, R code and pictures. It exports like a `DataPlot`, from whatever it holds. PopulationGenetics stores them.
+- ``StoredFigureView`` / ``FigureRow`` / ``FigureList`` / ``FigureTextEditor`` — showing a figure, listing a project's figures, and editing a figure's text.
+
+### Platform-neutral types
+
+- ``DLColor``, ``DLImage``, ``DLPasteboard`` — one name for what UIKit and AppKit each provide.
+- ``MapBaseStyle`` / ``MapStylePicker`` — a map's base layer and the control that picks it.
+- ``MapViewport`` — a map's visible area and scale, captured from a camera change.
+
 ### Matrix & Graph views
 
 - ``MatrixView`` / ``MatrixEditorView`` / ``VectorView`` — SwiftUI views and editors for `Matrix` and `Vector` values.

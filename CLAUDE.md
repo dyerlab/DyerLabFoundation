@@ -346,6 +346,49 @@ sites. Decisions confirmed with the user:
   bundled Baja DEM is unsuitable as the example because it stops at 30° N, which cuts the peninsula off from
   Sonora; a better example is still to be chosen.
 
+### Plots and platform abstraction (2026-11-06)
+
+Moved down from GeneticStudio so other apps can share them. The rule: the package holds mechanics and light UI
+elements; file dialogs, pages and app-specific containers stay in apps.
+
+- **`DataPlot` (PresentationZen)** is the seam: a `DataTable` with roles bound plus a `PlotForm`
+  (`.histogram(bins:)`, `.density`, `.bars`, `.scatter`). It draws itself and exports from the same table, so
+  domain modules only build a table. `DiversityPlotData.plot(spec:)` is the example.
+- **Exports:** `DataTable.toR()` (a tibble; `rSourceConvertible`), `csvText`, `tabSeparatedText`; any view's
+  `pngData(_:)`, which uses ImageIO so it needs no platform code; `RFigureChunk` for ggplot2 code that matches the
+  chart; `DataPlot.export(...)`, which copies clipboard outputs itself and returns a `PlotExportFile` for the app
+  to save.
+- **`Histogram` styles:** `.binned` (true bin edges) and `.density` (a real KDE, `KernelDensity` in Matrix) were
+  added; `.continuous` stays the default. `.continuous` smooths counts and `.discrete` draws fixed-width bars.
+- **Platform types follow `DLImage`:** one `DL*` name, a typealias per platform with the same extension API
+  (`DLPasteboard`). Default arguments use `.system`, since `.general` would need AppKit imported at each use.
+- **Diversity plots (PopulationGenetics, `Diversity/`):** `DiversityPlotSpec`'s JSON is stored in a figure's `spec`,
+  so its raw values and `DiversityType`'s must not change.
+- **Genotype editing:** `AllelePairText` is the shared split/join. `AllelePairCellView` is the AppKit table cell
+  (macOS only) and `AllelePairEditor` is the SwiftUI field for other platforms, which no app uses yet.
+
+### Figures in project files (2026-11-06)
+
+The `.figures` `StoreComponents` case (`FiguresSchemaComponent`, `ProjectStore+Figures`), with a domain-neutral
+`StoredFigure` model in PresentationZen. **The tables are a public format that R reads and writes directly**, so they
+stay plain SQL plus JSON, with no Swift-only encoding. `PopulationGenetics.docc/FigureStorage.md` is the specification.
+
+- **`Fixtures/generate_figures_fixture.R` is the check against drift:** it holds the reference `read_figures()` /
+  `write_figure()` and writes `Fixtures/figures_from_r.gstudio`, which `FigureInteropTests` reads. That test also
+  compares R's `CREATE TABLE` text with `createStatements`, so **a schema change means updating the script, rerunning
+  it (see its header), and bumping `figures_schema_version`**. gstudio itself has no SQLite reader yet.
+- **Three ways to draw:** a known `generator` + `spec` recomputes; a known `form` + columns redraws; else images. What a
+  program can't interpret must survive its saves, so don't drop unknown `form`/`generator` values.
+- **Stored values go stale on purpose until a save:** apps call `ProjectSnapshot.refreshingFigures()` just before
+  writing, so R reads values matching the file's genotypes. A plot that can no longer be drawn keeps its last values.
+- **New generators** add a `FigureGenerator` `static let` and a `refreshed`-style path in their own module.
+
+### Moved from GeneticStudio (2026-11-06)
+
+`PopulationClusters`, `FamilyReport`, `GenotypeSummary`, `ImportedDataset+Editing`, `PopulationGraphBuilder`,
+`ProjectFile` and the map/family views are now PopulationGenetics; `MapViewport` and the figure list views are
+PresentationZen. `ProjectFile` also carries rasters and figures, which the app's copy dropped on save.
+
 ### Swift version & platforms
 
 Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFeature("ApproachableConcurrency")` on all targets. Platforms: `.iOS(.v18), .macOS(.v15), .visionOS(.v2)` (raised from `.iOS(.v17), .macOS(.v14)` on 2026-08-09 to add visionOS and support `RealityGraphView`'s `RealityView`/`PhysicsDistanceJoint` usage — those APIs require exactly this floor). No per-symbol `@available` gating is needed anywhere in the package as a result, since every target's minimum already matches.

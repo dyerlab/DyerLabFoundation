@@ -35,7 +35,7 @@ public enum GraphsFile {
 
     /// The components of a new file. They are all created up front because a
     /// file can't gain a component later.
-    public static let components: StoreComponents = [.graph, .results, .log, .matrices, .rasters]
+    public static let components: StoreComponents = [.graph, .results, .log, .matrices, .rasters, .figures]
 
     /// Reads a file's graph without decoding its other components.
     ///

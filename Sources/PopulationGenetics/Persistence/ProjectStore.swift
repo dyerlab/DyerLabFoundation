@@ -96,6 +96,7 @@ public actor ProjectStore {
         if components.contains(.log) { try LogSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.matrices) { try MatricesSchemaComponent.createSchema(in: newConnection) }
         if components.contains(.rasters) { try RastersSchemaComponent.createSchema(in: newConnection) }
+        if components.contains(.figures) { try FiguresSchemaComponent.createSchema(in: newConnection) }
         connection = newConnection
         presentComponents = components
         mode = .readWrite
@@ -137,6 +138,10 @@ public actor ProjectStore {
         if try RastersSchemaComponent.isPresent(in: newConnection) {
             try RastersSchemaComponent.validateSchemaVersion(of: newConnection)
             found.insert(.rasters)
+        }
+        if try FiguresSchemaComponent.isPresent(in: newConnection) {
+            try FiguresSchemaComponent.validateSchemaVersion(of: newConnection)
+            found.insert(.figures)
         }
         connection = newConnection
         presentComponents = found

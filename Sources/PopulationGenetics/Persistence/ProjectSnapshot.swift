@@ -44,6 +44,8 @@ public struct ProjectSnapshot: Sendable {
     public let matrices: [MatrixAttachment]
     /// Every stored raster layer, in the order they were first written.
     public let rasters: [RasterAttachment]
+    /// Every stored figure, in list order.
+    public let figures: [StoredFigure]
 
     /// Initializes a new project snapshot.
     ///
@@ -59,10 +61,11 @@ public struct ProjectSnapshot: Sendable {
     ///   - logEntries: Every log entry.
     ///   - matrices: Every named matrix attachment.
     ///   - rasters: Every raster layer.
+    ///   - figures: Every figure.
     public init(projectName: String, species: String? = nil, description: String? = nil,
                 metadata: [String: String] = [:], dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
                 results: [AnalysisResult] = [], logEntries: [LogEntry] = [], matrices: [MatrixAttachment] = [],
-                rasters: [RasterAttachment] = []) {
+                rasters: [RasterAttachment] = [], figures: [StoredFigure] = []) {
         self.metadata = ProjectStore.initialMetadata(metadata, projectName: projectName, species: species,
                                                      description: description)
         self.dataset = dataset
@@ -71,5 +74,6 @@ public struct ProjectSnapshot: Sendable {
         self.logEntries = logEntries
         self.matrices = matrices
         self.rasters = rasters
+        self.figures = figures
     }
 }

@@ -37,6 +37,9 @@ public enum PersistenceError: LocalizedError, Equatable {
     /// A matrix couldn't be stored, e.g. its labels don't match its size.
     case invalidMatrix(String)
 
+    /// A figure couldn't be stored, e.g. its columns have different lengths.
+    case invalidFigure(String)
+
     /// A user-presentable description of the failure.
     public var errorDescription: String? {
         switch self {
@@ -58,6 +61,8 @@ public enum PersistenceError: LocalizedError, Equatable {
             "The project details couldn't be changed: \(detail)."
         case .invalidMatrix(let detail):
             "The matrix couldn't be saved: \(detail)."
+        case .invalidFigure(let detail):
+            "The figure couldn't be saved: \(detail)."
         }
     }
 }

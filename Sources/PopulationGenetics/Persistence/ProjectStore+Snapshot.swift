@@ -50,6 +50,7 @@ extension ProjectStore {
     ///   - logEntries: Every log entry to store.
     ///   - matrices: Every named matrix attachment to store.
     ///   - rasters: Every raster layer to store; names must be unique, since a later layer replaces an earlier one.
+    ///   - figures: Every figure to store, in list order.
     ///   - projectName: The project's name, written unconditionally.
     ///   - species: Optional species this project concerns.
     ///   - description: Optional free-text description of the project.
@@ -62,6 +63,7 @@ extension ProjectStore {
     public static func saveSnapshot(dataset: ImportedDataset? = nil, graph: PopulationGraphDataset? = nil,
                                      results: [AnalysisResult] = [], logEntries: [LogEntry] = [],
                                      matrices: [MatrixAttachment] = [], rasters: [RasterAttachment] = [],
+                                     figures: [StoredFigure] = [],
                                      projectName: String, species: String? = nil, description: String? = nil,
                                      metadata: [String: String] = [:], to url: URL) async throws {
         var components: StoreComponents = []
@@ -71,6 +73,7 @@ extension ProjectStore {
         if !logEntries.isEmpty { components.insert(.log) }
         if !matrices.isEmpty { components.insert(.matrices) }
         if !rasters.isEmpty { components.insert(.rasters) }
+        if !figures.isEmpty { components.insert(.figures) }
 
         let tempURL = url.deletingLastPathComponent()
             .appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
@@ -99,6 +102,9 @@ extension ProjectStore {
             }
             for attachment in rasters {
                 try await store.writeRaster(attachment.raster, description: attachment.description)
+            }
+            for figure in figures {
+                try await store.writeFigure(figure)
             }
             await store.close()
         } catch {
@@ -147,11 +153,14 @@ extension ProjectStore {
             }
         }
 
+        let figures = present.contains(.figures) ? try await store.figures() : []
+
         await store.close()
         guard let projectName = metadata[MetadataKey.projectName] else {
             throw PersistenceError.corruptData("missing \(MetadataKey.projectName) in project_metadata")
         }
         return ProjectSnapshot(projectName: projectName, metadata: metadata, dataset: dataset, graph: graph,
-                                results: results, logEntries: logEntries, matrices: matrices, rasters: rasters)
+                                results: results, logEntries: logEntries, matrices: matrices, rasters: rasters,
+                                figures: figures)
     }
 }

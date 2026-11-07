@@ -41,10 +41,33 @@ logic lives.
 - ``TwoGenerAnalysis`` / ``TwoGenerOutcome`` — two-generation analysis of pollen pool structure (Smouse et al. 2001): paternal gametes recovered from mother–offspring pairs, ambiguous ones weighted by study-wide pollen-pool frequencies (``PollenPoolFrequencyMethod``: expectation–maximization by default, or the original paternal average), missing genotypes imputed from those frequencies and incompatible offspring dropped, then AMOVA among mothers for Φ_FT. Every such decision is recorded as an `AnalysisNote`, and the report gives the effective number of pollen donors, 1 / (2 Φ_FT).
 - ``IsolationByDistanceAnalysis`` / ``IsolationByDistanceOutcome`` — Rousset's isolation by distance: pairwise `F / (1 − F)` (Φ_ST or single-locus θ from `PairwisePhiST`) against separation (e.g. `pairwiseGreatCircleDistance`), optionally log-transformed, with a Mantel test and plot-ready points.
 
+### Diversity plots
+
+- ``DiversityPlotSpec`` — a plot's parameters, saved as values so a plot follows its data. ``DiversityPlotOptions`` says what a dataset can offer, and ``DiversityPlotCalculator`` reduces its genotype columns.
+- ``DiversityPlotData`` — a spec's current numbers. `plot(spec:)` hands them to PresentationZen as a `DataPlot`, which draws and exports them.
+- ``DiversityChart`` / ``DiversityPlotControls`` — the chart and the controls that define it. An app adds its own page around them, and its own file dialogs.
+- `StoredFigure.init(id:title:legend:source:spec:data:thumbnail:createdAt:)` / `refreshed(from:)` — a diversity plot as a figure in a project file, with its values kept up to date.
+- ``DiversityType`` — names each metric, and reads ``DiversityType/frequencyStatistics`` from ``AlleleFrequencies``.
+
+### Maps, families and summaries
+
+- ``PopulationClusters`` — individuals grouped by population for a map, collapsing until they can be told apart. ``GenotypeMapView`` draws them, with ``PopulationMarker`` and ``IndividualMarker``.
+- ``PopulationGraphBuilder`` — estimates a population graph from genotypes, and says whether a saved one has gone stale. ``PopGraphMapView`` draws it, with ``NodeMarker``.
+- ``FamilyReport`` / ``FamilySummaryView`` — one maternal family's paternal alleles, listing each offspring genotype its mother couldn't have contributed to.
+- ``GenotypeSummary`` — headline counts for a dataset.
+
+### Genotype editing
+
+- ``AllelePairText`` — splits and joins the two alleles of a genotype.
+- ``AllelePairEditor`` — a SwiftUI genotype editor for any platform.
+- `AllelePairCellView` — a genotype cell for an AppKit table (macOS only).
+- `ImportedDataset.setAlleles(_:at:locus:)`, `setPopulationName(_:at:)`, `setLatitude(_:at:)`, `setLongitude(_:at:)` — single-cell edits to a dataset.
+
 ### Persistence & spatial
 
-- ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Six equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, named generic matrices, and raster layers (``ProjectStore/writeRaster(_:description:)``, stored as plain little-endian `Float32` blobs that gstudio reads for `terra`) — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
+- ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Seven equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, named generic matrices, raster layers (``ProjectStore/writeRaster(_:description:)``, stored as plain little-endian `Float32` blobs that gstudio reads for `terra`), and figures (<doc:FigureStorage>, which R reads and writes) — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
 - ``ProjectStore/appendLog(report:)`` — appends an analysis report (`Matrix`'s `AnalysisReport` from `perform(options:)`) to a project's log in one transaction: the Methods passage, the notes, then the Results passage.
+- ``ProjectFile`` — a whole project as the bytes of a file, for sandboxed apps that can't put journal files beside a user-chosen file.
 - ``GraphsFile`` — reads and saves `.graphs` files: one population graph and what was derived from it, with no genotypes, in the same schema as ``ProjectStore``. ``GraphNodeAttributeUpdate`` replaces named node attributes while keeping everything else in the file.
 - ``DatasetSummary`` — a cheap `meta`-table classification of a `ProjectStore` file's contents (project identity plus which components are present) without decoding the full dataset.
 - ``PopulationGraphDataset`` — a persisted population graph with its per-node strata and node, edge and graph

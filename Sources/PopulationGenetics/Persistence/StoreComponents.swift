@@ -46,6 +46,9 @@ public struct StoreComponents: OptionSet, Sendable {
     /// Named single-band `Raster` layers (elevation, a land-cover class, ...).
     public static let rasters = StoreComponents(rawValue: 1 << 5)
 
+    /// Figures: values, images and R code, which R can read and write too.
+    public static let figures = StoreComponents(rawValue: 1 << 6)
+
     /// Every component.
-    public static let all: StoreComponents = [.geneticData, .graph, .results, .log, .matrices, .rasters]
+    public static let all: StoreComponents = [.geneticData, .graph, .results, .log, .matrices, .rasters, .figures]
 }

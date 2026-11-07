@@ -21,7 +21,7 @@ import Foundation
 /// This enum defines standard population genetic statistics organized into
 /// allelic and genotypic categories. Each metric has a specific interpretation
 /// and use case in population genetics analyses.
-public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable {
+public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable, Codable, Identifiable {
     /// Placeholder for unspecified diversity metric.
     case Undefined = "Undefined"
 
@@ -56,8 +56,31 @@ public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable {
     /// Expected heterozygosity in subpopulations.
     case Hes = "Hes"
 
-    /// Proportion of polymorphic loci.
+    /// Locus polymorphic index, `Σp(1-p)`.
     case Pe = "Pe"
+
+    /// The metric itself.
+    public var id: Self { self }
+
+    /// The metric's name, for legends.
+    public var name: String {
+        switch self {
+        case .Undefined: "Undefined"
+        case .A: "Allelic richness"
+        case .A95: "Number of common alleles"
+        case .Ae: "Effective number of alleles"
+        case .Ho: "Observed heterozygosity"
+        case .Ht: "Total heterozygosity"
+        case .He: "Expected heterozygosity"
+        case .Hi: "Inbreeding heterozygosity"
+        case .Hos: "Observed subpopulation heterozygosity"
+        case .Hes: "Expected subpopulation heterozygosity"
+        case .Pe: "Locus polymorphic index"
+        }
+    }
+
+    /// The metric's name with its symbol, for axes, menus and legends.
+    public var label: String { "\(name) (\(rawValue))" }
 
     /// Returns the measurement level for this diversity metric.
     ///

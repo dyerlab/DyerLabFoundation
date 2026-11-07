@@ -58,6 +58,7 @@ about graphs, charts, or genetics.
 ### Regression & probability
 
 - ``LinearModelFit`` — standardized linear-model fitting.
+- `KernelDensity` / `SilvermanBandwidth` / ``DensityPoint`` — a Gaussian kernel density curve with R's `density()` defaults and `bw.nrd0` bandwidth.
 - `pearsonCorrelation` / `studentTCDF` / `studentTTwoSidedPValue` / `regularizedIncompleteBeta` — Pearson correlation and the Student's t distribution behind it, matching R's `cor.test(method = "pearson")`.
 - `spearmanCorrelation` / `averageRanks` — Spearman's rank correlation on average ranks, matching R's `cor(method = "spearman")`.
 - ``SigmaSearchResult`` — result of a bandwidth/sigma search (used by t-SNE affinity tuning).
