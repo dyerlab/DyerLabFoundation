@@ -37,7 +37,7 @@ logic lives.
 - ``PartitionedGeneticDistance(data:groups:gamma:)`` — directed partitioned conditional genetic distance among strata, built from genotypes via the Population Graph and Graph's genetic-gravity weights (`genetic_distance(mode = "pgd")`).
 - ``LocusSubsampleNull(genotypes:groups:lociPerSubset:subsets:gamma:seed:)`` — rebuilds the Population Graph from random subsets of polymorphic loci and records mean genetic-gravity `|Δ|` with the subset's polymorphism, an information-loss reference for the asymmetry index (`locus_subsample_null()`).
 - ``CorrelatedPaternity`` — Ritland's moment estimator for correlated paternity (`r_p`) and the effective number of pollen donors (`1/r_p`), via `GenotypeMatrix.correlatedPaternity(design:)` and `GenotypeMatrix.correlatedPaternityPerFamily(design:)`.
-- ``AMOVAAnalysis`` / ``DiversityRarefactionAnalysis`` / ``OutcrossingAnalysis`` / ``CorrelatedPaternityAnalysis`` — these techniques as `Matrix` `Analysis` conformers, adding `AnalysisType.outcrossing` and `.correlatedPaternity`. ``Outcrossing/Result`` and ``CorrelatedPaternity`` conform to `AnalysisOutcome`; diversity rarefaction returns `Matrix`'s `RarefactionOutcome`; `.weirCockerhamTheta` tags a single-locus AMOVA.
+- ``AMOVAAnalysis`` / ``DiversityRarefactionAnalysis`` / ``OutcrossingAnalysis`` / ``CorrelatedPaternityAnalysis`` — these techniques as `Matrix` `Analysis` conformers, adding `AnalysisType.outcrossing` and `.correlatedPaternity`. ``Outcrossing/Result`` and ``CorrelatedPaternity`` conform to `AnalysisOutcome`; diversity rarefaction returns `Matrix`'s `RarefactionOutcome`; ``WeirCockerhamAnalysis`` estimates Weir & Cockerham's θ (tag `.weirCockerhamTheta`), which is not a single-locus AMOVA.
 - ``TwoGenerAnalysis`` / ``TwoGenerOutcome`` — two-generation analysis of pollen pool structure (Smouse et al. 2001): paternal gametes recovered from mother–offspring pairs, ambiguous ones weighted by study-wide pollen-pool frequencies (``PollenPoolFrequencyMethod``: expectation–maximization by default, or the original paternal average), missing genotypes imputed from those frequencies and incompatible offspring dropped, then AMOVA among mothers for Φ_FT. Every such decision is recorded as an `AnalysisNote`, and the report gives the effective number of pollen donors, 1 / (2 Φ_FT).
 - ``IsolationByDistanceAnalysis`` / ``IsolationByDistanceOutcome`` — Rousset's isolation by distance: pairwise `F / (1 − F)` (Φ_ST or single-locus θ from `PairwisePhiST`) against separation (e.g. `pairwiseGreatCircleDistance`), optionally log-transformed, with a Mantel test and plot-ready points.
 
@@ -48,6 +48,18 @@ logic lives.
 - ``DiversityChart`` / ``DiversityPlotControls`` — the chart and the controls that define it. An app adds its own page around them, and its own file dialogs.
 - `StoredFigure.init(id:title:legend:source:spec:data:thumbnail:createdAt:)` / `refreshed(from:)` — a diversity plot as a figure in a project file, with its values kept up to date.
 - ``DiversityType`` — names each metric, and reads ``DiversityType/frequencyStatistics`` from ``AlleleFrequencies``.
+
+### Genetic structure
+
+- ``StructureSpec`` — a structure table's parameters: adults or 2Gener paternal gametes, a variance-components or
+  by-locus table, its statistic (Φ_ST from gene copies, genotypes or gametes, or Weir & Cockerham's θ) or columns
+  (θ, F_IS, F_IT, Φ_ST, Gst, G′st, Dest), all loci or one, the stratum level, the permutation test and the
+  ``DifferentiationThresholds`` that flag Gst and Dest. ``StructureOptions`` says what a dataset can offer.
+- ``StructureAnalysis`` — computes every statistic from allele counts within strata, with no distance matrix: each
+  locus uses the units genotyped there, multilocus values are ratios of sums over loci, and permutations move whole
+  individuals or gametes. It returns a ``StructureResult``: `Source`, `df`, `SS`, `MS`, `sigma2`, the statistic and `P`,
+  or ``StructureLocusRow``s with a `Multilocus` row and a `P_` column per tested statistic.
+- ``StructureControls`` — the options under the table. PresentationZen's `TabularOutputView` draws the table.
 
 ### Maps, families and summaries
 

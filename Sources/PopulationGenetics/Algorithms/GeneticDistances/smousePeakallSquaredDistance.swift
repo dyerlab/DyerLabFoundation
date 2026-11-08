@@ -27,12 +27,14 @@
 /// - Returns: The squared distance, or `nil` if either genotype is incomplete.
 public func smousePeakallSquaredDistance(_ a: (UInt8, UInt8), _ b: (UInt8, UInt8)) -> Double? {
     guard a.0 != 0, a.1 != 0, b.0 != 0, b.1 != 0 else { return nil }
-    var delta: [UInt8: Int] = [:]
-    delta[a.0, default: 0] += 1
-    delta[a.1, default: 0] += 1
-    delta[b.0, default: 0] -= 1
-    delta[b.1, default: 0] -= 1
-    var sum = 0
-    for (_, d) in delta { sum += d * d }
-    return Double(sum) / 2.0
+    // ½ Σ (c_i − c_j)² = ½ (Σ c_i² + Σ c_j²) − c_i·c_j, with Σ c² = 4 for a homozygote and 2 for a
+    // heterozygote, and c_i·c_j the number of matching allele pairs. No allocation, which matters at
+    // millions of pairs per locus.
+    let squares = (a.0 == a.1 ? 4 : 2) + (b.0 == b.1 ? 4 : 2)
+    var dot = 0
+    if a.0 == b.0 { dot += 1 }
+    if a.0 == b.1 { dot += 1 }
+    if a.1 == b.0 { dot += 1 }
+    if a.1 == b.1 { dot += 1 }
+    return Double(squares / 2 - dot)
 }

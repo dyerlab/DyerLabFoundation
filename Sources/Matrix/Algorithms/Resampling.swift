@@ -53,14 +53,70 @@ public enum Resampling {
         tag: AnalysisTag,
         statistic: ([Label]) -> Double
     ) -> NullDistributionResult {
+        // Never stops early, so the result is always there.
+        permutationTest(labels: labels, iterations: iterations, seed: seed, tag: tag,
+                        progress: { _ in true }, statistic: statistic)!
+    }
+
+    /// A permutation test that reports its progress and can be stopped part way.
+    ///
+    /// It draws the same permutations as
+    /// ``permutationTest(labels:iterations:seed:tag:statistic:)``, so the same seed gives the same null
+    /// distribution and p-value whichever is used.
+    ///
+    /// - Parameters:
+    ///   - labels: The observed labeling/partition, unshuffled.
+    ///   - iterations: Number of permutations.
+    ///   - seed: PRNG seed, for reproducibility.
+    ///   - tag: Which analysis this is, for the result's `analysisType`.
+    ///   - progress: Called after each permutation with the number done; return `false` to stop.
+    ///   - statistic: Computes the statistic of interest for a given labeling.
+    /// - Returns: The observed statistic plus the permuted null distribution, or `nil` if `progress` stopped it.
+    public static func permutationTest<Label>(
+        labels: [Label],
+        iterations: Int,
+        seed: UInt64,
+        tag: AnalysisTag,
+        progress: (Int) -> Bool,
+        statistic: ([Label]) -> Double
+    ) -> NullDistributionResult? {
+        permutationTest(labels: labels, iterations: iterations, seed: seed, tag: tag,
+                        observing: { done, _ in progress(done) }, statistic: statistic)
+    }
+
+    /// A permutation test that hands over each permuted value as it is drawn, so a caller can show the null
+    /// distribution and the p-value forming, and can be stopped part way.
+    ///
+    /// It draws the same permutations as
+    /// ``permutationTest(labels:iterations:seed:tag:statistic:)``, so the same seed gives the same result.
+    ///
+    /// - Parameters:
+    ///   - labels: The observed labeling/partition, unshuffled.
+    ///   - iterations: Number of permutations.
+    ///   - seed: PRNG seed, for reproducibility.
+    ///   - tag: Which analysis this is, for the result's `analysisType`.
+    ///   - observing: Called after each permutation with the number done and its statistic; return `false` to
+    ///     stop.
+    ///   - statistic: Computes the statistic of interest for a given labeling.
+    /// - Returns: The observed statistic plus the permuted null distribution, or `nil` if `observing` stopped it.
+    public static func permutationTest<Label>(
+        labels: [Label],
+        iterations: Int,
+        seed: UInt64,
+        tag: AnalysisTag,
+        observing: (_ done: Int, _ value: Double) -> Bool,
+        statistic: ([Label]) -> Double
+    ) -> NullDistributionResult? {
         let observed = statistic(labels)
         var rng = SplitMix64(seed: seed)
         var shuffled = labels
         var values = [Double]()
         values.reserveCapacity(iterations)
-        for _ in 0..<iterations {
+        for iteration in 0..<iterations {
             shuffled.shuffle(using: &rng)
-            values.append(statistic(shuffled))
+            let value = statistic(shuffled)
+            values.append(value)
+            guard observing(iteration + 1, value) else { return nil }
         }
         return NullDistributionResult(analysisType: tag, observed: observed, values: values, seed: seed)
     }

@@ -78,12 +78,13 @@ struct PopulationGeneticsAnalysisTests {
         #expect(abs(outcome.phi - 0.75) < 1e-12)
     }
 
-    @Test func singleLocusAMOVAIsTaggedTheta() throws {
+    @Test func customTagsReachTheNullDistribution() throws {
         let analysis = try #require(AMOVAAnalysis(distance: distances(), strata: ["A", "B", "A", "B"],
-                                                  tag: .weirCockerhamTheta))
+                                                  tag: .twoGenerPhiFT))
         let outcome = try #require(analysis.run(options: AnalysisOptions(iterations: 19, seed: 7)))
-        #expect(outcome.tag == .weirCockerhamTheta)
-        #expect(outcome.distribution?.analysisType == .weirCockerhamTheta)
+        #expect(outcome.tag == .twoGenerPhiFT)
+        #expect(outcome.statisticLabel == "Φ_ST")
+        #expect(outcome.distribution?.analysisType == .twoGenerPhiFT)
     }
 
     @Test func mismatchedStrataGiveNil() {
@@ -191,8 +192,6 @@ struct PopulationGeneticsAnalysisTests {
         let options = AnalysisOptions(iterations: 19, seed: 1)
         let reports: [AnalysisReport] = [
             try #require(AMOVAAnalysis(distance: distances(), strata: ["A", "B", "A", "B"])?.perform(options: options)).report,
-            try #require(AMOVAAnalysis(distance: distances(), strata: ["A", "B", "A", "B"], tag: .weirCockerhamTheta)?
-                .perform(options: options)).report,
             try #require(DiversityRarefactionAnalysis(genotypes: genotypes(), type: .Ho, size: 10)?.perform(options: options)).report,
             try #require(DiversityRarefactionAnalysis(genotypes: genotypes(), type: .A, size: 10)?.perform(options: options)).report,
             try #require(CorrelatedPaternityAnalysis(matrix: matrix, design: design)?.perform(options: options)).report,
@@ -203,11 +202,10 @@ struct PopulationGeneticsAnalysisTests {
             #expect(!report.methods.isEmpty && !report.results.isEmpty)
         }
         #expect(reports[0].methods.contains("4 individuals") && reports[0].results.contains("Φ_ST = 0.750"))
-        #expect(reports[1].results.contains("θ = "))
-        #expect(reports[2].methods.contains("observed heterozygosity (Ho)")
-                && reports[2].methods.contains("drawing whole individuals"))
-        #expect(reports[3].methods.contains("from the pooled alleles"))
-        #expect(reports[5].methods.contains("2,000 steps, the first 500 discarded"))
+        #expect(reports[1].methods.contains("observed heterozygosity (Ho)")
+                && reports[1].methods.contains("drawing whole individuals"))
+        #expect(reports[2].methods.contains("from the pooled alleles"))
+        #expect(reports[4].methods.contains("2,000 steps, the first 500 discarded"))
     }
 
     @Test func reportsBecomeLogEntriesInManuscriptOrder() throws {

@@ -126,6 +126,25 @@ struct TwoGenerTests {
         #expect(report.logEntries.contains { $0.logType == .warning && $0.message == warning.message })
     }
 
+    @Test func aLocusSubsetIgnoresImpossibilitiesElsewhere() throws {
+        let (first, design) = dataset([(mother: (1, 1), offspring: [(1, 2), (2, 3), (1, 3)]),
+                                       (mother: (2, 2), offspring: [(2, 1), (2, 4)])])
+        let (second, _) = dataset([(mother: (1, 1), offspring: [(1, 2), (1, 3), (1, 3)]),
+                                   (mother: (2, 2), offspring: [(2, 1), (2, 4)])])
+        let matrix = GenotypeMatrix(individuals: first.individuals,
+                                    loci: [Locus(name: "L1"), Locus(name: "L2")],
+                                    columns: [first.columns[0], second.columns[0]])
+        let all = try #require(TwoGenerAnalysis(matrix: matrix, design: design))
+        #expect(all.offspring.count == 4)
+
+        let subset = try #require(TwoGenerAnalysis(matrix: matrix, design: design, loci: [1]))
+        let alone = try #require(TwoGenerAnalysis(matrix: second, design: design))
+        #expect(subset.offspring.count == 5)
+        #expect(subset.pollenPool[0].isEmpty && subset.pollenPool[1] == alone.pollenPool[0])
+        #expect(subset.squaredDistances == alone.squaredDistances)
+        #expect(!subset.notes.contains { $0.logType == .warning })
+    }
+
     @Test func motherlessFamiliesAreSkippedAndLogged() throws {
         let (matrix, design) = dataset([(mother: (1, 1), offspring: [(1, 2), (1, 3)]),
                                         (mother: (2, 2), offspring: [(2, 1), (2, 4)]),

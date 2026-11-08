@@ -55,46 +55,64 @@ public func smousePeakallDistance(column: any GenotypeColumn) -> GeneticDistance
     return matrix
 }
 
-/// Accumulates one locus's contribution into running distance and coverage
-/// totals in a single O(n²) pass, without allocating an intermediate
-/// per-locus `GeneticDistanceMatrix`. `geneticDistance(overLoci:strategy:)`'s
-/// hot path — computing `smousePeakallDistance`/`smousePeakallCoverage` and
-/// `add()`-ing each into a running total materializes (and immediately
-/// discards) two fresh matrices *per locus*, which for a real SNP-panel-scale
-/// dataset (hundreds of loci, each a several-MB allocation for a
-/// thousand-plus-individual panel) dominates runtime far more than the
-/// per-pair arithmetic itself does.
+/// Adds one locus's Smouse–Peakall distances, and a count of the pairs scored, to running totals.
+///
+/// The totals are upper triangles packed row by row, as ``GeneticDistanceMatrix/init(count:packed:)`` takes
+/// them, so the inner loop is a plain walk through two arrays: at real panel sizes (millions of pairs per
+/// locus) a subscript per pair costs more than the arithmetic.
 ///
 /// - Parameters:
-///   - column: The locus to add.
-///   - distance: The running distance total, updated in place.
-///   - coverage: The running count of loci scored for each pair, updated in place.
+///   - column: The locus.
+///   - distance: The running sum of squared distances.
+///   - coverage: The running count of loci at which each pair was scored.
 func accumulateDistanceAndCoverage(column: any GenotypeColumn,
-                                    distance: inout GeneticDistanceMatrix,
-                                    coverage: inout GeneticDistanceMatrix) {
+                                   distance: inout [Double],
+                                   coverage: inout [Double]) {
     let n = column.count
-
-    if let biallelic = column as? BiallelicColumn {
-        let dosages: [UInt8?] = (0..<n).map { biallelic.dosage(at: $0) }
-        for i in 0..<n {
-            guard let di = dosages[i] else { continue }
-            for j in (i + 1)..<n {
-                guard let dj = dosages[j] else { continue }
-                let delta = Int(di) - Int(dj)
-                distance[i, j] += Double(delta * delta)
-                coverage[i, j] += 1.0
-            }
-        }
-        return
-    }
-
-    let genotypes: [(UInt8, UInt8)?] = (0..<n).map { column.alleles(at: $0) }
+    precondition(distance.count == n * (n - 1) / 2 && coverage.count == distance.count,
+                 "accumulateDistanceAndCoverage: totals are the wrong size")
+    // Each genotype as two allele indices, 0 where it isn't a complete diploid. Dosages become 1/1, 1/2
+    // and 2/2, which give the same (dosage_i − dosage_j)² distances.
+    var left = [UInt8](repeating: 0, count: n)
+    var right = [UInt8](repeating: 0, count: n)
+    let biallelic = column as? BiallelicColumn
     for i in 0..<n {
-        guard let gi = genotypes[i] else { continue }
-        for j in (i + 1)..<n {
-            guard let gj = genotypes[j], let d = smousePeakallSquaredDistance(gi, gj) else { continue }
-            distance[i, j] += d
-            coverage[i, j] += 1.0
+        if let biallelic {
+            guard let dosage = biallelic.dosage(at: i) else { continue }
+            (left[i], right[i]) = (dosage > 1 ? 2 : 1, dosage > 0 ? 2 : 1)
+        } else if let (a, b) = column.alleles(at: i), a != 0, b != 0 {
+            (left[i], right[i]) = (a, b)
+        }
+    }
+    // The inline form of `smousePeakallSquaredDistance`: ½ (Σ c_i² + Σ c_j²) − c_i·c_j.
+    left.withUnsafeBufferPointer { left in
+        right.withUnsafeBufferPointer { right in
+            distance.withUnsafeMutableBufferPointer { total in
+                coverage.withUnsafeMutableBufferPointer { covered in
+                    var k = 0
+                    for i in 0..<n {
+                        let a0 = left[i], a1 = right[i]
+                        guard a0 != 0 else {
+                            k += n - i - 1
+                            continue
+                        }
+                        let squaresA = a0 == a1 ? 4 : 2
+                        for j in (i + 1)..<n {
+                            let b0 = left[j], b1 = right[j]
+                            if b0 != 0 {
+                                var dot = 0
+                                if a0 == b0 { dot += 1 }
+                                if a0 == b1 { dot += 1 }
+                                if a1 == b0 { dot += 1 }
+                                if a1 == b1 { dot += 1 }
+                                total[k] += Double((squaresA + (b0 == b1 ? 4 : 2)) / 2 - dot)
+                                covered[k] += 1
+                            }
+                            k += 1
+                        }
+                    }
+                }
+            }
         }
     }
 }

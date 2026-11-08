@@ -20,7 +20,8 @@ import SwiftUI
 ///
 /// Only those relevant to the current response and predictor are shown, in an area whose height
 /// never changes so the plot above doesn't resize as they come and go. A window too narrow for a
-/// row scrolls it sideways.
+/// row scrolls it sideways. Given a `plot` action, the first row starts with a Plot button, so a page
+/// can wait to compute until the user asks.
 public struct DiversityPlotControls: View {
     /// The height of the control area: three rows of controls and their spacing.
     private static let height = 108.0
@@ -29,6 +30,10 @@ public struct DiversityPlotControls: View {
     @Binding public var spec: DiversityPlotSpec
     /// The choices the project's data offers.
     public let options: DiversityPlotOptions
+    /// Whether the plot is being computed.
+    public let isPlotting: Bool
+    /// Computes the plot, or `nil` for a page that plots as the controls change.
+    public let plot: (() -> Void)?
 
     // MARK: - Initialization
 
@@ -37,9 +42,14 @@ public struct DiversityPlotControls: View {
     /// - Parameters:
     ///   - spec: The plot being defined.
     ///   - options: The choices the project's data offers.
-    public init(spec: Binding<DiversityPlotSpec>, options: DiversityPlotOptions) {
+    ///   - isPlotting: Whether the plot is being computed (default `false`).
+    ///   - plot: Computes the plot, shown as a Plot button; `nil` (the default) for no button.
+    public init(spec: Binding<DiversityPlotSpec>, options: DiversityPlotOptions, isPlotting: Bool = false,
+                plot: (() -> Void)? = nil) {
         _spec = spec
         self.options = options
+        self.isPlotting = isPlotting
+        self.plot = plot
     }
 
     // MARK: - Body
@@ -65,6 +75,14 @@ public struct DiversityPlotControls: View {
 
     @ViewBuilder
     private var variables: some View {
+        if let plot {
+            Button("Plot", systemImage: "play.fill", action: plot)
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: .command)
+                .help("Draw the plot with these options (⌘↩)")
+                .disabled(isPlotting)
+                .fixedSize()
+        }
         Picker("Response", selection: $spec.response) {
             ForEach(DiversityType.frequencyStatistics) { Text($0.label).tag($0) }
         }
@@ -134,7 +152,7 @@ public struct DiversityPlotControls: View {
 #Preview("Adult structure") {
     @Previewable @State var spec = DiversityPlotSpec()
     if let dataset = try? ExampleDataset.arapatPopulations.load() {
-        DiversityPlotControls(spec: $spec, options: DiversityPlotOptions(dataset: dataset))
+        DiversityPlotControls(spec: $spec, options: DiversityPlotOptions(dataset: dataset), plot: {})
             .frame(width: 800)
     }
 }

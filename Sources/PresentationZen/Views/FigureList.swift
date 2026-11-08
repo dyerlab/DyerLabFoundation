@@ -27,6 +27,8 @@ public struct FigureList: View {
         case replaceWithCurrent
         /// Copy it to the clipboard or save it to a file.
         case export(PlotExportOutput)
+        /// Copy a results table to the clipboard or save it to a file.
+        case exportTable(TableExportOutput)
         /// Remove it from the project.
         case delete
     }
@@ -39,6 +41,8 @@ public struct FigureList: View {
     public let localSource: String?
     /// What to say when there are no figures.
     public let emptyMessage: String
+    /// What one figure is called in the list's buttons and messages, such as `Plot` or `Table`.
+    public let itemName: String
     /// Whether the page's current plot can be saved.
     public let canSave: Bool
     /// Saves the page's current plot.
@@ -59,6 +63,7 @@ public struct FigureList: View {
     ///   - selection: The figure on the page, if any.
     ///   - localSource: The program whose figures need no note of where they came from.
     ///   - emptyMessage: What to say when there are no figures.
+    ///   - itemName: What one figure is called, such as `Plot` or `Table`.
     ///   - canSave: Whether the page's current plot can be saved.
     ///   - save: Saves the page's current plot.
     ///   - canReplace: Whether the page's current plot can replace a figure.
@@ -68,6 +73,7 @@ public struct FigureList: View {
                 selection: Binding<StoredFigure.ID?>,
                 localSource: String? = nil,
                 emptyMessage: String = "Save a plot to keep it with the project.",
+                itemName: String = "Plot",
                 canSave: Bool,
                 save: @escaping () -> Void,
                 canReplace: @escaping (StoredFigure) -> Bool = { _ in false },
@@ -77,6 +83,7 @@ public struct FigureList: View {
         _selection = selection
         self.localSource = localSource
         self.emptyMessage = emptyMessage
+        self.itemName = itemName
         self.canSave = canSave
         self.save = save
         self.canReplace = canReplace
@@ -89,8 +96,14 @@ public struct FigureList: View {
     public var body: some View {
         Group {
             if figures.isEmpty {
-                ContentUnavailableView("No Saved Plots", systemImage: "photo.on.rectangle",
-                                       description: Text(emptyMessage))
+                VStack {
+                    Spacer()
+                    ContentUnavailableView("No Saved \(itemName)s",
+                                           systemImage: itemName == "Table" ? "tablecells" : "photo.on.rectangle",
+                                           description: Text(emptyMessage))
+                    Spacer()
+                }
+
             } else {
                 figureRows
             }
@@ -116,7 +129,7 @@ public struct FigureList: View {
 
     private var footer: some View {
         HStack {
-            Button("Save Plot…", systemImage: "plus", action: save)
+            Button("Save \(itemName)…", systemImage: "plus", action: save)
                 .disabled(!canSave)
             Spacer()
         }
@@ -130,11 +143,15 @@ public struct FigureList: View {
     private func menuItems(for figure: StoredFigure) -> some View {
         Button("Edit Title & Legend…") { perform(.edit, figure) }
         if canReplace(figure) {
-            Button("Replace with Current Plot") { perform(.replaceWithCurrent, figure) }
+            Button("Replace with Current \(itemName)") { perform(.replaceWithCurrent, figure) }
                 .disabled(!canSave)
         }
         Divider()
-        PlotExportMenu(outputs: outputs(figure)) { perform(.export($0), figure) }
+        if figure.isTable {
+            TableExportMenu(outputs: figure.availableTableOutputs) { perform(.exportTable($0), figure) }
+        } else {
+            PlotExportMenu(outputs: outputs(figure)) { perform(.export($0), figure) }
+        }
         Divider()
         Button("Delete", role: .destructive) { perform(.delete, figure) }
     }

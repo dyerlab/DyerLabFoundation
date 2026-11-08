@@ -47,6 +47,19 @@ public struct SymmetricUpperTriangle<Element>: Sendable where Element: Sendable 
         self.count = count
         self.storage = [Element](repeating: fill, count: max(0, count * (count - 1) / 2))
     }
+
+    /// Creates storage from its upper triangle, packed row by row: `(0,1), (0,2), …, (1,2), …`.
+    ///
+    /// - Parameters:
+    ///   - count: Number of items.
+    ///   - packed: The `count·(count−1)/2` off-diagonal entries.
+    /// - Precondition: `packed` has exactly that many entries.
+    public init(count: Int, packed: [Element]) {
+        precondition(packed.count == max(0, count * (count - 1) / 2),
+                     "SymmetricUpperTriangle(count:packed:): wrong number of entries")
+        self.count = count
+        self.storage = packed
+    }
 }
 
 public extension SymmetricUpperTriangle where Element: AdditiveArithmetic {

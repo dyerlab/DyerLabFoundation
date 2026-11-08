@@ -64,13 +64,15 @@ public struct FigureRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(.rect)
         .task(id: figure) {
-            drawn = figure.previewImage == nil ? figure.plot?.pngData(.thumbnail) : nil
+            drawn = figure.previewImage == nil && !figure.isTable ? figure.plot?.pngData(.thumbnail) : nil
         }
     }
 
     @ViewBuilder
     private var picture: some View {
-        if let data = figure.previewImage?.data ?? drawn, let image = DLImage(data: data) {
+        if figure.isTable, let table = figure.table {
+            TabularOutputView(table, decimals: 3, size: .compact)
+        } else if let data = figure.previewImage?.data ?? drawn, let image = DLImage(data: data) {
             Image(dlImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)

@@ -48,22 +48,20 @@ extension GenotypeMatrix {
             return total
         }
 
-        var total = GeneticDistanceMatrix(count: individualCount)
-        var covered = GeneticDistanceMatrix(count: individualCount)
+        let pairs = individualCount * (individualCount - 1) / 2
+        var total = [Double](repeating: 0, count: pairs)
+        var covered = [Double](repeating: 0, count: pairs)
         for j in lociArray {
             accumulateDistanceAndCoverage(column: columns[j], distance: &total, coverage: &covered)
         }
 
         let scale = strategy == .rescaleToTotalLoci ? Double(lociArray.count) : 1.0
-        var result = GeneticDistanceMatrix(count: individualCount)
-        for i in 0..<individualCount {
-            for j in (i + 1)..<individualCount {
-                let n = covered[i, j]
-                guard n > 0 else { continue } // never jointly scored — leave at 0, not NaN
-                result[i, j] = (total[i, j] / n) * scale
-            }
+        for k in 0..<pairs {
+            let n = covered[k]
+            // A pair never jointly scored stays at 0, not NaN.
+            total[k] = n > 0 ? (total[k] / n) * scale : 0
         }
-        return result
+        return GeneticDistanceMatrix(count: individualCount, packed: total)
     }
 
     /// Total Smouse–Peakall squared distance over all loci.

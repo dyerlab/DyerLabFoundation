@@ -34,7 +34,9 @@ public struct StoredFigureView: View {
     }
 
     public var body: some View {
-        if let image = figure.image(named: StoredFigure.figureImageName).flatMap({ DLImage(data: $0.data) }) {
+        if figure.isTable, let table = figure.table {
+            TabularOutputView(table, title: figure.title, caption: figure.legend)
+        } else if let image = figure.image(named: StoredFigure.figureImageName).flatMap({ DLImage(data: $0.data) }) {
             picture(image)
         } else if let plot = figure.plot {
             plot

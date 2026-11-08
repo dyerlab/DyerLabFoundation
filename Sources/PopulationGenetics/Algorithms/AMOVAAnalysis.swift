@@ -12,8 +12,9 @@
 //
 //  Population genetics' names for Matrix's `VarianceDecompositionAnalysis`,
 //  plus a constructor from individuals' genetic distances and stratum labels.
-//  Multi-locus distances give Φ_ST; a single locus's distances give Weir &
-//  Cockerham's θ — the same computation, so only the `tag` differs.
+//  The ratio is always reported as Φ_ST, for one locus or many. A single
+//  locus's AMOVA is not Weir & Cockerham's θ (it has no within-individual
+//  level); that is `WeirCockerhamAnalysis`.
 //
 //  Created by Rodney Dyer on 2026.11.02.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -34,8 +35,7 @@ extension VarianceDecompositionAnalysis {
     /// - Parameters:
     ///   - distance: Squared genetic distances among individuals.
     ///   - strata: Each individual's stratum, in `distance` order.
-    ///   - tag: `.amovaPhiST` (default) for multi-locus distances, or
-    ///     `.weirCockerhamTheta` for a single locus.
+    ///   - tag: The label for the outcome (default `.amovaPhiST`).
     /// - Returns: `nil` if `strata` is the wrong length, there are fewer than
     ///   two strata, or every stratum has a single individual.
     public init?(distance: GeneticDistanceMatrix, strata: [String], tag: AnalysisTag = .amovaPhiST) {
@@ -46,7 +46,7 @@ extension VarianceDecompositionAnalysis {
             return index.count - 1
         }
         self.init(squaredDistances: distance.dense(), partition: partition, tag: tag)
-        statisticLabel = tag == .weirCockerhamTheta ? "θ" : "Φ_ST"
+        statisticLabel = "Φ_ST"
         unitLabel = "individuals"
         groupLabel = "strata"
     }
@@ -54,6 +54,6 @@ extension VarianceDecompositionAnalysis {
 
 extension VarianceDecompositionOutcome {
 
-    /// Φ_ST (or θ for a single locus): the among/total variance ratio.
+    /// Φ_ST: the among/total variance ratio.
     public var phi: Double { statistic }
 }

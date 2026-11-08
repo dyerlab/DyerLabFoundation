@@ -13,6 +13,7 @@ this target.
 
 - ``DataTable`` — a generic, column-typed data table (``DataColumnRole``, ``ColumnKind``, ``PlotValue``) with CSV import/export and conversions from a `Matrix`, `NullDistributionResult`, or pairwise matrix.
 - ``DataTableView`` — a SwiftUI view over a `DataTable`.
+- ``TabularOutputView`` — a results table, such as an AMOVA, in publication style. ``RTableChunk``, `markdownText(caption:anchor:decimals:)` and `exportTable(_:title:legend:rCode:notes:pasteboard:)` copy or export it as an R chunk, Markdown or CSV (``TableExportOutput``, ``TableExportMenu``). A ``StoredFigure`` of form `table` holds one.
 - ``PlotRow`` — a single row prepared for charting.
 
 ### Charts

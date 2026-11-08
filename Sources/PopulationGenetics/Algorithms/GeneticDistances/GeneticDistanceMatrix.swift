@@ -37,6 +37,15 @@ public struct GeneticDistanceMatrix: Sendable, Equatable {
         self.storage = SymmetricUpperTriangle<Double>(count: count)
     }
 
+    /// Creates a matrix from its upper triangle, packed row by row.
+    ///
+    /// - Parameters:
+    ///   - count: Number of individuals.
+    ///   - packed: The `count·(count−1)/2` distances `(0,1), (0,2), …, (1,2), …`.
+    init(count: Int, packed: [Double]) {
+        self.storage = SymmetricUpperTriangle<Double>(count: count, packed: packed)
+    }
+
     /// Symmetric read/write access to a pairwise distance; the diagonal always returns 0.
     ///
     /// - Parameters:

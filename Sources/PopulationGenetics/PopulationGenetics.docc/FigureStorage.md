@@ -38,10 +38,10 @@ Bump `figures_schema_version` for any change that would break an existing reader
 | `title` | TEXT | Title |
 | `legend` | TEXT | Legend; `''` if none |
 | `source` | TEXT | The program that made it, such as `GeneticStudio` or `gstudio` |
-| `form` | TEXT, nullable | `histogram`, `density`, `bars` or `scatter`; another name is kept but can't be drawn; `NULL` for images only |
+| `form` | TEXT, nullable | `histogram`, `density`, `bars` or `scatter` for a plot, `table` for a results table; another name is kept but can't be drawn; `NULL` for images only |
 | `bins` | INTEGER, nullable | Bins, for a histogram |
 | `x_label`, `y_label` | TEXT, nullable | Axis titles |
-| `generator` | TEXT, nullable | The code that can recompute it, such as `diversity_plot` |
+| `generator` | TEXT, nullable | The code that can recompute it, such as `diversity_plot` or `amova_table` |
 | `spec` | TEXT, nullable | The generator's parameters, as JSON whose meaning belongs to the generator |
 | `r_code` | TEXT, nullable | R code that redraws it |
 | `created_at` | TEXT | UTC time as `YYYY-MM-DDTHH:MM:SSZ` |
@@ -76,8 +76,33 @@ Missing values are JSON `null`, including NaN and infinities. Dates are strings 
 | `histogram`, `density` | `y`, a number column holding the values |
 | `bars` | `x`, and `y`, a number column |
 | `scatter` | `x` and `y`, both number columns |
+| `table` | Any columns, without roles, shown as a table in column order |
 
 A figure that doesn't meet these is shown from its images instead.
+
+### Results tables
+
+A results table, such as an AMOVA, is a figure of form `table`. Its columns are the table's columns in order, a
+missing value is an empty cell, and `x_label`, `y_label` and `bins` are `NULL`. Its `r_code` prints it with
+`knitr::kable()` in a chunk labelled `tbl-…`. A structure table has generator `amova_table` and one of two layouts.
+A variance-components table has the columns `Source`, `df`, `SS`, `MS`, `sigma2`, then `Phi_ST` (an AMOVA) or `F`
+(Weir & Cockerham: θ, F_IS and F_IT), then `P` if it was tested; summed over loci genotyped in different numbers of
+individuals, `df` and `MS` are missing. A by-locus table has `Locus`, `N`, `Alleles`, `Hs` and `Ht` (adults only), one
+column per statistic (`theta`, `F_IS`, `F_IT`, `Phi_ST`, `Phi_ST_genotypes`, `Gst`, `Gst_prime`, `Dest`), each tested
+statistic followed by its `P_` column, and a text column `Warning` if any locus's Gst or Dest is flagged; its last row,
+`Multilocus`, holds ratios of sums over loci. The `spec` is a ``StructureSpec``:
+
+```json
+{"columns":["theta","phiGeneCopies","gst","gstPrime","dest"],"level":"Population","locus":"LTRS",
+ "permutations":999,"sample":"adults","seed":42,"statistic":"phiGeneCopies","table":"perLocus",
+ "thresholds":{"destAlleles":3,"destDiversity":0.3,"gstAlleles":7,"gstDiversity":0.6}}
+```
+
+`sample` is `adults` or `paternalGametes`; `table` is `amova` or `perLocus`; `statistic` (the variance-components
+statistic) is `phiGeneCopies`, `phiGenotypes`, `theta` or `phiGametes`; `locus` is absent for all loci; `seed` is
+absent when `permutations` is 0. A spec without `table`, `statistic`, `columns` or `thresholds`, written before they
+existed, reads as a variance-components table of `phiGenotypes` for every adult locus, `theta` for one adult locus and
+`phiGametes` for gametes.
 
 ### The `meta` table
 

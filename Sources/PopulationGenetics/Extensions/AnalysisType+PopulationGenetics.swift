@@ -47,6 +47,24 @@ extension AnalysisType {
                                                                                     kind: .pairwise)],
                                                          usesIterations: true)
 
+    /// Weir & Cockerham's (1984) θ at one locus, with F_IS and F_IT, from a
+    /// nested analysis of variance of allele frequencies.
+    public static let weirCockerham = AnalysisType("weirCockerham",
+                                                   displayName: "Weir & Cockerham θ",
+                                                   operands: [AnalysisOperand(role: "genotypes", kind: .genotypes),
+                                                              AnalysisOperand(role: "strata", kind: .partition)],
+                                                   usesIterations: true)
+
+    /// Genetic differentiation among strata locus by locus: θ, F_IS and F_IT, Φ_ST, Gst, G′st and Dest, with
+    /// multilocus values as ratios of sums over loci.
+    public static let geneticDifferentiation = AnalysisType("geneticDifferentiation",
+                                                            displayName: "Genetic Differentiation",
+                                                            operands: [AnalysisOperand(role: "genotypes",
+                                                                                       kind: .genotypes),
+                                                                       AnalysisOperand(role: "strata",
+                                                                                       kind: .partition)],
+                                                            usesIterations: true)
+
     /// Two-generation analysis of pollen pool structure (2Gener; Smouse et al.
     /// 2001): AMOVA of the paternal gametes recovered from mothers and their
     /// offspring, with mothers as strata, giving Φ_FT.

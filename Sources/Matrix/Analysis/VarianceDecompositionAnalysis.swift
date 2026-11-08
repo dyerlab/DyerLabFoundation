@@ -72,10 +72,39 @@ public struct VarianceDecompositionAnalysis: Analysis {
     /// - Parameter options: Permutation count and seed.
     /// - Returns: The decomposition and its null distribution; never `nil`.
     public func run(options: AnalysisOptions) -> VarianceDecompositionOutcome? {
-        let null = options.iterations > 0
-            ? decomposition.permutationTest(partition: partition, iterations: options.iterations,
-                                            seed: options.seed, tag: tag)
-            : nil
+        run(options: options) { _ in true }
+    }
+
+    /// Decomposes the variance and, if `options.iterations > 0`, tests the variance ratio by permuting group
+    /// membership, reporting each permutation as it finishes.
+    ///
+    /// The permutations are the same as ``run(options:)``'s, so a seed reproduces the same p-value.
+    ///
+    /// - Parameters:
+    ///   - options: Permutation count and seed.
+    ///   - progress: Called after each permutation with the number done; return `false` to stop.
+    /// - Returns: The decomposition and its null distribution, or `nil` if `progress` stopped the test.
+    public func run(options: AnalysisOptions, progress: (Int) -> Bool) -> VarianceDecompositionOutcome? {
+        run(options: options, observing: { done, _ in progress(done) })
+    }
+
+    /// Decomposes the variance and, if `options.iterations > 0`, tests the variance ratio, handing over each
+    /// permuted ratio as it is drawn.
+    ///
+    /// - Parameters:
+    ///   - options: Permutation count and seed.
+    ///   - observing: Called after each permutation with the number done and its ratio; return `false` to stop.
+    /// - Returns: The decomposition and its null distribution, or `nil` if `observing` stopped the test.
+    public func run(options: AnalysisOptions,
+                    observing: (_ done: Int, _ value: Double) -> Bool) -> VarianceDecompositionOutcome? {
+        var null: NullDistributionResult?
+        if options.iterations > 0 {
+            null = Resampling.permutationTest(labels: partition, iterations: options.iterations, seed: options.seed,
+                                              tag: tag, observing: observing) { labels in
+                decomposition.decompose(partition: labels).varianceRatio
+            }
+            guard null != nil else { return nil }
+        }
         return VarianceDecompositionOutcome(tag: tag, statisticLabel: statisticLabel,
                                             decomposition: decomposition.decompose(partition: partition),
                                             distribution: null)

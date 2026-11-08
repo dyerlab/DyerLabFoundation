@@ -34,9 +34,12 @@ public typealias AMOVAPermutationProgress = DistanceVarianceDecompositionProgres
 
 extension AMOVAResult {
     /// Population genetics' Φ_ST — this field's label for the generic
-    /// among/total variance ratio. Weir & Cockerham's Θ (a single-locus
-    /// estimator) is the identical statistic under a different subfield's
-    /// label; neither name belongs on the foundation type itself.
+    /// among/total variance ratio, used for every AMOVA in this package
+    /// (individuals or paternal gametes) rather than GenAlEx's Φ_PT.
+    ///
+    /// Weir & Cockerham's θ is *not* this ratio for one locus: a genotype-level
+    /// AMOVA has no within-individual level, so it departs from θ whenever
+    /// genotypes depart from Hardy–Weinberg. θ is ``WeirCockerhamAnalysis``.
     public var phi: Double { varianceRatio }
 }
 
@@ -45,9 +48,14 @@ extension AnalysisTag {
     /// distance-based variance decomposition. See `AMOVAResult.phi`.
     public static let amovaPhiST = AnalysisTag("amovaPhiST")
 
-    /// This package's label for Weir & Cockerham's θ — the same variance ratio
-    /// as `.amovaPhiST`, computed from a single locus's distances.
+    /// This package's label for Weir & Cockerham's θ (``WeirCockerhamAnalysis``):
+    /// the among-strata share of a nested analysis of variance of allele
+    /// indicators, with individuals within strata and alleles within individuals.
     public static let weirCockerhamTheta = AnalysisTag("weirCockerhamTheta")
+
+    /// This package's label for a by-locus structure table: θ, Φ_ST, Gst, G′st and Dest at each locus, with
+    /// multilocus ratios of sums (`StructureAnalysis`).
+    public static let differentiationByLocus = AnalysisTag("differentiationByLocus")
 
     /// This package's label for 2Gener's Φ_FT — AMOVA among the paternal
     /// gametes of different mothers (Smouse et al. 2001).

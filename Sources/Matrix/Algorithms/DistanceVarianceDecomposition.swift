@@ -149,7 +149,7 @@ public struct DistanceVarianceDecomposition: Sendable {
     ///   - iterations: number of permutations.
     ///   - seed: PRNG seed for reproducibility.
     ///   - tag: which analysis this is — e.g. a caller's own `.amovaPhiST`
-    ///     or `.weirCockerhamTheta`; this type has no opinion on the name.
+    ///     or `.twoGenerPhiFT`; this type has no opinion on the name.
     /// - Returns: The observed ratio and its permutation null distribution.
     public func permutationTest(partition: [Int],
                                 iterations: Int,

@@ -86,14 +86,16 @@ public struct TwoGenerAnalysis: Analysis {
     ///     `.expectationMaximization`; `.paternalAverage` reproduces the
     ///     original 2Gener and GenAlEx estimate).
     ///   - tag: The label for the outcome (default `.twoGenerPhiFT`).
+    ///   - loci: The locus ordinals to use, or `nil` (the default) for every locus.
     /// - Returns: `nil` if fewer than two mothers keep an offspring, or no
     ///   mother has more than one, so there is no among- or within-mother
     ///   variation to estimate.
     public init?(matrix: GenotypeMatrix,
                  design: ParentageDesign,
                  frequencyMethod: PollenPoolFrequencyMethod = .expectationMaximization,
-                 tag: AnalysisTag = .twoGenerPhiFT) {
-        let gametes = TwoGenerGametes(matrix: matrix, design: design, method: frequencyMethod)
+                 tag: AnalysisTag = .twoGenerPhiFT,
+                 loci: [Int]? = nil) {
+        let gametes = TwoGenerGametes(matrix: matrix, design: design, method: frequencyMethod, loci: loci)
         guard var amova = VarianceDecompositionAnalysis(squaredDistances: gametes.squaredDistances,
                                                         partition: gametes.partition,
                                                         tag: tag) else { return nil }
