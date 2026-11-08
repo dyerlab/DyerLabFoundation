@@ -61,6 +61,25 @@ logic lives.
   or ``StructureLocusRow``s with a `Multilocus` row and a `P_` column per tested statistic.
 - ``StructureControls`` — the options under the table. PresentationZen's `TabularOutputView` draws the table.
 
+### Distance matrices
+
+- ``DistanceSpec`` — what a pairwise distance matrix holds: its ``DistanceSpec/Measure`` (great-circle in km, or a
+  genetic distance) and whether it is among the adults or among the strata of one level; what a saved distance
+  analysis records to name its matrices (<doc:MatrixStorage>).
+- ``DistanceOptions`` — the levels and measures a dataset's coordinates and genotypes offer.
+- ``DistanceAnalysis`` / ``DistanceResult`` / ``UnitDistanceMatrix`` / ``GreatCircle`` — distances among adults
+  (mothers in parent/offspring data) or strata: haversine distances among centroids, matching gstudio's
+  `strata_distance()`, or ``GeneticDistances`` (AMOVA and Bray-Curtis among individuals; Nei, Cavalli-Sforza, Dps,
+  Euclidean, pairwise Φ_ST and cGD among strata), matching gstudio's `genetic_distance()`. Computed when needed,
+  never stored.
+- ``IBDSpec`` / ``IBDAnalysis`` / ``IBDResult`` — isolation by distance: a genetic matrix against great-circle distance
+  among the same units by a Mantel test (vegan's permutations), with Rousset's Φ_ST / (1 − Φ_ST) and ln distance as
+  options; saved as one `ibd_analysis` scatter figure holding its plot, table and spec (<doc:FigureStorage>).
+- ``IBDControls`` / ``IBDDisplay`` — the Distance page's isolation-by-distance options, and its scatter beside the
+  Mantel table.
+- ``DistanceControls`` / ``DistanceDisplay`` / ``MatrixList`` — the Distance page's controls, heatmap and histogram,
+  and the list of matrices other programs stored in the file.
+
 ### Maps, families and summaries
 
 - ``PopulationClusters`` — individuals grouped by population for a map, collapsing until they can be told apart. ``GenotypeMapView`` draws them, with ``PopulationMarker`` and ``IndividualMarker``.
@@ -77,7 +96,7 @@ logic lives.
 
 ### Persistence & spatial
 
-- ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Seven equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, named generic matrices, raster layers (``ProjectStore/writeRaster(_:description:)``, stored as plain little-endian `Float32` blobs that gstudio reads for `terra`), and figures (<doc:FigureStorage>, which R reads and writes) — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
+- ``ProjectStore`` — an actor-based SQLite store for a project's data, safe to hold and `await` from any context. Seven equal, independently optional components via ``StoreComponents`` — genetic data, population graph, results/images, log, named generic matrices (<doc:MatrixStorage>, with a `spec` saying what each holds), raster layers (``ProjectStore/writeRaster(_:description:)``, stored as plain little-endian `Float32` blobs that gstudio reads for `terra`), and figures (<doc:FigureStorage>, which R reads and writes) — so a file can hold any subset, not just genetic data. Hold one open across a document's session via `openOrCreate(at:)`; `writeGeneticData`/`writeGraph` replace their component in place, so editing and re-saving never disturbs the others.
 - ``ProjectStore/appendLog(report:)`` — appends an analysis report (`Matrix`'s `AnalysisReport` from `perform(options:)`) to a project's log in one transaction: the Methods passage, the notes, then the Results passage.
 - ``ProjectFile`` — a whole project as the bytes of a file, for sandboxed apps that can't put journal files beside a user-chosen file.
 - ``GraphsFile`` — reads and saves `.graphs` files: one population graph and what was derived from it, with no genotypes, in the same schema as ``ProjectStore``. ``GraphNodeAttributeUpdate`` replaces named node attributes while keeping everything else in the file.

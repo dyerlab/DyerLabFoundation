@@ -112,6 +112,19 @@ public struct MantelAnalysis: Analysis {
     /// - Parameter options: Permutation count and seed (R's `set.seed()` value).
     /// - Returns: The statistic and its null distribution; never `nil`.
     public func run(options: AnalysisOptions) -> MantelOutcome? {
+        run(options: options) { _, _ in true }
+    }
+
+    /// Correlates the matrices and tests the correlation, reporting each permuted value as it is drawn.
+    ///
+    /// The permutations are the same as ``run(options:)`` draws for the same seed.
+    ///
+    /// - Parameters:
+    ///   - options: Permutation count and seed (R's `set.seed()` value).
+    ///   - observing: Called after each permutation with the number done and the permuted correlation; return
+    ///     `false` to stop.
+    /// - Returns: The statistic and its null distribution, or `nil` if `observing` stopped the test.
+    public func run(options: AnalysisOptions, observing: (_ done: Int, _ value: Double) -> Bool) -> MantelOutcome? {
         let y = pairs.map { response[$0.0][$0.1] }
         let x = pairs.map { predictor[$0.0][$0.1] }
         let observed = method.correlation(x, y)
@@ -121,9 +134,11 @@ public struct MantelAnalysis: Analysis {
             var rng = RMersenneTwister(seed: Int(truncatingIfNeeded: options.seed))
             var values: [Double] = []
             values.reserveCapacity(options.iterations)
-            for _ in 0..<options.iterations {
+            for done in 1...options.iterations {
                 let order = rng.sampleIndicesNoReplacement(n: response.count)     // R: sample.int(n)
-                values.append(method.correlation(pairs.map { predictor[order[$0.0]][order[$0.1]] }, y))
+                let value = method.correlation(pairs.map { predictor[order[$0.0]][order[$0.1]] }, y)
+                values.append(value)
+                guard observing(done, value) else { return nil }
             }
             distribution = NullDistributionResult(analysisType: tag, observed: observed,
                                                   values: values, seed: options.seed)

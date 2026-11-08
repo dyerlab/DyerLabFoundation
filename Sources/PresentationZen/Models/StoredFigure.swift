@@ -151,17 +151,19 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
     ///   - xLabel: The x-axis title.
     ///   - yLabel: The y-axis title.
     ///   - notes: Remarks to keep with the code as comments.
+    ///   - extraLayers: ggplot2 layers the code adds after the form's own, such as a fitted line.
     public mutating func store(_ table: DataTable,
                                form: PlotForm,
                                xLabel: String,
                                yLabel: String,
-                               notes: [String] = []) {
+                               notes: [String] = [],
+                               extraLayers: [String] = []) {
         columns = table.figureColumns
         formName = form.storedName
         bins = form.storedBins
         self.xLabel = xLabel
         self.yLabel = yLabel
         rCode = RFigureChunk(title: title, legend: legend, table: table, form: form, xLabel: xLabel, yLabel: yLabel,
-                             notes: notes)?.code
+                             notes: notes, extraLayers: extraLayers)?.code
     }
 }

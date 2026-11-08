@@ -51,6 +51,8 @@ public struct FigureList: View {
     public let canReplace: (StoredFigure) -> Bool
     /// The exports a figure can provide.
     public let outputs: (StoredFigure) -> [PlotExportOutput]
+    /// The results-table exports a plot can also provide.
+    public let tableOutputs: (StoredFigure) -> [TableExportOutput]
     /// Performs an action on a figure.
     public let perform: (Action, StoredFigure) -> Void
 
@@ -68,6 +70,8 @@ public struct FigureList: View {
     ///   - save: Saves the page's current plot.
     ///   - canReplace: Whether the page's current plot can replace a figure.
     ///   - outputs: The exports a figure can provide.
+    ///   - tableOutputs: The results-table exports a plot can also provide, such as an analysis's statistics beside
+    ///     its scatter; none by default.
     ///   - perform: Performs an action on a figure.
     public init(figures: [StoredFigure],
                 selection: Binding<StoredFigure.ID?>,
@@ -78,6 +82,7 @@ public struct FigureList: View {
                 save: @escaping () -> Void,
                 canReplace: @escaping (StoredFigure) -> Bool = { _ in false },
                 outputs: @escaping (StoredFigure) -> [PlotExportOutput] = { $0.availableOutputs },
+                tableOutputs: @escaping (StoredFigure) -> [TableExportOutput] = { _ in [] },
                 perform: @escaping (Action, StoredFigure) -> Void) {
         self.figures = figures
         _selection = selection
@@ -88,6 +93,7 @@ public struct FigureList: View {
         self.save = save
         self.canReplace = canReplace
         self.outputs = outputs
+        self.tableOutputs = tableOutputs
         self.perform = perform
     }
 
@@ -151,6 +157,12 @@ public struct FigureList: View {
             TableExportMenu(outputs: figure.availableTableOutputs) { perform(.exportTable($0), figure) }
         } else {
             PlotExportMenu(outputs: outputs(figure)) { perform(.export($0), figure) }
+            let tables = tableOutputs(figure)
+            if !tables.isEmpty {
+                Menu("Results Table") {
+                    TableExportMenu(outputs: tables) { perform(.exportTable($0), figure) }
+                }
+            }
         }
         Divider()
         Button("Delete", role: .destructive) { perform(.delete, figure) }

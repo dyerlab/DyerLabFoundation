@@ -42,16 +42,17 @@ extension ProjectStore {
     ///   - data: The encoded matrix.
     ///   - name: The label to store it under.
     ///   - description: Optional longer description.
+    ///   - spec: App-defined JSON saying what the matrix holds.
     /// - Throws: ``PersistenceError/readOnly`` for a read-only store, ``PersistenceError/componentNotPresent(_:)``
     ///   without a `.matrices` component, ``PersistenceError/notOpen``, or
     ///   ``PersistenceError/sqliteError(code:message:)``.
-    public func addMatrix(_ data: Data, name: String, description: String? = nil) async throws {
+    public func addMatrix(_ data: Data, name: String, description: String? = nil, spec: String? = nil) async throws {
         guard mode == .readWrite else { throw PersistenceError.readOnly }
         try requireComponent(.matrices, "matrices")
         let connection = try requireConnection()
         let ordinal = try nextMatrixOrdinal(connection: connection)
         let stmt = try connection.prepare("""
-            INSERT INTO matrices (ordinal, uuid, name, description, created_at, data) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO matrices (ordinal, uuid, name, description, created_at, data, spec) VALUES (?, ?, ?, ?, ?, ?, ?)
             """)
         stmt.bind(ordinal, at: 1)
         stmt.bind(UUID().uuidString, at: 2)
@@ -59,6 +60,7 @@ extension ProjectStore {
         stmt.bindOptional(description, at: 4)
         stmt.bind(ISO8601DateFormatter().string(from: Date()), at: 5)
         stmt.bind([UInt8](data), at: 6)
+        stmt.bindOptional(spec, at: 7)
         _ = try stmt.step()
         try setMetaFlag(MatricesSchemaComponent.hasFlagKey, to: true, connection: connection)
     }
@@ -95,7 +97,8 @@ extension ProjectStore {
         try requireComponent(.matrices, "matrices")
         let connection = try requireConnection()
         let stmt = try connection.prepare("""
-            SELECT uuid, name, description, created_at FROM matrices ORDER BY ordinal
+            SELECT uuid, name, description, created_at, \(matricesHaveSpec ? "spec" : "NULL") FROM matrices
+            ORDER BY ordinal
             """)
         let formatter = ISO8601DateFormatter()
         var out: [StoredMatrixInfo] = []
@@ -139,6 +142,7 @@ extension ProjectStore {
         }
         return StoredMatrixInfo(id: uuid, name: stmt.columnText(at: 1),
                                  description: stmt.columnIsNull(at: 2) ? nil : stmt.columnText(at: 2),
-                                 createdAt: createdAt)
+                                 createdAt: createdAt,
+                                 spec: stmt.columnIsNull(at: 4) ? nil : stmt.columnText(at: 4))
     }
 }

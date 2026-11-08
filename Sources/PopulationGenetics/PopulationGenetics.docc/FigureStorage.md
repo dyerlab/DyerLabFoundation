@@ -104,6 +104,29 @@ absent when `permutations` is 0. A spec without `table`, `statistic`, `columns` 
 existed, reads as a variance-components table of `phiGenotypes` for every adult locus, `theta` for one adult locus and
 `phiGametes` for gametes.
 
+### Isolation-by-distance analyses
+
+An isolation-by-distance analysis is one figure of form `scatter` with generator `ibd_analysis`, so its plot and its
+results travel together. Its columns are the pairs tested: text columns `From` and `To`, then the separation as `x`
+(`distance_km`, or `ln_distance_km` when log-transformed) and the genetic distance as `y` (`phi_st_linearized` for
+Rousset's Φ_ST / (1 − Φ_ST), otherwise the measure's name, such as `nei`). `x_label` and `y_label` are the axis titles,
+`r_code` draws the points and the regression line (`geom_abline`), and the `figure` image is the plot with its line.
+The `spec` is an ``IBDSpec``, holding both the inputs and the results:
+
+```json
+{"genetic":{"level":"Population","measure":"phi_st"},"logSeparation":true,"method":"pearson","permutations":999,
+ "result":{"intercept":-2.796,"p":0.001,"pairs":703,"r":0.503,"r2":0.253,"slope":0.793},"seed":42,
+ "separation":{"level":"Population","measure":"great_circle","units":"km"},"transform":"rousset"}
+```
+
+`genetic` and `separation` are ``DistanceSpec``s (<doc:MatrixStorage>); the matrices aren't stored, since they can be
+rebuilt from the project's genotypes and coordinates. `transform` is `none` or `rousset` (only for `phi_st`); `method`
+is `pearson` or `spearman`, as vegan's `mantel()` takes it; `permutations` is 0 and `seed` absent when untested.
+In `result`, `r` is the Mantel correlation, `p` its permutation P (absent when untested), `slope` and `intercept` the
+least-squares line of `y` on `x`, `r2` that line's R², and `pairs` the pairs tested (pairs with a non-finite genetic
+distance are left out). The permutations are vegan's for the same `seed`, so `set.seed(seed); vegan::mantel(x, y)`
+reproduces `p`.
+
 ### The `meta` table
 
 The first figure written to a file must add these rows to `meta`, whose other rows are left alone:

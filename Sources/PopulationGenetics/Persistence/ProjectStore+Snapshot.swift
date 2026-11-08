@@ -98,7 +98,8 @@ extension ProjectStore {
                 try await store.appendLog(entry)
             }
             for matrix in matrices {
-                try await store.addMatrix(matrix.data, name: matrix.name, description: matrix.description)
+                try await store.addMatrix(matrix.data, name: matrix.name, description: matrix.description,
+                                          spec: matrix.spec)
             }
             for attachment in rasters {
                 try await store.writeRaster(attachment.raster, description: attachment.description)
@@ -139,7 +140,8 @@ extension ProjectStore {
             var seenNames: Set<String> = []
             for info in try await store.matrices() where seenNames.insert(info.name).inserted {
                 if let data = try await store.matrixData(named: info.name) {
-                    matrices.append(MatrixAttachment(name: info.name, description: info.description, data: data))
+                    matrices.append(MatrixAttachment(name: info.name, description: info.description,
+                                                     data: data, spec: info.spec))
                 }
             }
         }

@@ -27,6 +27,8 @@ public struct MatrixAttachment: Sendable, Equatable {
     public let description: String?
     /// The matrix's encoded payload (typically JSON via `Matrix`'s `Codable` conformance).
     public let data: Data
+    /// App-defined JSON saying what the matrix holds, such as GeneticStudio's `DistanceSpec`.
+    public let spec: String?
 
     /// Initializes a new matrix attachment.
     ///
@@ -34,9 +36,11 @@ public struct MatrixAttachment: Sendable, Equatable {
     ///   - name: Short label for the matrix.
     ///   - description: Optional longer description.
     ///   - data: The matrix's encoded payload.
-    public init(name: String, description: String? = nil, data: Data) {
+    ///   - spec: App-defined JSON saying what the matrix holds.
+    public init(name: String, description: String? = nil, data: Data, spec: String? = nil) {
         self.name = name
         self.description = description
         self.data = data
+        self.spec = spec
     }
 }

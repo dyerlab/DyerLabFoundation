@@ -40,6 +40,9 @@ public struct StoredMatrixInfo: Sendable, Identifiable, Equatable {
     /// When this matrix was stored.
     public var createdAt: Date
 
+    /// App-defined JSON saying what the matrix holds.
+    public var spec: String?
+
     /// Initializes new matrix metadata.
     ///
     /// - Parameters:
@@ -47,10 +50,13 @@ public struct StoredMatrixInfo: Sendable, Identifiable, Equatable {
     ///   - name: Short label for this matrix.
     ///   - description: Optional longer description.
     ///   - createdAt: When this matrix was stored (defaults to now).
-    public init(id: UUID = UUID(), name: String, description: String? = nil, createdAt: Date = Date()) {
+    ///   - spec: App-defined JSON saying what the matrix holds.
+    public init(id: UUID = UUID(), name: String, description: String? = nil, createdAt: Date = Date(),
+                spec: String? = nil) {
         self.id = id
         self.name = name
         self.description = description
         self.createdAt = createdAt
+        self.spec = spec
     }
 }

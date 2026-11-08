@@ -49,6 +49,7 @@ public struct RFigureChunk: Equatable, Sendable {
     ///   - xLabel: The x-axis title.
     ///   - yLabel: The y-axis title.
     ///   - notes: Remarks to keep with the code as comments.
+    ///   - extraLayers: ggplot2 layers to add after the form's own, such as a fitted line.
     /// - Returns: `nil` if the table doesn't bind the roles the form requires.
     public init?(title: String,
                  legend: String,
@@ -56,7 +57,8 @@ public struct RFigureChunk: Equatable, Sendable {
                  form: PlotForm,
                  xLabel: String,
                  yLabel: String,
-                 notes: [String] = []) {
+                 notes: [String] = [],
+                 extraLayers: [String] = []) {
         guard let yColumn = table.column(for: .y) else { return nil }
         let y = RLiteral.name(yColumn)
         let values = table.column(yColumn)
@@ -83,6 +85,7 @@ public struct RFigureChunk: Equatable, Sendable {
             mapping = "\(RLiteral.name(xColumn)), \(y)"
             layers = ["geom_point()"]
         }
+        layers += extraLayers
         layers.append("labs( x = \(RLiteral.quoted(xLabel)), y = \(RLiteral.quoted(yLabel)) )")
 
         anchor = Self.anchor(for: title)

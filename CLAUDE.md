@@ -46,6 +46,24 @@ travel between workstations, so they're repeated here.
   from a different subset of loci, so each graph needs its own list of SNP reference names, and a table rather than
   JSON lists at that scale. Expected shape: shared nodes, a `graphs` table, and `graph_schema_version` 2, with
   existing files migrating so their edges become graph 1. All apps keep using `ProjectStore`'s schemes.
+- **Matrices schema v2 (2026-11-08):** the `matrices` table gained a nullable `spec` TEXT column (app-defined JSON,
+  like a figure's `spec`); v1 files read with no spec and migrate in place when opened read-write — the first
+  component migration. **Distance matrices are computed, never stored** (the user's decision, 2026-11-08: 5,000
+  individuals compute in ~90 ms but are ~450 MB of JSON and take ~3 s to decode). `PopulationGenetics/Distance/`:
+  `DistanceSpec`, `DistanceAnalysis`, haversine with R = 6371 km and strata at the mean of their distinct coordinates,
+  both matching gstudio's `strata_distance()`/`strata_coordinates()` (`Fixtures/generate_distance_fixtures.R`).
+  Genetic measures (`DistanceSpec+Measure`, raw values = gstudio `genetic_distance()` modes, plus `phi_st`):
+  `amova`, `bray` among individuals (for Smouse & Peakall spatial autocorrelation); `nei`, `cavalli`, `dps`,
+  `euclidean`, `phi_st`, `cgd` among strata (`GeneticDistances`). Unlike gstudio (zero-fills missing genotypes),
+  each locus uses only units genotyped there, so the R parity fixtures use arapat's complete-data individuals.
+  Isolation by distance (`IBDSpec`/`IBDAnalysis`/`IBDResult`, 2026-11-08): genetic vs great-circle among the same
+  units, `MantelAnalysis` (vegan port; `run(options:observing:)` streams permutations), Rousset via
+  `IsolationByDistanceAnalysis`; saved as ONE figure (user's choice): form `scatter`, generator `ibd_analysis`, spec =
+  `IBDSpec` JSON with inputs *and* `result` (r, p, slope, intercept, r2, pairs); the page shows `IBDDisplay` (scatter
+  + table from `resultsTable`). Format in `FigureStorage.md`. The `matrices`
+  table holds only matrices that can't be rebuilt (e.g. from R); what gets saved is distance *analyses* (Mantel/IBD,
+  plots, trees), which name their matrices by `DistanceSpec`. Format: `PopulationGenetics.docc/MatrixStorage.md`;
+  gstudio doesn't read the table yet.
 - **`.graphs` files (2026-11-05):** `GraphsFile` is a `ProjectStore` file with the graph, results, log, matrices and
   rasters components and no genetic data, holding one graph. The pgraph app imports `.pgraph` and saves this format;
   the gstudio R package is to read and write it too. A graph's SNP names live in the `graph.loci` metadata key, read

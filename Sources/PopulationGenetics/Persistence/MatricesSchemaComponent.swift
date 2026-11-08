@@ -28,7 +28,11 @@ enum MatricesSchemaComponent {
 
     /// Bumped whenever the on-disk layout changes in a way that breaks
     /// existing readers.
-    static let currentSchemaVersion: Int32 = 1
+    ///
+    /// Version 2 (2026-11-08) added the `spec` column: app-defined JSON saying what a matrix holds (for GeneticStudio,
+    /// a `DistanceSpec`), as a figure's `spec` does. Version 1 files are read with no spec, and are migrated in place
+    /// when opened read-write.
+    static let currentSchemaVersion: Int32 = 2
 
     static let metaVersionKey = "matrices_schema_version"
     static let hasFlagKey = "has_matrices"
@@ -41,7 +45,8 @@ enum MatricesSchemaComponent {
             name        TEXT NOT NULL,
             description TEXT,
             created_at  TEXT NOT NULL,
-            data        BLOB NOT NULL
+            data        BLOB NOT NULL,
+            spec        TEXT
         )
         """,
     ]
@@ -76,14 +81,16 @@ enum MatricesSchemaComponent {
         return try stmt.step()
     }
 
-    /// Validates that this component's `meta` version row matches
+    /// Validates that this component's `meta` version row is one this code reads: 1 or
     /// `currentSchemaVersion`. Assumes the caller already confirmed presence.
     ///
     /// - Parameter connection: The open connection to inspect.
-    /// - Throws: ``PersistenceError/schemaVersionMismatch(found:expected:)`` for a different version,
+    /// - Returns: The file's version.
+    /// - Throws: ``PersistenceError/schemaVersionMismatch(found:expected:)`` for any other version,
     ///   ``PersistenceError/corruptData(_:)`` if the version row is missing or unreadable, or
     ///   ``PersistenceError/sqliteError(code:message:)`` if the query fails.
-    static func validateSchemaVersion(of connection: SQLiteConnection) throws {
+    @discardableResult
+    static func validateSchemaVersion(of connection: SQLiteConnection) throws -> Int32 {
         let stmt = try connection.prepare("SELECT value FROM meta WHERE key = ?")
         stmt.bind(metaVersionKey, at: 1)
         guard try stmt.step() else {
@@ -93,8 +100,24 @@ enum MatricesSchemaComponent {
         guard let found = Int32(valueString) else {
             throw PersistenceError.corruptData("invalid \(metaVersionKey) value: \(valueString)")
         }
-        guard found == currentSchemaVersion else {
+        guard (1...currentSchemaVersion).contains(found) else {
             throw PersistenceError.schemaVersionMismatch(found: found, expected: currentSchemaVersion)
         }
+        return found
+    }
+
+    /// Brings a version 1 table up to the current version by adding the `spec` column.
+    ///
+    /// - Parameters:
+    ///   - connection: The open, writable connection.
+    ///   - version: The file's version, from ``validateSchemaVersion(of:)``.
+    /// - Throws: ``PersistenceError/sqliteError(code:message:)`` if a statement fails.
+    static func migrate(_ connection: SQLiteConnection, from version: Int32) throws {
+        guard version < 2 else { return }
+        try connection.execute("ALTER TABLE matrices ADD COLUMN spec TEXT")
+        let stmt = try connection.prepare("UPDATE meta SET value = ? WHERE key = ?")
+        stmt.bind(String(currentSchemaVersion), at: 1)
+        stmt.bind(metaVersionKey, at: 2)
+        _ = try stmt.step()
     }
 }

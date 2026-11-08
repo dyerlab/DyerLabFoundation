@@ -48,6 +48,8 @@ public actor ProjectStore {
     /// Which components are present in the currently open file. Computed
     /// once at `create`/`open` time; fixed for the lifetime of a connection.
     private(set) var presentComponents: StoreComponents = []
+    /// Whether the `matrices` table has its `spec` column: false only for a version 1 file opened read-only.
+    private(set) var matricesHaveSpec = true
 
     /// Creates a store with no open connection. Call `create(at:overwrite:...)`,
     /// `open(at:mode:)`, or `openOrCreate(at:...)` before using it.
@@ -99,6 +101,7 @@ public actor ProjectStore {
         if components.contains(.figures) { try FiguresSchemaComponent.createSchema(in: newConnection) }
         connection = newConnection
         presentComponents = components
+        matricesHaveSpec = true
         mode = .readWrite
     }
 
@@ -132,7 +135,9 @@ public actor ProjectStore {
             found.insert(.log)
         }
         if try MatricesSchemaComponent.isPresent(in: newConnection) {
-            try MatricesSchemaComponent.validateSchemaVersion(of: newConnection)
+            let version = try MatricesSchemaComponent.validateSchemaVersion(of: newConnection)
+            if mode == .readWrite { try MatricesSchemaComponent.migrate(newConnection, from: version) }
+            matricesHaveSpec = mode == .readWrite || version >= 2
             found.insert(.matrices)
         }
         if try RastersSchemaComponent.isPresent(in: newConnection) {

@@ -116,7 +116,19 @@ public struct IsolationByDistanceAnalysis: Analysis {
     /// - Parameter options: Permutation count and seed (R's `set.seed()` value).
     /// - Returns: The outcome; never `nil`.
     public func run(options: AnalysisOptions) -> IsolationByDistanceOutcome? {
-        mantel.run(options: options).map {
+        run(options: options) { _, _ in true }
+    }
+
+    /// Runs the Mantel test, reporting each permuted correlation as it is drawn.
+    ///
+    /// - Parameters:
+    ///   - options: Permutation count and seed (R's `set.seed()` value).
+    ///   - observing: Called after each permutation with the number done and the permuted correlation; return
+    ///     `false` to stop.
+    /// - Returns: The outcome, or `nil` if `observing` stopped the test.
+    public func run(options: AnalysisOptions,
+                    observing: (_ done: Int, _ value: Double) -> Bool) -> IsolationByDistanceOutcome? {
+        mantel.run(options: options, observing: observing).map {
             IsolationByDistanceOutcome(mantel: $0, logSeparation: logSeparation,
                                        differentiationLabel: differentiationLabel,
                                        separationLabel: separationLabel)
