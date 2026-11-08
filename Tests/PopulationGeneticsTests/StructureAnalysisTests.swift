@@ -114,11 +114,29 @@ struct StructureAnalysisTests {
         }
     }
 
-    @Test func stoppingTheTestGivesNil() throws {
+    @Test func stoppingTheTestFinishesItWithThePermutationsDrawn() throws {
         let dataset = try ExampleDataset.arapatPopulations.load()
         let spec = StructureSpec(level: "Population", permutations: 999, seed: 1)
         let analysis = try #require(StructureAnalysis(spec: spec, dataset: dataset))
-        #expect(analysis.run { $0 < 5 } == nil)
+        let stopped = try #require(analysis.run { $0 < 5 })
+        #expect(stopped.spec.permutations == 5 && stopped.distribution?.values.count == 5)
+        // The first five permutations are those of a five-permutation test with the same seed.
+        var five = spec
+        five.permutations = 5
+        let planned = try #require(StructureAnalysis(spec: five, dataset: dataset)?.run())
+        #expect(stopped.pValue == planned.pValue && stopped.report.methods == planned.report.methods)
+    }
+
+    @Test func stoppingAByLocusTestFinishesItToo() throws {
+        let dataset = try ExampleDataset.arapatPopulations.load()
+        let spec = StructureSpec(table: .perLocus, level: "Population", permutations: 99, seed: 3)
+        let analysis = try #require(StructureAnalysis(spec: spec, dataset: dataset))
+        let stopped = try #require(analysis.run { done, _ in done < 7 })
+        var seven = spec
+        seven.permutations = 7
+        let planned = try #require(StructureAnalysis(spec: seven, dataset: dataset)?.run())
+        #expect(stopped.spec.permutations == 7)
+        #expect(stopped.locusRows.map(\.p) == planned.locusRows.map(\.p))
     }
 
     @Test func observingSeesEveryPermutedValue() throws {
@@ -133,7 +151,7 @@ struct StructureAnalysisTests {
         let plain = try #require(analysis.run())
         #expect(seen == observed.distribution?.values)
         #expect(observed.pValue == plain.pValue)
-        #expect(analysis.run { done, _ in done < 10 } == nil)
+        #expect(analysis.run { done, _ in done < 10 }?.distribution?.values.count == 10)
     }
 
     // MARK: - Paternal gametes

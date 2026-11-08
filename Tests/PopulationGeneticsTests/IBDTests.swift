@@ -93,6 +93,54 @@ struct IBDTests {
         expectMatches(try run(DistanceSpec(measure: .bray), logSeparation: false, fixture), fixture)
     }
 
+    // MARK: - Two genetic distances
+
+    @Test func aGeneticDistanceCanBeTestedAgainstAnother() throws {
+        let dataset = try DistanceFixtureData.completeArapat()
+        let spec = IBDSpec(genetic: DistanceSpec(measure: .nei, level: "Population"), against: .cavalli,
+                           permutations: 99, seed: 1)
+        let result = try #require(try IBDAnalysis(spec: spec, dataset: dataset).run())
+        #expect(!spec.isGeographic)
+        #expect(spec.formula == "\(DistanceSpec.Measure.nei.symbol) ~ \(DistanceSpec.Measure.cavalli.symbol) | Population")
+        #expect(!result.title.contains("Isolation by distance"))
+
+        // The x of each pair is the second matrix, and r is the Pearson correlation of the pairs.
+        let cavalli = try #require(DistanceAnalysis(spec: DistanceSpec(measure: .cavalli, level: "Population"),
+                                                    dataset: dataset)?.run())
+        let points = result.scatter.points
+        #expect(points.count == cavalli.heatmapData.pairValues.count)
+        let xs = points.map(\.x).sorted(), expected = cavalli.heatmapData.pairValues.sorted()
+        #expect(zip(xs, expected).allSatisfy { abs($0 - $1) <= 1e-9 })
+        #expect(abs(result.outcome.r - pearson(points.map(\.x), points.map(\.y))) <= 1e-9)
+        #expect(result.spec.result?.p != nil)
+    }
+
+    @Test func aMatrixIsNotTestedAgainstItself() {
+        #expect(throws: IBDAnalysis.Failure.sameMatrices) {
+            try IBDAnalysis(spec: IBDSpec(genetic: DistanceSpec(measure: .nei, level: "Population"), against: .nei),
+                            dataset: DistanceFixtureData.completeArapat())
+        }
+    }
+
+    @Test func whatASpecIsTestedAgainstSurvivesItsJSON() throws {
+        let spec = IBDSpec(genetic: DistanceSpec(measure: .nei, level: "Population"), against: .cgd)
+        let decoded = try JSONDecoder().decode(IBDSpec.self, from: Data(spec.json.utf8))
+        #expect(decoded == spec && decoded.against == .cgd)
+        // Specs written before other matrices could be tested have only great-circle separation.
+        let older = #"{"genetic":{"level":"Population","measure":"phi_st"},"logSeparation":true,"method":"pearson","#
+            + #""permutations":0,"transform":"rousset"}"#
+        #expect(try JSONDecoder().decode(IBDSpec.self, from: Data(older.utf8)).isGeographic)
+    }
+
+    /// The Pearson correlation of two equal-length series.
+    private func pearson(_ x: [Double], _ y: [Double]) -> Double {
+        let n = Double(x.count)
+        let mx = x.reduce(0, +) / n, my = y.reduce(0, +) / n
+        let sxy = zip(x, y).reduce(0) { $0 + ($1.0 - mx) * ($1.1 - my) }
+        let sxx = x.reduce(0) { $0 + ($1 - mx) * ($1 - mx) }, syy = y.reduce(0) { $0 + ($1 - my) * ($1 - my) }
+        return sxy / (sxx * syy).squareRoot()
+    }
+
     // MARK: - Failures
 
     @Test func sharedLocationsHaveNoLogarithm() throws {
@@ -106,12 +154,17 @@ struct IBDTests {
         }
     }
 
-    @Test func stoppingTheTestReturnsNothing() throws {
+    @Test func stoppingTheTestFinishesItWithThePermutationsDrawn() throws {
         let spec = IBDSpec(permutations: 99, seed: 1)
         let analysis = try IBDAnalysis(spec: spec, dataset: DistanceFixtureData.completeArapat())
         var seen = 0
-        #expect(analysis.run { done, _ in seen = done; return done < 10 } == nil)
+        let stopped = try #require(analysis.run { done, _ in seen = done; return done < 10 })
         #expect(seen == 10)
+        #expect(stopped.spec.permutations == 10 && stopped.outcome.distribution?.values.count == 10)
+        let planned = try #require(try IBDAnalysis(spec: IBDSpec(permutations: 10, seed: 1),
+                                                   dataset: DistanceFixtureData.completeArapat()).run())
+        #expect(stopped.spec.result?.p == planned.spec.result?.p)
+        #expect(stopped.report.methods == planned.report.methods)
     }
 
     // MARK: - Saving

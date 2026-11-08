@@ -34,10 +34,12 @@ extension ProjectStore {
         let connection = try requireConnection()
         try connection.beginTransaction()
         do {
+            try connection.execute(FiguresSchemaComponent.recordsStatement)
             try upsertRow(for: figure, connection: connection)
             try deleteChildren(of: figure.id, connection: connection)
             try insertColumns(of: figure, connection: connection)
             try insertImages(of: figure, connection: connection)
+            try insertRecord(of: figure, connection: connection)
             try setMetaFlag(FiguresSchemaComponent.hasFlagKey, to: true, connection: connection)
             try connection.commit()
         } catch {
@@ -56,9 +58,10 @@ extension ProjectStore {
         try requireComponent(.figures, "figures")
         let connection = try requireConnection()
         let stmt = try connection.prepare("\(Self.figureSelection) ORDER BY ordinal")
+        let hasRecords = try FiguresSchemaComponent.hasRecords(in: connection)
         var out: [StoredFigure] = []
         while try stmt.step() {
-            out.append(try makeFigure(stmt: stmt, connection: connection))
+            out.append(try makeFigure(stmt: stmt, hasRecords: hasRecords, connection: connection))
         }
         return out
     }
@@ -74,7 +77,8 @@ extension ProjectStore {
         let stmt = try connection.prepare("\(Self.figureSelection) WHERE upper(uuid) = ?")
         stmt.bind(id.uuidString, at: 1)
         guard try stmt.step() else { return nil }
-        return try makeFigure(stmt: stmt, connection: connection)
+        return try makeFigure(stmt: stmt, hasRecords: try FiguresSchemaComponent.hasRecords(in: connection),
+                              connection: connection)
     }
 
     /// Removes a figure and everything stored with it.
@@ -89,6 +93,7 @@ extension ProjectStore {
         let connection = try requireConnection()
         try connection.beginTransaction()
         do {
+            try connection.execute(FiguresSchemaComponent.recordsStatement)
             try deleteChildren(of: id, connection: connection)
             let stmt = try connection.prepare("DELETE FROM figures WHERE upper(uuid) = ?")
             stmt.bind(id.uuidString, at: 1)
@@ -135,7 +140,7 @@ extension ProjectStore {
     }
 
     private func deleteChildren(of id: UUID, connection: SQLiteConnection) throws {
-        for table in ["figure_columns", "figure_images"] {
+        for table in ["figure_columns", "figure_images", "figure_records"] {
             let stmt = try connection.prepare("DELETE FROM \(table) WHERE upper(figure_uuid) = ?")
             stmt.bind(id.uuidString, at: 1)
             _ = try stmt.step()
@@ -178,6 +183,24 @@ extension ProjectStore {
         }
     }
 
+    private func insertRecord(of figure: StoredFigure, connection: SQLiteConnection) throws {
+        guard let record = figure.record else { return }
+        let stmt = try connection.prepare("""
+            INSERT INTO figure_records (figure_uuid, methods, results, notes, analyst_notes, data_version,
+                                        data_modified_at, app_version)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """)
+        stmt.bind(figure.id.uuidString, at: 1)
+        stmt.bind(record.methods, at: 2)
+        stmt.bind(record.results, at: 3)
+        stmt.bind(String(decoding: try JSONEncoder().encode(record.notes), as: UTF8.self), at: 4)
+        stmt.bind(record.analystNotes, at: 5)
+        stmt.bindOptional(record.dataVersion, at: 6)
+        stmt.bindOptional(record.dataModifiedAt.map { ISO8601DateFormatter().string(from: $0) }, at: 7)
+        stmt.bindOptional(record.appVersion, at: 8)
+        _ = try stmt.step()
+    }
+
     // MARK: - Reading
 
     private static let figureSelection = """
@@ -185,7 +208,7 @@ extension ProjectStore {
         FROM figures
         """
 
-    private func makeFigure(stmt: Statement, connection: SQLiteConnection) throws -> StoredFigure {
+    private func makeFigure(stmt: Statement, hasRecords: Bool, connection: SQLiteConnection) throws -> StoredFigure {
         // R writes lowercase ids and Swift uppercase, so children are found in the file's own spelling.
         let storedID = stmt.columnText(at: 0)
         guard let id = UUID(uuidString: storedID) else {
@@ -214,7 +237,28 @@ extension ProjectStore {
                             rCode: stmt.columnIsNull(at: 10) ? nil : stmt.columnText(at: 10),
                             createdAt: createdAt,
                             columns: columns,
-                            images: try readImages(figure: storedID, connection: connection))
+                            images: try readImages(figure: storedID, connection: connection),
+                            record: hasRecords ? try readRecord(figure: storedID, connection: connection) : nil)
+    }
+
+    private func readRecord(figure: String, connection: SQLiteConnection) throws -> ResultRecord? {
+        let stmt = try connection.prepare("""
+            SELECT methods, results, notes, analyst_notes, data_version, data_modified_at, app_version
+            FROM figure_records WHERE figure_uuid = ?
+            """)
+        stmt.bind(figure, at: 1)
+        guard try stmt.step() else { return nil }
+        guard let notes = try? JSONDecoder().decode([String].self, from: Data(stmt.columnText(at: 2).utf8)) else {
+            throw PersistenceError.corruptData("unreadable notes in the record of figure \(figure)")
+        }
+        return ResultRecord(methods: stmt.columnText(at: 0),
+                            results: stmt.columnText(at: 1),
+                            notes: notes,
+                            analystNotes: stmt.columnText(at: 3),
+                            dataVersion: stmt.columnIsNull(at: 4) ? nil : stmt.columnText(at: 4),
+                            dataModifiedAt: stmt.columnIsNull(at: 5)
+                                ? nil : Self.parseFigureDate(stmt.columnText(at: 5)),
+                            appVersion: stmt.columnIsNull(at: 6) ? nil : stmt.columnText(at: 6))
     }
 
     private func readColumns(figure: String, connection: SQLiteConnection) throws -> [FigureColumn] {

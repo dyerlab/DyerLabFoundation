@@ -71,12 +71,13 @@ public extension StoredFigure {
 
     /// The figure with its values and R code recomputed, so what R reads matches the project's genotypes.
     ///
-    /// A plot that can no longer be drawn, such as one naming a deleted locus, keeps its last values.
+    /// A plot that can no longer be drawn, such as one naming a deleted locus, keeps its last values. A figure that
+    /// records its run (``record`` is set) is a frozen result and is never refreshed.
     ///
     /// - Parameter dataset: The current genotypes.
-    /// - Returns: The refreshed figure, or the figure unchanged if it isn't a diversity plot.
+    /// - Returns: The refreshed figure, or the figure unchanged if it isn't a diversity plot or is a frozen result.
     func refreshed(from dataset: ImportedDataset) -> StoredFigure {
-        guard let spec = diversitySpec else { return self }
+        guard record == nil, let spec = diversitySpec else { return self }
         var figure = self
         figure.storeValues(of: DiversityPlotData(spec: spec, dataset: dataset), spec: spec)
         return figure

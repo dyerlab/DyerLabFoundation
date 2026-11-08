@@ -64,10 +64,26 @@ Missing values are JSON `null`, including NaN and infinities. Dates are strings 
 | Column | Type | Meaning |
 | --- | --- | --- |
 | `figure_uuid` | TEXT | The figure |
-| `name` | TEXT | `thumbnail` for a list, `figure` for full resolution; other names are kept |
+| `name` | TEXT | `thumbnail` for a list, `figure` for full resolution, `null_distribution` for a tested result's permutation density; other names are kept |
 | `mime_type` | TEXT | Such as `image/png` |
 | `width`, `height` | INTEGER, nullable | Pixel size |
 | `data` | BLOB | The image's bytes |
+
+**`figure_records`**, optional, at most one row per figure: what a figure records about the analysis that made it,
+so it reads as a frozen result. Files written before the table existed lack it; it is additive, so its absence is
+valid and it doesn't change `figures_schema_version`. Readers that don't know it ignore it; a writer that removes a
+figure should remove its row too.
+
+| Column | Type | Meaning |
+| --- | --- | --- |
+| `figure_uuid` | TEXT, primary key | The figure |
+| `methods` | TEXT | The Methods text written when the analysis ran |
+| `results` | TEXT | The Results text written when the analysis ran |
+| `notes` | TEXT | The analysis's notes (units left out, warnings), as a JSON array of strings |
+| `analyst_notes` | TEXT | The analyst's own notes on the result; `''` if none |
+| `data_version` | TEXT, nullable | An opaque id of the data the analysis ran against, which the writing program changes with each edit to the data |
+| `data_modified_at` | TEXT, nullable | When that data version was made, in the `created_at` format |
+| `app_version` | TEXT, nullable | The version of the program that ran the analysis |
 
 ### Which columns each form needs
 

@@ -249,6 +249,6 @@ struct StructureFixtureTests {
         #expect(result.dataTable.columnNames == ["Locus", "N", "Alleles", "Hs", "Ht", "theta", "P_theta", "F_IS",
                                                  "Gst", "P_Gst", "Warning"])
         #expect(analysis.run()?.locusRows == result.locusRows)
-        #expect(analysis.run { done, _ in done < 3 } == nil)
+        #expect(analysis.run { done, _ in done < 3 }?.spec.permutations == 3)
     }
 }

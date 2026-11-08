@@ -15,6 +15,10 @@
 //  data rather than fixed at import, since editing a population name can
 //  change a population's size.
 //
+//  Nodes are the strata of one level, the innermost by default, so a project with nested strata (clusters within
+//  treatments) can draw its graph among either. Only adults are nodes' members: offspring share their mothers' alleles
+//  and would inflate the within-node variance the graph rests on.
+//
 //  Created by Rodney Dyer on 2026.10.24.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
@@ -50,13 +54,15 @@ public enum PopulationGraphBuilder {
         /// Whether there are enough eligible populations to estimate a graph.
         public var canEstimate: Bool { included.count >= PopulationGraphBuilder.minimumPopulationCount }
 
-        /// Sorts a dataset's populations by whether they are big enough.
+        /// Sorts a dataset's strata at one level by whether they are big enough.
         ///
-        /// - Parameter dataset: The genotypes, with strata.
-        public init(dataset: ImportedDataset) {
+        /// - Parameters:
+        ///   - dataset: The genotypes, with strata.
+        ///   - level: The strata level whose strata are nodes, or `nil` for the innermost.
+        public init(dataset: ImportedDataset, level: String? = nil) {
             var counts: [String: Int] = [:]
-            for ordinal in 0..<dataset.matrix.individualCount {
-                let name = dataset.populationName(at: ordinal)
+            for ordinal in dataset.adultOrdinals {
+                let name = PopulationGraphBuilder.name(at: ordinal, level: level, in: dataset)
                 guard !name.isEmpty else { continue }
                 counts[name, default: 0] += 1
             }
@@ -81,28 +87,34 @@ public enum PopulationGraphBuilder {
 
     // MARK: - Estimating
 
-    /// Estimates a population graph from the eligible populations.
+    /// Estimates a population graph among the eligible strata of one level.
     ///
-    /// Nodes are placed at their population's centroid, when it has coordinates.
+    /// Nodes are placed at their stratum's centroid, when it has coordinates.
     ///
-    /// - Parameter dataset: The genotypes, with strata and coordinates.
+    /// - Parameters:
+    ///   - dataset: The genotypes, with strata and coordinates.
+    ///   - level: The strata level whose strata are nodes, or `nil` for the innermost.
     /// - Returns: The graph, stamped with the dataset's fingerprint, or `nil` if
-    ///   there are too few eligible populations or the decomposition fails.
-    public static func estimate(from dataset: ImportedDataset) -> PopulationGraphDataset? {
-        let eligibility = Eligibility(dataset: dataset)
+    ///   there are too few eligible strata or the decomposition fails.
+    public static func estimate(from dataset: ImportedDataset, level: String? = nil) -> PopulationGraphDataset? {
+        let eligibility = Eligibility(dataset: dataset, level: level)
         guard eligibility.canEstimate else { return nil }
         let names = Set(eligibility.included.map(\.name))
-        let rows = (0..<dataset.matrix.individualCount).filter { names.contains(dataset.populationName(at: $0)) }
+        let rows = dataset.adultOrdinals.filter { names.contains(name(at: $0, level: level, in: dataset)) }
         let multivariate = dataset.matrix.multivariateMatrix()
         let x = multivariate.submatrix(rows, Array(0..<multivariate.cols))
-        let groups = rows.map { dataset.populationName(at: $0) }
+        let groups = rows.map { name(at: $0, level: level, in: dataset) }
         guard let graph = PopulationGraph(x: x, groups: groups) else { return nil }
 
-        let centroids = Dictionary(uniqueKeysWithValues: PopulationClusters(dataset: dataset).clusters
-            .map { ($0.name, $0.centroid) })
+        let centroids = centroids(in: dataset, level: level)
+        // Each node's lineage, from the outermost level down to its own.
         var lineages: [String: [StratumReference]] = [:]
-        for lineage in dataset.strata.values {
-            if let name = lineage.last?.name, lineages[name] == nil { lineages[name] = lineage }
+        for ordinal in rows {
+            let lineage = dataset.strata[dataset.matrix.individuals[ordinal].id] ?? []
+            guard let depth = level.map({ level in lineage.firstIndex { $0.level == level } })
+                ?? lineage.indices.last else { continue }
+            let name = lineage[depth].name
+            if lineages[name] == nil { lineages[name] = Array(lineage[...depth]) }
         }
         var nodeStrata: [UUID: [StratumReference]] = [:]
         for node in graph.nodes {
@@ -110,7 +122,7 @@ public enum PopulationGraphBuilder {
             nodeStrata[node.id] = lineages[node.name]
         }
         return PopulationGraphDataset(graph: graph, nodeStrata: nodeStrata,
-                                      graphValues: [fingerprintKey: fingerprint(of: dataset)],
+                                      graphValues: [fingerprintKey: fingerprint(of: dataset, level: level)],
                                       loci: dataset.matrix.loci)
     }
 
@@ -128,22 +140,24 @@ public enum PopulationGraphBuilder {
     ///   matches, or carries no fingerprint to compare.
     public static func isStale(_ graph: PopulationGraphDataset, for dataset: ImportedDataset) -> Bool {
         guard let stamped = graph.graphValues[fingerprintKey] else { return false }
-        return stamped != fingerprint(of: dataset)
+        return stamped != fingerprint(of: dataset, level: level(of: graph))
     }
 
-    /// A stable FNV-1a hash of every individual's population and genotypes,
+    /// A stable FNV-1a hash of every adult's stratum at one level and genotypes,
     /// truncated to 53 bits so it survives storage as a `Double`.
     ///
-    /// - Parameter dataset: The genotypes, with strata.
+    /// - Parameters:
+    ///   - dataset: The genotypes, with strata.
+    ///   - level: The strata level whose strata are nodes, or `nil` for the innermost.
     /// - Returns: The fingerprint.
-    public static func fingerprint(of dataset: ImportedDataset) -> Double {
+    public static func fingerprint(of dataset: ImportedDataset, level: String? = nil) -> Double {
         var hash: UInt64 = 0xcbf2_9ce4_8422_2325
         func mix(_ text: String) {
             for byte in text.utf8 { hash = (hash ^ UInt64(byte)) &* 0x100_0000_01b3 }
             hash = (hash ^ 0xff) &* 0x100_0000_01b3
         }
-        for ordinal in 0..<dataset.matrix.individualCount {
-            mix(dataset.populationName(at: ordinal))
+        for ordinal in dataset.adultOrdinals {
+            mix(name(at: ordinal, level: level, in: dataset))
             for locus in 0..<dataset.matrix.locusCount {
                 if let (left, right) = dataset.alleleLabels(at: ordinal, locus: locus) {
                     mix(left)
@@ -154,5 +168,64 @@ public enum PopulationGraphBuilder {
             }
         }
         return Double(hash >> 11)
+    }
+
+    // MARK: - Levels
+
+    /// The strata levels whose strata can be nodes, outermost first.
+    ///
+    /// - Parameter dataset: The genotypes, with strata.
+    /// - Returns: The levels the adults are assigned to.
+    public static func levels(in dataset: ImportedDataset) -> [String] {
+        var levels: [String] = []
+        for ordinal in dataset.adultOrdinals {
+            for reference in dataset.strata[dataset.matrix.individuals[ordinal].id] ?? []
+            where !levels.contains(reference.level) {
+                levels.append(reference.level)
+            }
+        }
+        return levels
+    }
+
+    /// The level whose strata are a graph's nodes, read from their lineages.
+    ///
+    /// - Parameter graph: A saved graph.
+    /// - Returns: The level, or `nil` if the nodes carry no lineage.
+    public static func level(of graph: PopulationGraphDataset) -> String? {
+        graph.nodeStrata.values.lazy.compactMap(\.last?.level).first
+    }
+
+    /// Each located stratum's centroid at one level, by name, from its adults.
+    ///
+    /// - Parameters:
+    ///   - dataset: The genotypes, with coordinates.
+    ///   - level: The strata level, or `nil` for the innermost.
+    /// - Returns: The centroids.
+    public static func centroids(in dataset: ImportedDataset,
+                                 level: String? = nil) -> [String: CLLocationCoordinate2D] {
+        var sums: [String: (latitude: Double, longitude: Double, count: Double)] = [:]
+        for ordinal in dataset.adultOrdinals {
+            let individual = dataset.matrix.individuals[ordinal]
+            let name = name(at: ordinal, level: level, in: dataset)
+            guard !name.isEmpty, let latitude = individual.latitude, let longitude = individual.longitude else {
+                continue
+            }
+            let sum = sums[name] ?? (0, 0, 0)
+            sums[name] = (sum.latitude + latitude, sum.longitude + longitude, sum.count + 1)
+        }
+        return sums.mapValues { CLLocationCoordinate2D(latitude: $0.latitude / $0.count,
+                                                       longitude: $0.longitude / $0.count) }
+    }
+
+    /// An individual's stratum at one level.
+    ///
+    /// - Parameters:
+    ///   - ordinal: The individual's row.
+    ///   - level: The level, or `nil` for the innermost.
+    ///   - dataset: The genotypes, with strata.
+    /// - Returns: The stratum's name, or `""` if the individual has none at that level.
+    static func name(at ordinal: Int, level: String?, in dataset: ImportedDataset) -> String {
+        guard let level else { return dataset.populationName(at: ordinal) }
+        return dataset.strata[dataset.matrix.individuals[ordinal].id]?.first { $0.level == level }?.name ?? ""
     }
 }

@@ -136,7 +136,8 @@ struct WeirCockerhamTests {
         #expect(first.tag == .weirCockerhamTheta && first.analysisType == .weirCockerham)
 
         var seen = 0
-        #expect(analysis.run(options: options) { done in seen = done; return done < 10 } == nil)
+        #expect(analysis.run(options: options) { done in seen = done; return done < 10 }?.distribution?.values.count
+                == 10)
         #expect(seen == 10)
     }
 

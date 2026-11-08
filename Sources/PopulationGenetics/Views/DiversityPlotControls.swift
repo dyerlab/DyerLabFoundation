@@ -32,8 +32,30 @@ public struct DiversityPlotControls: View {
     public let options: DiversityPlotOptions
     /// Whether the plot is being computed.
     public let isPlotting: Bool
-    /// Computes the plot, or `nil` for a page that plots as the controls change.
-    public let plot: (() -> Void)?
+    /// The page's action button (such as Plot or Run), or `nil` for none.
+    public let action: Action?
+
+    /// A button shown first in the controls.
+    public struct Action {
+        /// The button's title.
+        public let title: String
+        /// Its help text.
+        public let help: String
+        /// What it does.
+        public let perform: () -> Void
+
+        /// Creates the button.
+        ///
+        /// - Parameters:
+        ///   - title: The button's title.
+        ///   - help: Its help text.
+        ///   - perform: What it does.
+        public init(_ title: String, help: String, perform: @escaping () -> Void) {
+            self.title = title
+            self.help = help
+            self.perform = perform
+        }
+    }
 
     // MARK: - Initialization
 
@@ -42,14 +64,14 @@ public struct DiversityPlotControls: View {
     /// - Parameters:
     ///   - spec: The plot being defined.
     ///   - options: The choices the project's data offers.
-    ///   - isPlotting: Whether the plot is being computed (default `false`).
-    ///   - plot: Computes the plot, shown as a Plot button; `nil` (the default) for no button.
+    ///   - isPlotting: Whether the plot is being computed (default `false`), which disables the action.
+    ///   - action: The button shown first, with ⌘↩; `nil` (the default) for none.
     public init(spec: Binding<DiversityPlotSpec>, options: DiversityPlotOptions, isPlotting: Bool = false,
-                plot: (() -> Void)? = nil) {
+                action: Action? = nil) {
         _spec = spec
         self.options = options
         self.isPlotting = isPlotting
-        self.plot = plot
+        self.action = action
     }
 
     // MARK: - Body
@@ -75,11 +97,11 @@ public struct DiversityPlotControls: View {
 
     @ViewBuilder
     private var variables: some View {
-        if let plot {
-            Button("Plot", systemImage: "play.fill", action: plot)
+        if let action {
+            Button(action.title, systemImage: "play.fill", action: action.perform)
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.return, modifiers: .command)
-                .help("Draw the plot with these options (⌘↩)")
+                .help(action.help)
                 .disabled(isPlotting)
                 .fixedSize()
         }
@@ -152,7 +174,8 @@ public struct DiversityPlotControls: View {
 #Preview("Adult structure") {
     @Previewable @State var spec = DiversityPlotSpec()
     if let dataset = try? ExampleDataset.arapatPopulations.load() {
-        DiversityPlotControls(spec: $spec, options: DiversityPlotOptions(dataset: dataset), plot: {})
+        DiversityPlotControls(spec: $spec, options: DiversityPlotOptions(dataset: dataset),
+                              action: .init("Run", help: "File this plot as a result") {})
             .frame(width: 800)
     }
 }

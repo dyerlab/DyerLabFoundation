@@ -31,6 +31,8 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
     public static let thumbnailImageName = "thumbnail"
     /// The name of the full-resolution image, which is what an export prefers.
     public static let figureImageName = "figure"
+    /// The name of a tested result's null distribution picture: the permuted values' density and the observed value.
+    public static let nullDistributionImageName = "null_distribution"
 
     /// The figure's identity.
     public var id: UUID
@@ -60,6 +62,8 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
     public var columns: [FigureColumn]
     /// Pictures of the figure, named by ``thumbnailImageName`` and ``figureImageName``.
     public var images: [ResultImage]
+    /// What the figure records about the analysis that made it, or `nil` if it doesn't record one.
+    public var record: ResultRecord?
 
     /// Creates a figure.
     ///
@@ -78,6 +82,7 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
     ///   - createdAt: When the figure was made.
     ///   - columns: The values plotted.
     ///   - images: Pictures of the figure.
+    ///   - record: What the figure records about the analysis that made it.
     public init(id: UUID = UUID(),
                 title: String,
                 legend: String = "",
@@ -91,7 +96,8 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
                 rCode: String? = nil,
                 createdAt: Date = Date(),
                 columns: [FigureColumn] = [],
-                images: [ResultImage] = []) {
+                images: [ResultImage] = [],
+                record: ResultRecord? = nil) {
         self.id = id
         self.title = title
         self.legend = legend
@@ -106,6 +112,7 @@ public struct StoredFigure: Identifiable, Equatable, Sendable {
         self.createdAt = createdAt
         self.columns = columns
         self.images = images
+        self.record = record
     }
 
     /// The small image a figure list shows: the thumbnail, or else the full image.

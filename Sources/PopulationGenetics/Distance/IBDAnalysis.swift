@@ -38,6 +38,8 @@ public struct IBDAnalysis: Sendable {
         case sharedLocations
         /// Fewer than three pairs have a finite genetic distance.
         case tooFewPairs
+        /// The genetic distances would be tested against themselves.
+        case sameMatrices
 
         /// What went wrong, for an alert or an empty page.
         public var errorDescription: String? {
@@ -47,9 +49,11 @@ public struct IBDAnalysis: Sendable {
             case .tooFewLocatedUnits:
                 "Fewer than three units have both genotypes and coordinates."
             case .sharedLocations:
-                "Some units share a location, and a distance of 0 km has no logarithm. Turn off ln distance."
+                "Some pairs are at a distance of 0, which has no logarithm. Turn off ln distance."
             case .tooFewPairs:
                 "Fewer than three pairs have a finite genetic distance to test."
+            case .sameMatrices:
+                "A distance can't be tested against itself. Choose a different matrix to test against."
             }
         }
     }
@@ -81,8 +85,9 @@ public struct IBDAnalysis: Sendable {
     ///   - dataset: The genotypes, with their coordinates and strata.
     /// - Throws: A ``Failure`` saying why the data can't support the test.
     public init(spec: IBDSpec, dataset: ImportedDataset) throws(Failure) {
-        guard spec.genetic.measure.isGenetic,
-              let genetic = DistanceAnalysis(spec: spec.genetic, dataset: dataset)?.run() else {
+        guard spec.genetic.measure.isGenetic else { throw .noGeneticDistances }
+        guard spec.against != spec.genetic.measure else { throw .sameMatrices }
+        guard let genetic = DistanceAnalysis(spec: spec.genetic, dataset: dataset)?.run() else {
             throw .noGeneticDistances
         }
         guard let separation = DistanceAnalysis(spec: spec.separation, dataset: dataset)?.run() else {
@@ -111,7 +116,7 @@ public struct IBDAnalysis: Sendable {
                                                              separation: separationMatrix,
                                                              logSeparation: spec.logSeparation,
                                                              differentiationLabel: "Φ_ST",
-                                                             separationLabel: "great-circle distance (km)",
+                                                             separationLabel: spec.separationPhrase,
                                                              method: spec.method) else { throw .tooFewPairs }
             test = .rousset(analysis)
         case .none:
@@ -122,7 +127,7 @@ public struct IBDAnalysis: Sendable {
             guard var mantel = MantelAnalysis(response: response, predictor: predictor, names: names,
                                               method: spec.method) else { throw .tooFewPairs }
             mantel.responseLabel = spec.genetic.measure.title
-            mantel.predictorLabel = (spec.logSeparation ? "the natural log of " : "") + "great-circle distance (km)"
+            mantel.predictorLabel = (spec.logSeparation ? "the natural log of " : "") + spec.separationPhrase
             mantel.unitLabel = unitLabel
             test = .mantel(mantel)
         }
@@ -143,25 +148,32 @@ public struct IBDAnalysis: Sendable {
     ///
     /// - Parameter observing: Called after each permutation with the number done and the permuted correlation;
     ///   return `false` to stop.
-    /// - Returns: The result, or `nil` if `observing` stopped the test.
+    /// - Returns: The result; a test that `observing` stopped is finished with the permutations it drew, which its
+    ///   spec and report state.
     public func run(observing: (_ done: Int, _ value: Double) -> Bool = { _, _ in true }) -> IBDResult? {
         let options = AnalysisOptions(iterations: spec.isTested ? spec.permutations : 0, seed: spec.seed ?? 0)
+        var spec = spec
+        /// The options as the test finished: with the permutations drawn, if it stopped short.
+        func finished(_ outcome: MantelOutcome) -> AnalysisOptions {
+            guard let drawn = outcome.distribution?.values.count, drawn < options.iterations else { return options }
+            spec.permutations = drawn
+            return AnalysisOptions(iterations: drawn, seed: options.seed)
+        }
         let outcome: MantelOutcome
         let report: AnalysisReport
         switch test {
         case .rousset(let analysis):
             guard let ibd = analysis.run(options: options, observing: observing) else { return nil }
             outcome = ibd.mantel
-            report = analysis.report(for: ibd, options: options)
+            report = analysis.report(for: ibd, options: finished(outcome))
         case .mantel(let analysis):
             guard let mantel = analysis.run(options: options, observing: observing) else { return nil }
             outcome = mantel
-            report = analysis.report(for: mantel, options: options)
+            report = analysis.report(for: mantel, options: finished(outcome))
         }
         let x = outcome.points.map(\.x)
         let y = outcome.points.map(\.y)
         let pearson = pearsonCorrelation(x, y)
-        var spec = spec
         spec.result = IBDSpec.Summary(r: outcome.r, p: outcome.distribution?.pValue(),
                                       slope: outcome.line?.slope, intercept: outcome.line?.intercept,
                                       r2: pearson.isFinite ? pearson * pearson : nil, pairs: outcome.pairCount)

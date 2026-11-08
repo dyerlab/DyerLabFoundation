@@ -42,7 +42,7 @@ import Matrix
 public struct StructureAnalysis: Sendable {
 
     /// The parameters.
-    public let spec: StructureSpec
+    public private(set) var spec: StructureSpec
 
     /// The decisions made about the data before the analysis itself.
     public let notes: [AnalysisNote]
@@ -153,7 +153,7 @@ public struct StructureAnalysis: Sendable {
     /// Runs the analysis and its test, if the spec asks for one.
     ///
     /// - Parameter progress: Called after each permutation with the number done; return `false` to stop.
-    /// - Returns: The table and report, or `nil` if `progress` stopped the test.
+    /// - Returns: The table and report; a test that `progress` stopped is finished with the permutations it drew.
     public func run(progress: (Int) -> Bool = { _ in true }) -> StructureResult? {
         run(observing: { done, _ in progress(done) })
     }
@@ -163,7 +163,8 @@ public struct StructureAnalysis: Sendable {
     ///
     /// - Parameter observing: Called after each permutation with the number done and its statistic; return
     ///   `false` to stop.
-    /// - Returns: The table and report, or `nil` if `observing` stopped the test.
+    /// - Returns: The table and report; a test that `observing` stopped is finished with the permutations it drew,
+    ///   which its spec, P and report state.
     public func run(observing: (_ done: Int, _ value: Double) -> Bool) -> StructureResult? {
         switch spec.table {
         case .amova: varianceComponents(observing: observing)
@@ -191,12 +192,24 @@ public struct StructureAnalysis: Sendable {
                                               seed: options.seed, tag: tag, observing: observing) { labels in
                 evaluate(labels, workspace: &workspace).total?.parts(statistic)?.amongShare ?? .nan
             }
-            guard null != nil else { return nil }
         }
+        // A stopped test is finished with the permutations it drew, and says so.
+        let finished = stopped(after: null?.values.count)
         let p = null?.pValue(direction: .greaterOrEqual)
-        let rows = tableRows(parts, p: p)
-        return StructureResult(spec: spec, rows: rows, statistic: parts.amongShare, pValue: p,
-                               report: report(rows: rows, parts: parts, p: p), distribution: null)
+        let rows = finished.tableRows(parts, p: p)
+        return StructureResult(spec: finished.spec, rows: rows, statistic: parts.amongShare, pValue: p,
+                               report: finished.report(rows: rows, parts: parts, p: p), distribution: null)
+    }
+
+    /// This analysis as it finished: with the permutations drawn, if a test stopped short of its count.
+    ///
+    /// - Parameter drawn: The permutations drawn, or `nil` if there was no test.
+    /// - Returns: The analysis with `drawn` permutations, or unchanged if the test drew them all.
+    private func stopped(after drawn: Int?) -> StructureAnalysis {
+        guard let drawn, drawn < spec.permutations else { return self }
+        var finished = self
+        finished.spec.permutations = drawn
+        return finished
     }
 
     /// A variance-components table's rows.
@@ -260,10 +273,11 @@ public struct StructureAnalysis: Sendable {
                 for (i, value) in cells(evaluation).enumerated() where value >= target[i] { extreme[i] += 1 }
                 let value = evaluation.total?.value(followed) ?? .nan
                 values.append(value)
-                guard observing(iteration + 1, value) else { return nil }
+                guard observing(iteration + 1, value) else { break }
             }
+            // A stopped test is finished with the permutations it drew.
             p = zip(target, extreme).map { observed, count in
-                observed.isFinite ? Double(count + 1) / Double(spec.permutations + 1) : nil
+                observed.isFinite ? Double(count + 1) / Double(values.count + 1) : nil
             }
             null = NullDistributionResult(analysisType: tag, observed: total.value(followed), values: values,
                                           seed: options.seed)
@@ -313,9 +327,10 @@ public struct StructureAnalysis: Sendable {
         let followed = tested.first ?? columns.first
         let statistic = followed.map { Self.finite(total.value($0)) } ?? nil
         let followedP = multilocus ? rows.last?.p.first ?? nil : rows.first?.p.first ?? nil
-        return StructureResult(spec: spec, locusRows: rows, statistic: statistic, pValue: followedP,
+        let finished = stopped(after: null?.values.count)
+        return StructureResult(spec: finished.spec, locusRows: rows, statistic: statistic, pValue: followedP,
                                warnings: warnings,
-                               report: report(rows: rows, warnings: warnings), distribution: null)
+                               report: finished.report(rows: rows, warnings: warnings), distribution: null)
     }
 
     /// A value, or `nil` if it isn't finite.

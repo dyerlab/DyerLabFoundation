@@ -78,6 +78,9 @@ public struct IBDSpec: Codable, Hashable, Sendable {
 
     /// The genetic distances.
     public var genetic: DistanceSpec
+    /// What the genetic distances are tested against, at the same level: great-circle distance by default, or
+    /// another genetic distance for a Mantel test between two genetic matrices.
+    public var against: DistanceSpec.Measure
     /// How the genetic distances are transformed.
     public var transform: Transform
     /// Whether separation is log-transformed, as Rousset expects for a two-dimensional habitat.
@@ -101,6 +104,7 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     ///
     /// - Parameters:
     ///   - genetic: The genetic distances (default pairwise Φ_ST among `Population`).
+    ///   - against: What they are tested against (default great-circle distance).
     ///   - transform: Their transform (default Rousset's for Φ_ST, otherwise none).
     ///   - logSeparation: Whether separation is log-transformed (default `false`).
     ///   - method: The correlation (default Pearson).
@@ -108,6 +112,7 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     ///   - seed: The permutations' seed.
     ///   - result: What the test found.
     public init(genetic: DistanceSpec = DistanceSpec(measure: .phiST, level: "Population"),
+                against: DistanceSpec.Measure = .greatCircle,
                 transform: Transform? = nil,
                 logSeparation: Bool = false,
                 method: CorrelationMethod = .pearson,
@@ -115,6 +120,7 @@ public struct IBDSpec: Codable, Hashable, Sendable {
                 seed: UInt64? = nil,
                 result: Summary? = nil) {
         self.genetic = genetic
+        self.against = against
         self.transform = transform ?? (genetic.measure == .phiST ? .rousset : .none)
         self.logSeparation = logSeparation
         self.method = method
@@ -123,13 +129,15 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         self.result = result
     }
 
-    /// Decodes a spec; `separation` is written for readers such as R and follows from `genetic`.
+    /// Decodes a spec; `separation` names what the genetic distances were tested against, great-circle distance
+    /// for specs written before other matrices could be.
     ///
     /// - Parameter decoder: The decoder to read from.
     /// - Throws: A `DecodingError` when a field is missing or unknown.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         genetic = try container.decode(DistanceSpec.self, forKey: .genetic)
+        against = try container.decodeIfPresent(DistanceSpec.self, forKey: .separation)?.measure ?? .greatCircle
         transform = try container.decode(Transform.self, forKey: .transform)
         logSeparation = try container.decode(Bool.self, forKey: .logSeparation)
         method = try container.decode(CorrelationMethod.self, forKey: .method)
@@ -156,10 +164,13 @@ public struct IBDSpec: Codable, Hashable, Sendable {
 
     // MARK: - Contents
 
-    /// The separation the genetic distances are tested against: great-circle distance among the same units.
+    /// The matrix the genetic distances are tested against, among the same units.
     public var separation: DistanceSpec {
-        DistanceSpec(measure: .greatCircle, level: genetic.level)
+        DistanceSpec(measure: against, level: genetic.level)
     }
+
+    /// Whether the genetic distances are tested against geographic distance, which is isolation by distance.
+    public var isGeographic: Bool { against == .greatCircle }
 
     /// The spec's JSON, with sorted keys, as a figure's `spec` stores it.
     public var json: String {
@@ -195,9 +206,22 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         }
     }
 
-    /// The separation axis's title, such as "ln great-circle distance (km)".
+    /// The separation axis's title, such as "ln great-circle distance (km)" or "Nei's distance".
     public var separationLabel: String {
-        (logSeparation ? "ln great-circle distance" : "Great-circle distance") + " (km)"
+        guard isGeographic else { return (logSeparation ? "ln " : "") + against.title }
+        return (logSeparation ? "ln great-circle distance" : "Great-circle distance") + " (km)"
+    }
+
+    /// The separation as prose, such as "great-circle distance (km)", for Methods text.
+    public var separationPhrase: String {
+        isGeographic ? "great-circle distance (km)" : against.title
+    }
+
+    /// The analysis as a formula, such as `Φ_ST/(1−Φ_ST) ~ ln km | Population` or `Nei ~ cGD | Population`.
+    public var formula: String {
+        let response = validTransform == .rousset ? "Φ_ST/(1−Φ_ST)" : genetic.measure.symbol
+        let predictor = (logSeparation ? "ln " : "") + (isGeographic ? "km" : against.symbol)
+        return "\(response) ~ \(predictor) | \(genetic.level)"
     }
 
     /// The analysis's title, such as "Isolation by distance among Population".
@@ -205,6 +229,8 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     /// - Parameter isParentOffspring: Whether the adults are the mothers of parent/offspring data.
     /// - Returns: The title.
     public func title(isParentOffspring: Bool) -> String {
-        "Isolation by distance among \(genetic.unitName(isParentOffspring: isParentOffspring))"
+        let units = genetic.unitName(isParentOffspring: isParentOffspring)
+        return isGeographic ? "Isolation by distance among \(units)"
+                            : "\(genetic.measure.title) against \(against.title) among \(units)"
     }
 }

@@ -10,8 +10,8 @@
 //  IBDDisplay.swift
 //  PopulationGenetics
 //
-//  An isolation-by-distance analysis as the Distance page shows it: the
-//  scatter of pairs with its regression line, and beside it the Mantel
+//  An isolation-by-distance analysis as the Isolation page shows it: the
+//  scatter of pairs with its regression line, and below it the Mantel
 //  table, its caption and whatever the page adds below (the permutation
 //  test's null distribution). The same view draws a fresh result and a saved
 //  one, so what is saved is what was seen.
@@ -24,11 +24,12 @@ import Matrix
 import PresentationZen
 import SwiftUI
 
-/// The scatter and results table of an isolation-by-distance analysis.
+/// The scatter, results table and anything below them (such as the null distribution) of an isolation-by-distance
+/// analysis, stacked in one scrolling column.
 public struct IBDDisplay<Accessory: View>: View {
 
-    /// The width of the results column.
-    private static var tableWidth: Double { 340 }
+    /// The height of the scatter, tall enough to read its pairs without crowding out the table below.
+    private static var scatterHeight: Double { 380 }
 
     /// The pairs and regression line.
     public let scatter: PairwiseScatter
@@ -64,22 +65,17 @@ public struct IBDDisplay<Accessory: View>: View {
 
     /// The display.
     public var body: some View {
-        HStack(alignment: .top, spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 20) {
                 Text(title).font(.headline)
                 PairwiseScatterPlot(scatter)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 20) {
-                    if let table {
-                        TabularOutputView(table, caption: caption, decimals: 4)
-                    }
-                    accessory
+                    .frame(height: Self.scatterHeight)
+                if let table {
+                    TabularOutputView(table, caption: caption, decimals: 4)
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                accessory
             }
-            .frame(width: Self.tableWidth)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
     }
 }
@@ -110,6 +106,6 @@ public extension IBDDisplay where Accessory == EmptyView {
             }
         }
         .padding()
-        .frame(width: 1000, height: 520)
+        .frame(width: 800, height: 900)
     }
 }

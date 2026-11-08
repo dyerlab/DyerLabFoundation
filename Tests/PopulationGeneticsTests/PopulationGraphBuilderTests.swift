@@ -82,4 +82,30 @@ struct PopulationGraphBuilderTests {
         #expect(!dataset.hasPopulations)
         #expect(try exampleDataset().hasPopulations)
     }
+
+    // MARK: - Levels
+
+    @Test func nodesCanBeTheStrataOfAnyLevel() throws {
+        let dataset = try ExampleDataset.arapatPopulations.load()
+        #expect(PopulationGraphBuilder.levels(in: dataset) == ["Species", "Cluster", "Population"])
+        let innermost = try #require(PopulationGraphBuilder.estimate(from: dataset))
+        #expect(PopulationGraphBuilder.level(of: innermost) == "Population")
+
+        let clusters = PopulationGraphBuilder.Eligibility(dataset: dataset, level: "Cluster")
+        let graph = try #require(PopulationGraphBuilder.estimate(from: dataset, level: "Cluster"))
+        #expect(graph.graph.nodes.count == clusters.included.count)
+        #expect(graph.graph.nodes.count < innermost.graph.nodes.count)
+        #expect(PopulationGraphBuilder.level(of: graph) == "Cluster")
+        #expect(graph.nodeStrata.values.allSatisfy { $0.map(\.level) == ["Species", "Cluster"] })
+        #expect(graph.graph.nodes.allSatisfy { $0.latitude != nil && $0.longitude != nil })
+        #expect(!PopulationGraphBuilder.isStale(graph, for: dataset))
+    }
+
+    @Test func onlyAdultsAreNodesMembers() throws {
+        let dataset = try ExampleDataset.cornusFamilies.load()
+        let adults = Set(dataset.adultOrdinals)
+        let counted = PopulationGraphBuilder.Eligibility(dataset: dataset)
+        let total = (counted.included + counted.excluded).map(\.count).reduce(0, +)
+        #expect(total <= adults.count && adults.count < dataset.matrix.individualCount)
+    }
 }

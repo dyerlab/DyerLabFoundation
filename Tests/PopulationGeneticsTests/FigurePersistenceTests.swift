@@ -123,6 +123,30 @@ struct FigurePersistenceTests {
         }
     }
 
+    @Test func aResultsRecordSurvivesASnapshotAndARewrite() async throws {
+        var figure = Self.figure
+        figure.record = ResultRecord(methods: "Methods text.", results: "Results text.", notes: ["Left out: Pop09."],
+                                     analystNotes: "Check Pop09.", dataVersion: "v1",
+                                     dataModifiedAt: Date(timeIntervalSince1970: 1_700_000_100), appVersion: "1.0")
+        let plain = StoredFigure(title: "No record", createdAt: Date(timeIntervalSince1970: 0))
+        try await withFile { url in
+            try await ProjectStore.saveSnapshot(figures: [figure, plain], projectName: "p", to: url)
+            let loaded = try await ProjectStore.loadSnapshot(from: url).figures
+            #expect(loaded == [figure, plain])
+
+            let store = ProjectStore()
+            try await store.open(at: url, mode: .readWrite)
+            figure.record?.analystNotes = "Rechecked."
+            try await store.writeFigure(figure)
+            #expect(try await store.figure(id: figure.id)?.record?.analystNotes == "Rechecked.")
+            try await store.removeFigure(id: figure.id)
+            figure.record = nil
+            try await store.writeFigure(figure)
+            #expect(try await store.figures().allSatisfy { $0.record == nil })
+            await store.close()
+        }
+    }
+
     @Test func columnsOfDifferentLengthsAreRejected() async throws {
         try await withFile { url in
             let store = ProjectStore()
@@ -179,6 +203,14 @@ struct FigurePersistenceTests {
         let refreshed = figure.refreshed(from: dataset)
         #expect(refreshed.columns.last?.values == .numbers([0.46875, 0.5]))
         #expect(refreshed.images == figure.images)
+    }
+
+    @Test func aFrozenResultIsNeverRefreshed() throws {
+        let dataset = try GenotypeTableLayout(csv: Self.csv).importTable(csv: Self.csv)
+        let spec = DiversityPlotSpec(response: .He, predictor: .locus)
+        var figure = try StoredFigure(title: "t", legend: "", source: "s", spec: spec, data: nil, thumbnail: Data([9]))
+        figure.record = ResultRecord(methods: "Plotted He by locus.")
+        #expect(figure.refreshed(from: dataset) == figure)
     }
 
     @Test func aPlotThatCantBeDrawnKeepsItsLastValues() throws {

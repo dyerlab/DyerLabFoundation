@@ -122,8 +122,9 @@ public struct MantelAnalysis: Analysis {
     /// - Parameters:
     ///   - options: Permutation count and seed (R's `set.seed()` value).
     ///   - observing: Called after each permutation with the number done and the permuted correlation; return
-    ///     `false` to stop.
-    /// - Returns: The statistic and its null distribution, or `nil` if `observing` stopped the test.
+    ///     `false` to stop, which finishes the test with the permutations drawn so far.
+    /// - Returns: The statistic and its null distribution (of fewer values than asked if `observing` stopped the
+    ///   test).
     public func run(options: AnalysisOptions, observing: (_ done: Int, _ value: Double) -> Bool) -> MantelOutcome? {
         let y = pairs.map { response[$0.0][$0.1] }
         let x = pairs.map { predictor[$0.0][$0.1] }
@@ -138,7 +139,7 @@ public struct MantelAnalysis: Analysis {
                 let order = rng.sampleIndicesNoReplacement(n: response.count)     // R: sample.int(n)
                 let value = method.correlation(pairs.map { predictor[order[$0.0]][order[$0.1]] }, y)
                 values.append(value)
-                guard observing(done, value) else { return nil }
+                guard observing(done, value) else { break }
             }
             distribution = NullDistributionResult(analysisType: tag, observed: observed,
                                                   values: values, seed: options.seed)

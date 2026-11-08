@@ -72,7 +72,7 @@ public extension StructureSpec {
                     + "strata and within individuals, giving θ with F_IS and F_IT."
             case .phiGametes:
                 "An AMOVA of the paternal gametes left once each mother's contribution is removed (2Gener; Smouse "
-                    + "et al. 2001)."
+                    + "et al. 2001), giving Φ_ST among the pollen pools of maternal families (their Φ_FT)."
             }
         }
 

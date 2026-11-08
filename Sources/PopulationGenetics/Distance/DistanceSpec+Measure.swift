@@ -64,6 +64,21 @@ public extension DistanceSpec {
             }
         }
 
+        /// The measure's short name in a formula, such as `Φ_ST`, `cGD` or `km`.
+        public var symbol: String {
+            switch self {
+            case .greatCircle: "km"
+            case .amova: "AMOVA"
+            case .bray: "Bray"
+            case .nei: "Nei"
+            case .cavalli: "Dch"
+            case .dps: "Dps"
+            case .euclidean: "Euclidean"
+            case .phiST: "Φ_ST"
+            case .cgd: "cGD"
+            }
+        }
+
         /// The units of the distances, or `nil` for a genetic distance, which has none.
         public var units: String? {
             self == .greatCircle ? "km" : nil

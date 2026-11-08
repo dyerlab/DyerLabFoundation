@@ -74,7 +74,35 @@ enum FiguresSchemaComponent {
             PRIMARY KEY (figure_uuid, name)
         )
         """,
+        recordsStatement,
     ]
+
+    /// Creates the `figure_records` table, which files written before it existed lack; it is optional and additive,
+    /// so it doesn't change the schema version.
+    static let recordsStatement = """
+        CREATE TABLE IF NOT EXISTS figure_records (
+            figure_uuid      TEXT PRIMARY KEY REFERENCES figures(uuid),
+            methods          TEXT NOT NULL DEFAULT '',
+            results          TEXT NOT NULL DEFAULT '',
+            notes            TEXT NOT NULL DEFAULT '[]',
+            analyst_notes    TEXT NOT NULL DEFAULT '',
+            data_version     TEXT,
+            data_modified_at TEXT,
+            app_version      TEXT
+        )
+        """
+
+    /// Whether the open file has a `figure_records` table.
+    ///
+    /// - Parameter connection: The open connection to inspect.
+    /// - Returns: `true` if the table exists.
+    /// - Throws: ``PersistenceError/sqliteError(code:message:)`` if the query fails.
+    static func hasRecords(in connection: SQLiteConnection) throws -> Bool {
+        let stmt = try connection.prepare("""
+            SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'figure_records'
+            """)
+        return try stmt.step()
+    }
 
     /// Creates this component's tables and records its version and `has_figures` flag in `meta`.
     ///

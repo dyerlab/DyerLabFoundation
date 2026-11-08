@@ -45,8 +45,12 @@ public struct StructureControls: View {
     public let estimate: () -> Void
     /// Starts a test.
     public let test: () -> Void
-    /// Stops the running test.
+    /// Stops the running test, which finishes it with the permutations drawn so far.
     public let cancel: () -> Void
+    /// Whether the page shows a table that can be saved.
+    public let canSave: Bool
+    /// Files the table as a result, or `nil` for no Save button.
+    public let save: (() -> Void)?
 
     // MARK: - Initialization
 
@@ -61,7 +65,9 @@ public struct StructureControls: View {
     ///   - canTest: Whether the page shows an estimate the test can start from.
     ///   - estimate: Estimates the table.
     ///   - test: Starts a test.
-    ///   - cancel: Stops the running test.
+    ///   - cancel: Stops the running test, which finishes it with the permutations drawn so far.
+    ///   - canSave: Whether the page shows a table that can be saved (default `false`).
+    ///   - save: Files the table as a result, shown as a Save button; `nil` (the default) for none.
     public init(spec: Binding<StructureSpec>,
                 options: StructureOptions,
                 permutations: Binding<Int>,
@@ -70,7 +76,9 @@ public struct StructureControls: View {
                 canTest: Bool,
                 estimate: @escaping () -> Void,
                 test: @escaping () -> Void,
-                cancel: @escaping () -> Void) {
+                cancel: @escaping () -> Void,
+                canSave: Bool = false,
+                save: (() -> Void)? = nil) {
         _spec = spec
         self.options = options
         _permutations = permutations
@@ -80,6 +88,8 @@ public struct StructureControls: View {
         self.estimate = estimate
         self.test = test
         self.cancel = cancel
+        self.canSave = canSave
+        self.save = save
     }
 
     // MARK: - Body
@@ -181,7 +191,8 @@ public struct StructureControls: View {
             ProgressView().controlSize(.small)
         }
         if isTesting {
-            Button("Cancel Test", systemImage: "stop.circle", role: .cancel, action: cancel)
+            Button("Stop Test", systemImage: "stop.circle", role: .cancel, action: cancel)
+                .help("Stop permuting and finish the test with the permutations drawn so far")
                 .fixedSize()
         } else {
             Button(spec.isTested ? "Test Again" : "Test Significance", systemImage: "dice", action: test)
@@ -195,6 +206,13 @@ public struct StructureControls: View {
         }
         .fixedSize()
         .disabled(isTesting)
+        if let save {
+            Button("Save", systemImage: "square.and.arrow.down", action: save)
+                .keyboardShortcut("s", modifiers: [.command, .option])
+                .help("File this table as a result under Structure (⌥⌘S)")
+                .disabled(!canSave)
+                .fixedSize()
+        }
     }
 
     // MARK: - Description

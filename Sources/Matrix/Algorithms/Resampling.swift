@@ -69,9 +69,10 @@ public enum Resampling {
     ///   - iterations: Number of permutations.
     ///   - seed: PRNG seed, for reproducibility.
     ///   - tag: Which analysis this is, for the result's `analysisType`.
-    ///   - progress: Called after each permutation with the number done; return `false` to stop.
+    ///   - progress: Called after each permutation with the number done; return `false` to stop, which finishes
+    ///     the test with the permutations drawn so far.
     ///   - statistic: Computes the statistic of interest for a given labeling.
-    /// - Returns: The observed statistic plus the permuted null distribution, or `nil` if `progress` stopped it.
+    /// - Returns: The observed statistic plus the permuted null distribution (of fewer values if stopped).
     public static func permutationTest<Label>(
         labels: [Label],
         iterations: Int,
@@ -96,9 +97,10 @@ public enum Resampling {
     ///   - seed: PRNG seed, for reproducibility.
     ///   - tag: Which analysis this is, for the result's `analysisType`.
     ///   - observing: Called after each permutation with the number done and its statistic; return `false` to
-    ///     stop.
+    ///     stop, which finishes the test with the permutations drawn so far.
     ///   - statistic: Computes the statistic of interest for a given labeling.
-    /// - Returns: The observed statistic plus the permuted null distribution, or `nil` if `observing` stopped it.
+    /// - Returns: The observed statistic plus the permuted null distribution, of `iterations` values, or of fewer if
+    ///   `observing` stopped the test.
     public static func permutationTest<Label>(
         labels: [Label],
         iterations: Int,
@@ -106,7 +108,7 @@ public enum Resampling {
         tag: AnalysisTag,
         observing: (_ done: Int, _ value: Double) -> Bool,
         statistic: ([Label]) -> Double
-    ) -> NullDistributionResult? {
+    ) -> NullDistributionResult {
         let observed = statistic(labels)
         var rng = SplitMix64(seed: seed)
         var shuffled = labels
@@ -116,7 +118,7 @@ public enum Resampling {
             shuffled.shuffle(using: &rng)
             let value = statistic(shuffled)
             values.append(value)
-            guard observing(iteration + 1, value) else { return nil }
+            guard observing(iteration + 1, value) else { break }
         }
         return NullDistributionResult(analysisType: tag, observed: observed, values: values, seed: seed)
     }

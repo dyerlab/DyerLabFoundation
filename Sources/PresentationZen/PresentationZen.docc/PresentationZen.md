@@ -33,6 +33,7 @@ this target.
 ### Stored figures
 
 - ``StoredFigure`` / ``FigureColumn`` / ``FigureGenerator`` — a figure kept in a project file by any program: values, how they're drawn, R code and pictures. It exports like a `DataPlot`, from whatever it holds. PopulationGenetics stores them.
+- ``ResultRecord`` — what a figure records about the analysis that made it (log text, analyst notes, data version), so it reads as a frozen result.
 - ``StoredFigureView`` / ``FigureRow`` / ``FigureList`` / ``FigureTextEditor`` — showing a figure, listing a project's figures, and editing a figure's text.
 
 ### Platform-neutral types

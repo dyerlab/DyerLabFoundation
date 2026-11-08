@@ -10,7 +10,7 @@
 //  DistanceDisplay.swift
 //  PopulationGenetics
 //
-//  The top of the Distance page: the matrix as a heatmap and, beside it, the
+//  The matrix as a heatmap and, below it, the
 //  distribution of its pairwise values with a few summary numbers. It draws
 //  any matrix, so a stored one written from R shows the same way, without
 //  units.
@@ -23,7 +23,7 @@ import Matrix
 import PresentationZen
 import SwiftUI
 
-/// A matrix's heatmap beside the histogram of its pairwise values.
+/// A matrix's heatmap above the histogram of its pairwise values.
 public struct DistanceDisplay: View {
     /// The matrix.
     public let data: MatrixHeatmapData
@@ -45,22 +45,21 @@ public struct DistanceDisplay: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
-            HStack(alignment: .top, spacing: 24) {
-                MatrixHeatmap(data)
-                    .layoutPriority(1)
-                distribution
-                    .frame(minWidth: 240, idealWidth: 320, maxWidth: 380)
-            }
+            MatrixHeatmap(data)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .layoutPriority(1)
+            distribution
         }
     }
 
     private var distribution: some View {
         let values = data.pairValues
         let label = "Distance" + (data.units.map { " (\($0))" } ?? "")
-        return VStack(alignment: .leading, spacing: 12) {
+        return HStack(alignment: .top, spacing: 24) {
             Histogram(DataTable(numbers: [label: values], roles: [.y: label]), bins: 30, xLabel: label,
                       style: .binned)
-                .frame(height: 220)
+                .frame(maxWidth: .infinity)
+                .frame(height: 240)
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
                 summaryRow("Pairs", values.count.formatted())
                 summaryRow("Minimum", format(values.min()))
@@ -92,7 +91,7 @@ public struct DistanceDisplay: View {
        let result = DistanceAnalysis(spec: DistanceSpec(level: "Population"), dataset: dataset)?.run() {
         DistanceDisplay(result.heatmapData, title: result.name)
             .padding()
-            .frame(width: 1000, height: 560)
+            .frame(width: 900, height: 900)
     }
 }
 
@@ -101,6 +100,6 @@ public struct DistanceDisplay: View {
        let result = DistanceAnalysis(spec: DistanceSpec(), dataset: dataset)?.run() {
         DistanceDisplay(result.heatmapData, title: result.name)
             .padding()
-            .frame(width: 1000, height: 560)
+            .frame(width: 900, height: 900)
     }
 }

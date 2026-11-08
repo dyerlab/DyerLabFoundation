@@ -83,7 +83,7 @@ public struct VarianceDecompositionAnalysis: Analysis {
     /// - Parameters:
     ///   - options: Permutation count and seed.
     ///   - progress: Called after each permutation with the number done; return `false` to stop.
-    /// - Returns: The decomposition and its null distribution, or `nil` if `progress` stopped the test.
+    /// - Returns: The decomposition and its null distribution (of fewer values if `progress` stopped the test).
     public func run(options: AnalysisOptions, progress: (Int) -> Bool) -> VarianceDecompositionOutcome? {
         run(options: options, observing: { done, _ in progress(done) })
     }
@@ -93,8 +93,9 @@ public struct VarianceDecompositionAnalysis: Analysis {
     ///
     /// - Parameters:
     ///   - options: Permutation count and seed.
-    ///   - observing: Called after each permutation with the number done and its ratio; return `false` to stop.
-    /// - Returns: The decomposition and its null distribution, or `nil` if `observing` stopped the test.
+    ///   - observing: Called after each permutation with the number done and its ratio; return `false` to stop,
+    ///     which finishes the test with the permutations drawn so far.
+    /// - Returns: The decomposition and its null distribution (of fewer values if `observing` stopped the test).
     public func run(options: AnalysisOptions,
                     observing: (_ done: Int, _ value: Double) -> Bool) -> VarianceDecompositionOutcome? {
         var null: NullDistributionResult?
@@ -103,7 +104,6 @@ public struct VarianceDecompositionAnalysis: Analysis {
                                               tag: tag, observing: observing) { labels in
                 decomposition.decompose(partition: labels).varianceRatio
             }
-            guard null != nil else { return nil }
         }
         return VarianceDecompositionOutcome(tag: tag, statisticLabel: statisticLabel,
                                             decomposition: decomposition.decompose(partition: partition),
