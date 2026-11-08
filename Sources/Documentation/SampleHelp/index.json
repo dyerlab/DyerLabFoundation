@@ -1,0 +1,22 @@
+{
+  "title": "Sample Help",
+  "home": "sample.welcome",
+  "entries": [
+    { "id": "sample.welcome", "title": "Welcome", "file": "welcome.html", "symbol": "house",
+      "summary": "What this help covers." },
+    { "id": "background", "title": "Background",
+      "summary": "The population genetics behind the analyses.",
+      "children": [
+        { "id": "sample.inbreeding", "title": "Nonrandom Mating", "file": "inbreeding.html",
+          "url": "https://dyerlabteaching.github.io/Inbreeding/narrative.html",
+          "summary": "How inbreeding repackages alleles into genotypes.",
+          "keywords": ["F", "selfing", "heterozygosity"],
+          "children": [
+            { "id": "sample.selfing", "title": "Selfing", "anchor": "sec-selfing" },
+            { "id": "sample.wahlund", "title": "Wahlund Effects", "anchor": "wahlund-effects" }
+          ] },
+        { "id": "sample.structure", "title": "Population Structure",
+          "summary": "Partitioning genetic variation among strata." }
+      ] }
+  ]
+}

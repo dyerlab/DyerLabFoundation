@@ -10,8 +10,8 @@
 //  DyerlabFoundation.swift
 //  DyerlabFoundation
 //
-//  Umbrella module — re-exports Matrix, Graph, PresentationZen, and
-//  PopulationGenetics. Consumers that only want the horizontal, domain-
+//  Umbrella module — re-exports Matrix, Graph, PresentationZen,
+//  PopulationGenetics and Documentation. Consumers that only want the horizontal, domain-
 //  agnostic layer should depend on the individual products (Matrix/Graph/
 //  PresentationZen) directly rather than this umbrella — Linguistics does
 //  exactly that, so re-exporting PopulationGenetics here has no effect on
@@ -26,3 +26,4 @@
 @_exported import Graph
 @_exported import PresentationZen
 @_exported import PopulationGenetics
+@_exported import Documentation

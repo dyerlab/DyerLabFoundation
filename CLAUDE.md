@@ -98,7 +98,7 @@ Other open items:
 
 ## Architecture
 
-DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes four library products plus an umbrella:
+DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes five library products plus an umbrella:
 
 | Product | Depends on | Purpose |
 |---|---|---|
@@ -106,7 +106,8 @@ DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixSt
 | `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine + its own SwiftUI views (GraphLayoutView, MapView) + file import (.pgraph, GeoJSON) |
 | `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, SwiftUI views for Matrix/Vector and general data-communication (charts, tables) |
 | `PopulationGenetics` | `Matrix`, `Graph`, `PresentationZen` | Diploid genetic-marker storage/import/analysis (see below — folded in wholesale as of 2026-07-14) |
-| `DyerLabFoundation` | all four | Umbrella — re-exports everything via `@_exported import` |
+| `Documentation` | — | An app's help: a DocC-style browser (outline with disclosure triangles and search, `WKWebView` page) over a bundled JSON index of HTML pages, plus its window (`DocumentationScene`), Help menu item (`DocumentationCommands`) and (?) button (`DocumentationLink`). No dependencies, so any app can use it (2026-11-07) |
+| `DyerLabFoundation` | all five | Umbrella — re-exports everything via `@_exported import` |
 
 ### PresentationZen is the UI layer — except Graph, which owns its own views
 

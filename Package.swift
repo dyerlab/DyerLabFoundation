@@ -26,6 +26,7 @@ let package = Package(
         .library(name: "Graph",              targets: ["Graph"]),
         .library(name: "PresentationZen",    targets: ["PresentationZen"]),
         .library(name: "PopulationGenetics", targets: ["PopulationGenetics"]),
+        .library(name: "Documentation",      targets: ["Documentation"]),
         .library(name: "DyerLabFoundation", targets: ["DyerlabFoundation"]),
         .executable(name: "GraphDemoApp", targets: ["GraphDemoApp"]),
     ],
@@ -82,9 +83,19 @@ let package = Package(
             ]
         ),
 
+        // An app's help: a DocC-style browser over bundled HTML pages, with no
+        // other dependencies so any app can use it.
+        .target(
+            name: "Documentation",
+            resources: [ .process("Documentation.docc"), .copy("SampleHelp") ],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
         .target(
             name: "DyerlabFoundation",
-            dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics"],
+            dependencies: ["Matrix", "Graph", "PresentationZen", "PopulationGenetics", "Documentation"],
             resources: [ .process("DyerlabFoundation.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -140,6 +151,14 @@ let package = Package(
             name: "PopulationGeneticsTests",
             dependencies: ["PopulationGenetics", "Matrix", "Graph", "PresentationZen"],
             resources: [ .copy("Fixtures") ],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
+        .testTarget(
+            name: "DocumentationTests",
+            dependencies: ["Documentation"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
