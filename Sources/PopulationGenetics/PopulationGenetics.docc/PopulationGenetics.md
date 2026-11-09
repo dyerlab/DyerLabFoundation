@@ -85,6 +85,8 @@ logic lives.
 - ``PopulationClusters`` — individuals grouped by population for a map, collapsing until they can be told apart. ``GenotypeMapView`` draws them, with ``PopulationMarker`` and ``IndividualMarker``.
 - ``PopulationGraphBuilder`` — estimates a population graph from genotypes among the strata of any level, or among
   mothers' pollen pools from their offspring's paternal gametes, and says whether a saved one has gone stale. ``PopGraphMapView`` draws it, with ``NodeMarker``.
+- ``StratumReport`` / ``StratumSummaryView`` — one stratum's members, place and per-locus diversity among its
+  adults (A, Ae, Ho, He, F), read one stratum at a time like a family.
 - ``FamilyReport`` / ``FamilySummaryView`` — one maternal family's paternal alleles, listing each offspring genotype its mother couldn't have contributed to.
 - ``GenotypeSummary`` — headline counts for a dataset.
 

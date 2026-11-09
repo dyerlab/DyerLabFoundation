@@ -13,7 +13,8 @@
 //  The finished form of a permutation test, for a frozen result: the density of the permuted values with the
 //  observed value marked. The running-P trace of `NullDistributionView` shows how a live test settles and has
 //  nothing to say once it has, so it is left out. Permuted values that are all equal have no density, so they are
-//  drawn as a single rule.
+//  drawn as a single rule. The density axis is hidden: its scale depends only on the spread of the permuted values
+//  and reads as if it were the statistic's.
 //
 //  Created by Rodney Dyer on 2026.11.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -72,16 +73,18 @@ public struct NullDensityPlot: View {
                     RuleMark(x: .value(statisticLabel, value))
                         .foregroundStyle(.tint)
                 }
-                RuleMark(x: .value("Observed", observed))
+                RuleMark(x: .value(statisticLabel, observed))
                     .foregroundStyle(.red)
                     .lineStyle(StrokeStyle(lineWidth: 2))
-                    .annotation(position: .top, alignment: .center) {
+                    .annotation(position: .top, alignment: .center, spacing: 4,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         Text("observed").font(.caption2).foregroundStyle(.red)
                     }
             }
             .chartXScale(domain: xDomain)
-            .chartXAxisLabel("Permuted \(statisticLabel)")
-            .chartYAxisLabel("Density")
+            .chartXAxisLabel("Permuted \(statisticLabel)", position: .bottom, alignment: .center)
+            // A density's scale depends on the spread of the values and means nothing to read, so it isn't shown.
+            .chartYAxis(.hidden)
         }
     }
 
@@ -93,11 +96,12 @@ public struct NullDensityPlot: View {
         return KernelDensity(values)
     }
 
-    /// The axis range, wide enough for the curve and the observed value.
-    private var xDomain: ClosedRange<Double> {
-        let xs = curve.map(\.x) + values + [observed]
+    /// The axis range: the curve and the observed value, with a margin of a tenth of their span on each side.
+    var xDomain: ClosedRange<Double> {
+        // Not `+`: Matrix's elementwise `+` for `[Double]` shadows concatenation here.
+        let xs = Array([curve.map(\.x), values, [observed]].joined())
         guard let low = xs.min(), let high = xs.max() else { return 0...1 }
-        let pad = high > low ? (high - low) * 0.05 : max(abs(high) * 0.05, 0.01)
+        let pad = high > low ? (high - low) * 0.1 : max(abs(high) * 0.1, 0.01)
         return (low - pad)...(high + pad)
     }
 

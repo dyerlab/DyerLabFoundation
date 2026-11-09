@@ -39,7 +39,7 @@ import CoreGraphics
 /// Supports element-wise operations with scalars and other vectors:
 /// ```swift
 /// let a = v1 + 2.0      // Add scalar
-/// let b = v1 + v2       // Add vectors
+/// let b = v1 + v2       // Add vectors, element by element
 /// let dot = v1 .* v2    // Dot product (scalar result)
 /// let dist = distance(v1, v2)  // Euclidean distance
 /// ```
@@ -53,6 +53,9 @@ import CoreGraphics
 /// print(v1.minimum)   // Minimum value
 /// print(v1.maximum)   // Maximum value
 /// ```
+/// - Important: Because `Vector` is `[Double]`, its `+` replaces array concatenation for `[Double]` in any file
+///   that imports Matrix: `[1.0, 2.0] + [3.0, 4.0]` is `[4.0, 6.0]`, not four values. Concatenate with
+///   `append(contentsOf:)` or `joined()`. Vectors of unequal length stop with a precondition failure.
 public typealias Vector = [Double]
 
 extension Vector {

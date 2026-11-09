@@ -33,6 +33,10 @@ typealias OperatorVectorVector = ((_: UnsafePointer<Double>, _: vDSP_Stride,
 ///   - y: The right `Vector`
 /// - Returns: The result of the `operaiton` function on the two vectors.
 func vectorVectorOperation(_ operation: OperatorVectorVector, _ x: Vector, _ y: Vector) -> Vector {
+    // vDSP reads `x.count` values from both, so a shorter `y` would be read past its end. Because `Vector` is
+    // `[Double]`, these operators also shadow array concatenation, and a concatenation of unequal arrays mistaken
+    // for one must stop here rather than return garbage.
+    precondition(x.count == y.count, "Elementwise vector operations need vectors of equal length")
     var z = Vector(repeating: 0.0, count: x.count)
     operation(x, 1, y, 1, &z, 1, vDSP_Length(x.count))
     return z

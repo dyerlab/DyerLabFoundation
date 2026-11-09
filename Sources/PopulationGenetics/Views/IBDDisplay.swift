@@ -28,9 +28,6 @@ import SwiftUI
 /// analysis, stacked in one scrolling column.
 public struct IBDDisplay<Accessory: View>: View {
 
-    /// The height of the scatter, tall enough to read its pairs without crowding out the table below.
-    private static var scatterHeight: Double { 380 }
-
     /// The pairs and regression line.
     public let scatter: PairwiseScatter
     /// The Mantel and regression statistics, if the test has run.
@@ -69,7 +66,7 @@ public struct IBDDisplay<Accessory: View>: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text(title).font(.headline)
                 PairwiseScatterPlot(scatter)
-                    .frame(height: Self.scatterHeight)
+                    .figureFrame(aspectRatio: 1.4)
                 if let table {
                     TabularOutputView(table, caption: caption, decimals: 4)
                 }

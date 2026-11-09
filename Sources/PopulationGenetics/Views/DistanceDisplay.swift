@@ -42,13 +42,14 @@ public struct DistanceDisplay: View {
 
     /// The display.
     public var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-            MatrixHeatmap(data)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .layoutPriority(1)
-            distribution
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(title)
+                    .font(.headline)
+                MatrixHeatmap(data)
+                    .figureFrame(aspectRatio: 1, maxWidth: 640)
+                distribution
+            }
         }
     }
 
@@ -58,8 +59,9 @@ public struct DistanceDisplay: View {
         return HStack(alignment: .top, spacing: 24) {
             Histogram(DataTable(numbers: [label: values], roles: [.y: label]), bins: 30, xLabel: label,
                       style: .binned)
+                .aspectRatio(2, contentMode: .fit)
+                .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
-                .frame(height: 240)
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
                 summaryRow("Pairs", values.count.formatted())
                 summaryRow("Minimum", format(values.min()))
