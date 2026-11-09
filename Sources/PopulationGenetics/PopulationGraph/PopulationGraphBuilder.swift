@@ -17,7 +17,8 @@
 //
 //  Nodes are the strata of one level, the innermost by default, so a project with nested strata (clusters within
 //  treatments) can draw its graph among either. Only adults are nodes' members: offspring share their mothers' alleles
-//  and would inflate the within-node variance the graph rests on.
+//  and would inflate the within-node variance the graph rests on. Their own graph is the pollination graph of
+//  `PopulationGraphBuilder+PollenPools.swift`, among maternal families.
 //
 //  Created by Rodney Dyer on 2026.10.24.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -61,7 +62,11 @@ public enum PopulationGraphBuilder {
         ///   - level: The strata level whose strata are nodes, or `nil` for the innermost.
         public init(dataset: ImportedDataset, level: String? = nil) {
             var counts: [String: Int] = [:]
-            for ordinal in dataset.adultOrdinals {
+            if level == PopulationGraphBuilder.pollenPoolLevel {
+                // A pollen pool's members are its offspring's paternal gametes.
+                for family in dataset.familiesWithOffspring { counts[family.id] = family.offspring.count }
+            }
+            for ordinal in dataset.adultOrdinals where level != PopulationGraphBuilder.pollenPoolLevel {
                 let name = PopulationGraphBuilder.name(at: ordinal, level: level, in: dataset)
                 guard !name.isEmpty else { continue }
                 counts[name, default: 0] += 1
@@ -97,6 +102,7 @@ public enum PopulationGraphBuilder {
     /// - Returns: The graph, stamped with the dataset's fingerprint, or `nil` if
     ///   there are too few eligible strata or the decomposition fails.
     public static func estimate(from dataset: ImportedDataset, level: String? = nil) -> PopulationGraphDataset? {
+        if level == pollenPoolLevel { return estimatePollenPools(from: dataset) }
         let eligibility = Eligibility(dataset: dataset, level: level)
         guard eligibility.canEstimate else { return nil }
         let names = Set(eligibility.included.map(\.name))
@@ -151,13 +157,25 @@ public enum PopulationGraphBuilder {
     ///   - level: The strata level whose strata are nodes, or `nil` for the innermost.
     /// - Returns: The fingerprint.
     public static func fingerprint(of dataset: ImportedDataset, level: String? = nil) -> Double {
+        if level == pollenPoolLevel { return pollenPoolFingerprint(of: dataset) }
+        return fingerprint(of: dataset.adultOrdinals.map { (name(at: $0, level: level, in: dataset), $0) }, in: dataset)
+    }
+
+    /// A stable FNV-1a hash of some individuals' groups and genotypes, truncated to 53 bits so it survives storage
+    /// as a `Double`.
+    ///
+    /// - Parameters:
+    ///   - members: Each individual's group and row, in a stable order.
+    ///   - dataset: The genotypes.
+    /// - Returns: The fingerprint.
+    static func fingerprint(of members: [(group: String, ordinal: Int)], in dataset: ImportedDataset) -> Double {
         var hash: UInt64 = 0xcbf2_9ce4_8422_2325
         func mix(_ text: String) {
             for byte in text.utf8 { hash = (hash ^ UInt64(byte)) &* 0x100_0000_01b3 }
             hash = (hash ^ 0xff) &* 0x100_0000_01b3
         }
-        for ordinal in dataset.adultOrdinals {
-            mix(name(at: ordinal, level: level, in: dataset))
+        for (group, ordinal) in members {
+            mix(group)
             for locus in 0..<dataset.matrix.locusCount {
                 if let (left, right) = dataset.alleleLabels(at: ordinal, locus: locus) {
                     mix(left)
@@ -172,7 +190,8 @@ public enum PopulationGraphBuilder {
 
     // MARK: - Levels
 
-    /// The strata levels whose strata can be nodes, outermost first.
+    /// The strata levels whose strata can be nodes, outermost first, then ``pollenPoolLevel`` when mothers have
+    /// offspring.
     ///
     /// - Parameter dataset: The genotypes, with strata.
     /// - Returns: The levels the adults are assigned to.
@@ -184,6 +203,7 @@ public enum PopulationGraphBuilder {
                 levels.append(reference.level)
             }
         }
+        if !dataset.familiesWithOffspring.isEmpty { levels.append(pollenPoolLevel) }
         return levels
     }
 
@@ -203,6 +223,7 @@ public enum PopulationGraphBuilder {
     /// - Returns: The centroids.
     public static func centroids(in dataset: ImportedDataset,
                                  level: String? = nil) -> [String: CLLocationCoordinate2D] {
+        if level == pollenPoolLevel { return pollenPoolCentroids(in: dataset) }
         var sums: [String: (latitude: Double, longitude: Double, count: Double)] = [:]
         for ordinal in dataset.adultOrdinals {
             let individual = dataset.matrix.individuals[ordinal]

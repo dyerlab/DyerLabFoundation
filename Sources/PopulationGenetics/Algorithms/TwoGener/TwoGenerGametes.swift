@@ -48,6 +48,9 @@ struct TwoGenerGametes: Sendable {
     /// `N × N` squared distances among kept gametes, or empty if they weren't asked for.
     let squaredDistances: [[Double]]
 
+    /// Each kept gamete's scores over every scored locus, end to end: the rows of a gamete matrix.
+    let vectors: [[Double]]
+
     /// Each scored locus's gamete vectors: the locus ordinal, and the gametes' scores one after another, each as
     /// long as that locus's pollen pool.
     let locusScores: [(locus: Int, scores: [Double])]
@@ -100,7 +103,7 @@ struct TwoGenerGametes: Sendable {
         let L = matrix.locusCount
         let used = loci.map { Set($0) } ?? Set(0..<L)
 
-        // MARK: Recover gametes; drop impossible offspring.
+        // MARK: - Recover gametes; drop impossible offspring.
         var partition: [Int] = []
         var offspring: [Int] = []
         var contributions: [[PaternalContribution]] = []   // [gamete][locus]
@@ -130,7 +133,7 @@ struct TwoGenerGametes: Sendable {
             }
         }
 
-        // MARK: Pollen-pool frequencies per locus.
+        // MARK: - Pollen-pool frequencies per locus.
         var pollenPool: [[Double]] = []
         var maxIterations = 0
         var unconverged: [String] = []
@@ -196,7 +199,7 @@ struct TwoGenerGametes: Sendable {
             }
         }
 
-        // MARK: Score gametes as allele vectors and note ambiguity / imputation.
+        // MARK: - Score gametes as allele vectors and note ambiguity / imputation.
         var vectors = [[Double]](repeating: [], count: contributions.count)
         var locusScores: [(locus: Int, scores: [Double])] = []
         var ambiguousCount = 0
@@ -233,7 +236,7 @@ struct TwoGenerGametes: Sendable {
                  + "and were imputed with the pollen-pool allele frequencies.")
         }
 
-        // MARK: Squared distances, ½ Σ (Y_g − Y_h)² over every allele of every kept locus.
+        // MARK: - Squared distances, ½ Σ (Y_g − Y_h)² over every allele of every kept locus.
         let count = computesDistances ? vectors.count : 0
         var distances = [[Double]](repeating: [Double](repeating: 0, count: count), count: count)
         for g in 0..<count {
@@ -250,6 +253,7 @@ struct TwoGenerGametes: Sendable {
         self.pollenPool = pollenPool
         self.squaredDistances = distances
         self.locusScores = locusScores
+        self.vectors = vectors
         self.notes = notes
         self.droppedCount = droppedCount
         self.motherlessOffspringCount = motherlessOffspringCount
@@ -261,6 +265,11 @@ struct TwoGenerGametes: Sendable {
 
     /// The posterior that an ambiguous gamete carries allele `i` rather than `k`,
     /// `qᵢ / (qᵢ + qₖ)`, or one half if neither allele has been seen.
+    ///
+    /// - Parameters:
+    ///   - qi: The pollen-pool frequency of allele `i`.
+    ///   - qk: The pollen-pool frequency of allele `k`.
+    /// - Returns: The posterior weight on `i`.
     static func weight(_ qi: Double, _ qk: Double) -> Double {
         qi + qk > 0 ? qi / (qi + qk) : 0.5
     }

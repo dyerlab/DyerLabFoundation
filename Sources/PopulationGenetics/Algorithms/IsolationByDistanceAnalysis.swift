@@ -102,7 +102,8 @@ public struct IsolationByDistanceAnalysis: Analysis {
         guard var mantel = MantelAnalysis(response: linearized, predictor: separated, names: names,
                                           method: method, tag: tag) else { return nil }
         mantel.responseLabel = "\(differentiationLabel) / (1 − \(differentiationLabel))"
-        mantel.predictorLabel = (logSeparation ? "the natural log of " : "") + AnalysisReport.sentenceCase(separationLabel)
+        mantel.predictorLabel = (logSeparation ? "the natural log of " : "")
+            + AnalysisReport.sentenceCase(separationLabel)
         mantel.unitLabel = "populations"
         self.mantel = mantel
         self.logSeparation = logSeparation

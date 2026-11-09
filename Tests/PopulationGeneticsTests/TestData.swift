@@ -44,6 +44,16 @@ enum TestData {
         try text(of: "example_offspring.csv")
     }
 
+    /// *Pinus echinata*: ID, Offspring, Treatment, Cluster, Longitude, Latitude and 10 allozyme loci.
+    ///
+    /// 46 mothers and 1,230 offspring, families nested in Cluster within Treatment.
+    ///
+    /// - Returns: The CSV text.
+    /// - Throws: A file error if it can't be read.
+    static func pechinataCSV() throws -> String {
+        try text(of: "example_pechinata.csv")
+    }
+
     /// Imports a genotype CSV.
     ///
     /// - Parameter csv: The CSV text.

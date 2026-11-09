@@ -199,7 +199,8 @@ struct StructureAnalysisTests {
 
         let markdown = try #require(try figure.exportTable(.markdown))
         let text = String(decoding: markdown.data, as: UTF8.self)
-        #expect(text.hasPrefix("| Source | df | SS | MS | sigma2 | Phi_ST | P |\n|:---|---:|---:|---:|---:|---:|---:|\n"))
+        #expect(text.hasPrefix("| Source | df | SS | MS | sigma2 | Phi_ST | P |\n"
+                               + "|:---|---:|---:|---:|---:|---:|---:|\n"))
         #expect(text.contains("{#tbl-amova-among-populations}"))
         #expect(markdown.suggestedName == "tbl-amova-among-populations")
         #expect(try figure.exportTable(.csv)?.contentType == .commaSeparatedText)

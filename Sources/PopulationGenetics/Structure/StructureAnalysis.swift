@@ -173,10 +173,17 @@ public struct StructureAnalysis: Sendable {
     }
 
     /// Every locus's components and their sum under a labelling.
+    ///
+    /// - Parameters:
+    ///   - partition: Each unit's stratum.
+    ///   - workspace: Scratch space reused across permutations.
+    /// - Returns: Each locus's components (`nil` where it lacks two strata with more units than strata) and their
+    ///   sum over the loci that have them.
     func evaluate(_ partition: [Int], workspace: inout StructureLoci.Workspace)
         -> (loci: [LocusComponents?], total: LocusComponents?) {
         let loci = data.components(partition: partition, workspace: &workspace)
-        let total = loci.compactMap { $0 }.reduce(nil as LocusComponents?) { sum, next in sum.map { $0 + next } ?? next }
+        let total = loci.compactMap { $0 }
+            .reduce(nil as LocusComponents?) { sum, next in sum.map { $0 + next } ?? next }
         return (loci, total)
     }
 
@@ -213,6 +220,11 @@ public struct StructureAnalysis: Sendable {
     }
 
     /// A variance-components table's rows.
+    ///
+    /// - Parameters:
+    ///   - parts: The sums of squares and components.
+    ///   - p: The statistic's permutation P, if tested.
+    /// - Returns: The rows, sources first and Total last.
     private func tableRows(_ parts: VarianceParts, p: Double?) -> [StructureTableRow] {
         func ms(_ i: Int) -> Double? { parts.df[i].map { parts.ss[i] / Double($0) } }
         let dfTotal = parts.df.allSatisfy { $0 != nil } ? parts.df.compactMap { $0 }.reduce(0, +) : nil
@@ -334,6 +346,9 @@ public struct StructureAnalysis: Sendable {
     }
 
     /// A value, or `nil` if it isn't finite.
+    ///
+    /// - Parameter value: The value.
+    /// - Returns: `value`, or `nil` for NaN and infinities.
     private static func finite(_ value: Double) -> Double? { value.isFinite ? value : nil }
 
     /// The label for outcomes.

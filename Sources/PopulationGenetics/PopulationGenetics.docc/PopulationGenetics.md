@@ -72,18 +72,19 @@ logic lives.
   `strata_distance()`, or ``GeneticDistances`` (AMOVA and Bray-Curtis among individuals; Nei, Cavalli-Sforza, Dps,
   Euclidean, pairwise Φ_ST and cGD among strata), matching gstudio's `genetic_distance()`. Computed when needed,
   never stored.
-- ``IBDSpec`` / ``IBDAnalysis`` / ``IBDResult`` — isolation by distance: a genetic matrix against great-circle distance
-  among the same units by a Mantel test (vegan's permutations), with Rousset's Φ_ST / (1 − Φ_ST) and ln distance as
+- ``IBDSpec`` / ``IBDAnalysis`` / ``IBDResult`` — isolation by distance: a genetic matrix against great-circle distance,
+  or against another genetic matrix, among the same units by a Mantel test (vegan's permutations), with Rousset's Φ_ST / (1 − Φ_ST) and ln distance as
   options; saved as one `ibd_analysis` scatter figure holding its plot, table and spec (<doc:FigureStorage>).
-- ``IBDControls`` / ``IBDDisplay`` — the Distance page's isolation-by-distance options, and its scatter beside the
+- ``IBDControls`` / ``IBDDisplay`` — the Isolation page's `Genetic ~ Against` options, and its scatter above the
   Mantel table.
-- ``DistanceControls`` / ``DistanceDisplay`` / ``MatrixList`` — the Distance page's controls, heatmap and histogram,
+- ``DistanceControls`` / ``DistanceDisplay`` / ``MatrixList`` — a matrix's controls, heatmap above its histogram,
   and the list of matrices other programs stored in the file.
 
 ### Maps, families and summaries
 
 - ``PopulationClusters`` — individuals grouped by population for a map, collapsing until they can be told apart. ``GenotypeMapView`` draws them, with ``PopulationMarker`` and ``IndividualMarker``.
-- ``PopulationGraphBuilder`` — estimates a population graph from genotypes, and says whether a saved one has gone stale. ``PopGraphMapView`` draws it, with ``NodeMarker``.
+- ``PopulationGraphBuilder`` — estimates a population graph from genotypes among the strata of any level, or among
+  mothers' pollen pools from their offspring's paternal gametes, and says whether a saved one has gone stale. ``PopGraphMapView`` draws it, with ``NodeMarker``.
 - ``FamilyReport`` / ``FamilySummaryView`` — one maternal family's paternal alleles, listing each offspring genotype its mother couldn't have contributed to.
 - ``GenotypeSummary`` — headline counts for a dataset.
 

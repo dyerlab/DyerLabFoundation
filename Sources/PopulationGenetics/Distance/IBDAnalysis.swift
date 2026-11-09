@@ -134,6 +134,11 @@ public struct IBDAnalysis: Sendable {
     }
 
     /// A matrix among some of its units, in the order given.
+    ///
+    /// - Parameters:
+    ///   - matrix: The full matrix.
+    ///   - names: The units to keep, in order.
+    /// - Returns: The matrix among `names`.
     private static func restricted(_ matrix: UnitDistanceMatrix, to names: [String]) -> UnitDistanceMatrix {
         var restricted = UnitDistanceMatrix(groupNames: names)
         for i in names.indices {

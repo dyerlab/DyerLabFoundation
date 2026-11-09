@@ -78,6 +78,9 @@ private struct Fixtures: Decodable {
     let differentiationUncorrectedMultilocus: DifferentiationMultilocus
 
     /// The per-locus and multilocus values of one Hs and Ht estimator.
+    ///
+    /// - Parameter estimator: The estimator.
+    /// - Returns: R's per-locus and multilocus values for it.
     func differentiation(_ estimator: StructureSpec.Heterozygosity)
         -> (loci: [DifferentiationFixture], multilocus: DifferentiationMultilocus) {
         switch estimator {

@@ -58,7 +58,8 @@ struct IBDTests {
         return try #require(try IBDAnalysis(spec: spec, dataset: DistanceFixtureData.completeArapat()).run())
     }
 
-    private func expectMatches(_ result: IBDResult, _ fixture: IBDCase, sourceLocation: SourceLocation = #_sourceLocation) {
+    private func expectMatches(_ result: IBDResult, _ fixture: IBDCase,
+                               sourceLocation: SourceLocation = #_sourceLocation) {
         let summary = result.spec.result
         func close(_ a: Double?, _ b: Double) -> Bool { a.map { abs($0 - b) <= 1e-9 * max(1, abs(b)) } ?? false }
         #expect(close(summary?.r, fixture.r), "r", sourceLocation: sourceLocation)
@@ -77,7 +78,8 @@ struct IBDTests {
         #expect(result.spec.validTransform == .rousset)
         expectMatches(result, fixture)
         #expect(result.report.methods.contains("Rousset (1997)") && result.report.results.contains("Mantel r"))
-        #expect(result.scatter.yLabel == "Φ_ST / (1 − Φ_ST)" && result.scatter.xLabel == "ln great-circle distance (km)")
+        #expect(result.scatter.yLabel == "Φ_ST / (1 − Φ_ST)")
+        #expect(result.scatter.xLabel == "ln great-circle distance (km)")
     }
 
     @Test func otherMeasuresAreTestedAsTheyAre() throws {
@@ -101,7 +103,8 @@ struct IBDTests {
                            permutations: 99, seed: 1)
         let result = try #require(try IBDAnalysis(spec: spec, dataset: dataset).run())
         #expect(!spec.isGeographic)
-        #expect(spec.formula == "\(DistanceSpec.Measure.nei.symbol) ~ \(DistanceSpec.Measure.cavalli.symbol) | Population")
+        let (neiSymbol, cavalliSymbol) = (DistanceSpec.Measure.nei.symbol, DistanceSpec.Measure.cavalli.symbol)
+        #expect(spec.formula == "\(neiSymbol) ~ \(cavalliSymbol) | Population")
         #expect(!result.title.contains("Isolation by distance"))
 
         // The x of each pair is the second matrix, and r is the Pearson correlation of the pairs.
@@ -133,6 +136,11 @@ struct IBDTests {
     }
 
     /// The Pearson correlation of two equal-length series.
+    ///
+    /// - Parameters:
+    ///   - x: One series.
+    ///   - y: The other, as long as `x`.
+    /// - Returns: Their correlation.
     private func pearson(_ x: [Double], _ y: [Double]) -> Double {
         let n = Double(x.count)
         let mx = x.reduce(0, +) / n, my = y.reduce(0, +) / n
@@ -176,7 +184,8 @@ struct IBDTests {
                                   image: Data([1]), thumbnail: Data([2]))
         #expect(figure.formName == "scatter" && figure.generator == .ibdAnalysis)
         #expect(figure.ibdSpec == result.spec)
-        #expect(figure.ibdSpec?.json.contains(#""separation":{"level":"Population","measure":"great_circle","units":"km"}"#) == true)
+        let separation = #""separation":{"level":"Population","measure":"great_circle","units":"km"}"#
+        #expect(figure.ibdSpec?.json.contains(separation) == true)
         #expect(figure.rCode?.contains("geom_abline( intercept = ") == true)
         let scatter = try #require(figure.ibdScatter)
         #expect(scatter.points.count == fixture.pairs)

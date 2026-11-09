@@ -163,6 +163,11 @@ public struct StructureControls: View {
     }
 
     /// Whether a by-locus table shows a column; the last column can't be turned off.
+    ///
+    /// - Parameters:
+    ///   - column: The column.
+    ///   - choices: The columns offered.
+    /// - Returns: A binding that adds or removes the column.
     private func shows(_ column: StructureSpec.Column, among choices: [StructureSpec.Column]) -> Binding<Bool> {
         Binding {
             spec.columns.contains(column)

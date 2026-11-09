@@ -108,4 +108,25 @@ struct PopulationGraphBuilderTests {
         let total = (counted.included + counted.excluded).map(\.count).reduce(0, +)
         #expect(total <= adults.count && adults.count < dataset.matrix.individualCount)
     }
+
+    @Test func pollenPoolsAreTheNodesOfAPollinationGraph() throws {
+        let dataset = try TestData.dataset(TestData.pechinataCSV())
+        let level = PopulationGraphBuilder.pollenPoolLevel
+        #expect(PopulationGraphBuilder.levels(in: dataset).last == level)
+        let eligibility = PopulationGraphBuilder.Eligibility(dataset: dataset, level: level)
+        #expect(eligibility.canEstimate)
+        let graph = try #require(PopulationGraphBuilder.estimate(from: dataset, level: level))
+        let families = Set(dataset.familiesWithOffspring.map(\.id))
+        #expect(graph.graph.nodes.count > 2 && graph.graph.nodes.allSatisfy { families.contains($0.name) })
+        #expect(PopulationGraphBuilder.level(of: graph) == level && !graph.graph.edges.isEmpty)
+        #expect(graph.nodeStrata.values.allSatisfy { $0.map(\.level) == ["Treatment", "Cluster", level] })
+        #expect(!PopulationGraphBuilder.isStale(graph, for: dataset))
+
+        // An offspring's genotype is part of its pollen pool, so editing it makes the graph stale.
+        var edited = dataset
+        let child = try #require(dataset.familiesWithOffspring.first?.offspring.first)
+        let changed = edited.setAlleles(("9", "9"), at: child, locus: 0)
+        #expect(changed)
+        #expect(PopulationGraphBuilder.isStale(graph, for: edited))
+    }
 }

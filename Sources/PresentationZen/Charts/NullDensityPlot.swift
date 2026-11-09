@@ -55,6 +55,7 @@ public struct NullDensityPlot: View {
 
     // MARK: - Body
 
+    /// The plot.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(caption)
