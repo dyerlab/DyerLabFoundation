@@ -71,6 +71,10 @@ public struct TwoGenerAnalysis: Analysis {
     /// The decisions made while recovering and scoring the gametes.
     public var notes: [AnalysisNote] { gametes.notes }
 
+    /// Every maternal genotype missing at a locus with offspring to go on, as reconstructed from them; those with
+    /// ``MaternalInference/isUsed`` recovered their offspring's paternal gametes, the rest were imputed.
+    public var maternalInferences: [MaternalInference] { gametes.maternalInferences }
+
     /// The scored gametes and the counts the report draws on.
     let gametes: TwoGenerGametes
 

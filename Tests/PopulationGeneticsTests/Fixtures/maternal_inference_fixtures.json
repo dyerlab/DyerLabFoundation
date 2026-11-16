@@ -1,0 +1,94 @@
+{
+  "inferences": [
+    {
+      "family": "468",
+      "locus": "G8",
+      "offspring": 20,
+      "genotype": "164:164",
+      "alternative": "164:182",
+      "likelihoodRatio": 7.13643206412834,
+      "used": false
+    },
+    {
+      "family": "474",
+      "locus": "G8",
+      "offspring": 20,
+      "genotype": "156:164",
+      "alternative": "154:154",
+      "likelihoodRatio": "Inf",
+      "used": true
+    },
+    {
+      "family": "468",
+      "locus": "H18",
+      "offspring": 20,
+      "genotype": "110:116",
+      "alternative": "102:102",
+      "likelihoodRatio": "Inf",
+      "used": true
+    },
+    {
+      "family": "474",
+      "locus": "H18",
+      "offspring": 20,
+      "genotype": "104:112",
+      "alternative": "112:114",
+      "likelihoodRatio": 6.98832755808196,
+      "used": false
+    },
+    {
+      "family": "468",
+      "locus": "N5",
+      "offspring": 20,
+      "genotype": "124:124",
+      "alternative": "124:126",
+      "likelihoodRatio": 7313.34405583522,
+      "used": true
+    },
+    {
+      "family": "474",
+      "locus": "N5",
+      "offspring": 20,
+      "genotype": "126:126",
+      "alternative": "126:128",
+      "likelihoodRatio": 13237.9245044818,
+      "used": true
+    },
+    {
+      "family": "468",
+      "locus": "N10",
+      "offspring": 20,
+      "genotype": "198:202",
+      "alternative": "182:182",
+      "likelihoodRatio": "Inf",
+      "used": true
+    },
+    {
+      "family": "474",
+      "locus": "N10",
+      "offspring": 20,
+      "genotype": "198:200",
+      "alternative": "182:182",
+      "likelihoodRatio": "Inf",
+      "used": true
+    },
+    {
+      "family": "468",
+      "locus": "O5",
+      "offspring": 20,
+      "genotype": "181:193",
+      "alternative": "177:177",
+      "likelihoodRatio": "Inf",
+      "used": true
+    },
+    {
+      "family": "474",
+      "locus": "O5",
+      "offspring": 20,
+      "genotype": "185:193",
+      "alternative": "177:177",
+      "likelihoodRatio": "Inf",
+      "used": true
+    }
+  ]
+}

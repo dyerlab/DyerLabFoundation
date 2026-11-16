@@ -51,6 +51,13 @@ extension TwoGenerAnalysis {
                             + "(\(AnalysisReport.count(gametes.ambiguousCount)) gamete-loci), the paternal allele "
                             + "was weighted by its pollen-pool posterior probability, qᵢ / (qᵢ + qₖ).")
         }
+        let reconstructed = gametes.maternalInferences.filter(\.isUsed).count
+        if reconstructed > 0 {
+            handling.append("Missing maternal genotypes at \(AnalysisReport.count(reconstructed)) mother-loci were "
+                            + "reconstructed from the offspring by maximum likelihood, and used where at least "
+                            + "\(AnalysisReport.count(Int(MaternalInference.minimumLikelihoodRatio))) times as "
+                            + "likely as the next best genotype.")
+        }
         if gametes.imputedCount > 0 {
             handling.append("Paternal alleles at \(AnalysisReport.count(gametes.imputedCount)) gamete-loci with a "
                             + "missing maternal or offspring genotype were imputed from the pollen-pool allele "

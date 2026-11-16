@@ -31,7 +31,8 @@ import Foundation
 /// | ``Table/amova`` | the analysis of variance behind one ``Statistic``, at one locus or summed over loci |
 /// | ``Table/perLocus`` | one row per locus, then the multilocus row, with the chosen ``Column``s |
 ///
-/// Multilocus values are always ratios of sums over loci, never means of the per-locus values.
+/// Multilocus values are ratios of sums over loci, never means of the per-locus values; Gst, G′st and Dest apply
+/// their formulas to the mean Hs and Ht over loci, as mmod and hierfstat do.
 public struct StructureSpec: Codable, Hashable, Sendable {
 
     /// Whose genotypes are analysed.

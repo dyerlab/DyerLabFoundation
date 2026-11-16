@@ -38,6 +38,11 @@ public struct Genotype: Codable, Hashable, Sendable, Identifiable {
     /// Lineage tracking for the right allele. See `MaternalLineage`, `PaternalLineage`, etc.
     public var rightLineage: Int
 
+    /// Whether the genotype was inferred rather than scored, e.g. a missing maternal genotype reconstructed from
+    /// her offspring (``MaternalInference``). Not part of a genotype's identity: an estimated genotype equals a
+    /// scored one with the same alleles.
+    public var isEstimated: Bool
+
     /// Initializes a new genotype with the specified alleles and lineage.
     ///
     /// - Parameters:
@@ -45,15 +50,37 @@ public struct Genotype: Codable, Hashable, Sendable, Identifiable {
     ///   - rightAllele: The second allele string.
     ///   - leftLineage: Lineage tracking for the left allele (defaults to `UnknownLineage`).
     ///   - rightLineage: Lineage tracking for the right allele (defaults to `UnknownLineage`).
+    ///   - isEstimated: Whether the genotype was inferred rather than scored (defaults to `false`).
     public init(leftAllele: String,
                 rightAllele: String,
                 leftLineage: Int = Genotype.UnknownLineage,
-                rightLineage: Int = Genotype.UnknownLineage) {
+                rightLineage: Int = Genotype.UnknownLineage,
+                isEstimated: Bool = false) {
         self.id = UUID()
         self.leftAllele = leftAllele
         self.rightAllele = rightAllele
         self.leftLineage = leftLineage
         self.rightLineage = rightLineage
+        self.isEstimated = isEstimated
+    }
+
+    /// The keys a genotype is encoded under.
+    private enum CodingKeys: String, CodingKey {
+        case id, leftAllele, rightAllele, leftLineage, rightLineage, isEstimated
+    }
+
+    /// Decodes a genotype; one encoded before ``isEstimated`` existed reads as scored.
+    ///
+    /// - Parameter decoder: The decoder.
+    /// - Throws: `DecodingError` if a required key is missing or mistyped.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        leftAllele = try container.decode(String.self, forKey: .leftAllele)
+        rightAllele = try container.decode(String.self, forKey: .rightAllele)
+        leftLineage = try container.decode(Int.self, forKey: .leftLineage)
+        rightLineage = try container.decode(Int.self, forKey: .rightLineage)
+        isEstimated = try container.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
     }
 
     /// Returns the ploidy level of this genotype.

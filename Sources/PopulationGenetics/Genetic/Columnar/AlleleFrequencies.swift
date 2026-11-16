@@ -168,6 +168,34 @@ extension AlleleFrequencies {
     public var He: Double {
         1.0 - frequencies().map { $0 * $0 }.reduce(0.0, +)
     }
+
+    /// Wright's inbreeding coefficient, `1 − Ho / He`, or `NaN` when He is zero or nothing was counted.
+    public var Fis: Double {
+        let he = He
+        return numGenos > 0 && he > 0 ? 1 - Ho / he : .nan
+    }
+
+    /// The locus polymorphic index, `Σ p(1 − p)`, as gstudio's `Pe()` gives it.
+    public var Pe: Double {
+        frequencies().reduce(0.0) { $0 + $1 * (1 - $1) }
+    }
+
+    /// Shannon's information index, `−Σ p ln p`, with the natural logarithm as in GenAlEx and gstudio's `Sh()`.
+    public var Sh: Double {
+        -frequencies().filter { $0 > 0 }.reduce(0.0) { $0 + $1 * log($1) }
+    }
+
+    /// The probability of excluding a random male as the father when the mother is known (Jamieson & Taylor
+    /// 1997), `Σᵢ pᵢ(1 − pᵢ)² − ½ Σᵢ≠ⱼ pᵢ²pⱼ²(4 − 3pᵢ − 3pⱼ)`, as gstudio's `Pex()` gives it.
+    public var Pex: Double {
+        let p = frequencies().filter { $0 > 0 }
+        var single = 0.0, pairs = 0.0
+        for (i, pi) in p.enumerated() {
+            single += pi * (1 - pi) * (1 - pi)
+            for (j, pj) in p.enumerated() where j != i { pairs += pi * pi * pj * pj * (4 - 3 * pi - 3 * pj) }
+        }
+        return single - 0.5 * pairs
+    }
 }
 
 // MARK: - Markdown rendering

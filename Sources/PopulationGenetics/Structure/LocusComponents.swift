@@ -13,7 +13,10 @@
 //  Everything a structure table needs from one locus, kept as sums so loci
 //  add: each statistic is a numerator and a denominator, and the multilocus
 //  value divides their sums over loci rather than averaging the per-locus
-//  values.
+//  values. Gst, G′st and Dest are the exception: as in mmod and hierfstat,
+//  their multilocus values apply each formula to the mean Hs and Ht over loci,
+//  with k the number of strata. For Gst that is the same ratio of sums; for
+//  G′st it is not, and for Dest it differs only when k varies among loci.
 //
 //  Created by Rodney Dyer on 2026.11.07.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -52,13 +55,32 @@ struct LocusComponents: Sendable, Equatable {
     /// Mean Ht over the loci.
     var ht: Double { htSum / Double(locusCount) }
 
-    /// A column's value: its numerator over its denominator.
+    /// A column's value: its numerator over its denominator, or for Gst, G′st and Dest the formula applied to
+    /// the mean Hs and Ht.
     ///
     /// - Parameter column: The statistic.
     /// - Returns: The value, `NaN` where it can't be estimated.
     func value(_ column: StructureSpec.Column) -> Double {
-        let i = Self.index[column] ?? 0
-        return denominators[i] != 0 ? numerators[i] / denominators[i] : .nan
+        switch column {
+        case .gst, .gstPrime, .dest: return differentiation(column)
+        default:
+            let i = Self.index[column] ?? 0
+            return denominators[i] != 0 ? numerators[i] / denominators[i] : .nan
+        }
+    }
+
+    /// Gst, G′st (Hedrick 2005) or Dest (Jost 2008) from the mean Hs and Ht, with k = `strata`.
+    ///
+    /// - Parameter column: `.gst`, `.gstPrime` or `.dest`.
+    /// - Returns: The value, `NaN` when its denominator is zero or Hs and Ht are unknown.
+    private func differentiation(_ column: StructureSpec.Column) -> Double {
+        let hs = self.hs, ht = self.ht, k = Double(strata)
+        let (numerator, denominator): (Double, Double) = switch column {
+        case .gst: (ht - hs, ht)
+        case .gstPrime: ((ht - hs) * (k - 1 + hs), ht * (k - 1) * (1 - hs))
+        default: ((ht - hs) * k / (k - 1), 1 - hs)
+        }
+        return denominator != 0 && denominator.isFinite ? numerator / denominator : .nan
     }
 
     /// A variance-components statistic's parts.

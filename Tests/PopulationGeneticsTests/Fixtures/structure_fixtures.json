@@ -468,8 +468,8 @@
   ],
   "differentiationMultilocus": {
     "gst": 0.453761444874148,
-    "gstPrime": 0.719339950906807,
-    "dest": 0.412159614223889
+    "gstPrime": 0.678885806047321,
+    "dest": 0.412135611923814
   },
   "differentiationNeiChesser": [
     {
@@ -571,8 +571,8 @@
   ],
   "differentiationNeiChesserMultilocus": {
     "gst": 0.44203731337437,
-    "gstPrime": 0.710472244532112,
-    "dest": 0.405905988203826
+    "gstPrime": 0.668504330294678,
+    "dest": 0.405882010300552
   },
   "differentiationUncorrected": [
     {
@@ -674,7 +674,7 @@
   ],
   "differentiationUncorrectedMultilocus": {
     "gst": 0.487976298595357,
-    "gstPrime": 0.745896110630596,
-    "dest": 0.429659376635722
+    "gstPrime": 0.707959319851885,
+    "dest": 0.429634449837077
   }
 }

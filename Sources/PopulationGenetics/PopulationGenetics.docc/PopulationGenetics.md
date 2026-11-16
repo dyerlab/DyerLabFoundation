@@ -56,7 +56,7 @@ logic lives.
   (θ, F_IS, F_IT, Φ_ST, Gst, G′st, Dest), all loci or one, the stratum level, the permutation test and the
   ``DifferentiationThresholds`` that flag Gst and Dest. ``StructureOptions`` says what a dataset can offer.
 - ``StructureAnalysis`` — computes every statistic from allele counts within strata, with no distance matrix: each
-  locus uses the units genotyped there, multilocus values are ratios of sums over loci, and permutations move whole
+  locus uses the units genotyped there, multilocus values are ratios of sums over loci (Gst, G′st and Dest from the mean Hs and Ht), and permutations move whole
   individuals or gametes. It returns a ``StructureResult``: `Source`, `df`, `SS`, `MS`, `sigma2`, the statistic and `P`,
   or ``StructureLocusRow``s with a `Multilocus` row and a `P_` column per tested statistic.
 - ``StructureControls`` — the options under the table. PresentationZen's `TabularOutputView` draws the table.

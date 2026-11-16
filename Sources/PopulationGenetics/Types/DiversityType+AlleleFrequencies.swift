@@ -19,7 +19,7 @@ import Foundation
 public extension DiversityType {
 
     /// The metrics computed from one locus's allele counts, which can be read from `AlleleFrequencies`.
-    static let frequencyStatistics: [DiversityType] = [.A, .A95, .Ae, .Ho, .He]
+    static let frequencyStatistics: [DiversityType] = [.A, .A95, .Ae, .Ho, .He, .Fis, .Pe, .Sh, .Pex]
 
     /// Computes the metric for one set of genotypes.
     ///
@@ -35,7 +35,11 @@ public extension DiversityType {
         case .Ae: return frequencies.Ae
         case .Ho: return frequencies.Ho
         case .He: return frequencies.He
-        case .Undefined, .Ht, .Hi, .Hos, .Hes, .Pe: return nil
+        case .Fis: return frequencies.Fis.isFinite ? frequencies.Fis : nil
+        case .Pe: return frequencies.Pe
+        case .Sh: return frequencies.Sh
+        case .Pex: return frequencies.Pex
+        case .Undefined, .Ht, .Hi, .Hos, .Hes, .Dm: return nil
         }
     }
 }

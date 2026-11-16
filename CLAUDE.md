@@ -71,6 +71,32 @@ travel between workstations, so they're repeated here.
   also update that key. Saves go through `GraphsFile.update`, which starts from the file on disk and replaces only the
   named node attributes. Text attributes are stored as single-level `node_strata`.
 
+## gstudio 1.15.5 parity pass (2026-11-16)
+
+Uncommitted. Divergences that remain, with what would close each, are in `~/Coding/gstudio/SWIFT_PARITY.md`
+(excluded from the R build). Decisions confirmed with the user:
+- **Gst, G′st and Dest follow mmod/hierfstat:** the multilocus value applies the formula to the mean Hs and Ht.
+  gstudio's working tree matches per locus and with `multilocus = "average"`, but its default is still `"harmonic"`.
+- **PhiFT reconstructs a missing mother** (gstudio's `.infer_maternal`, `MaternalInference`; used when the
+  likelihood ratio is ≥ 20). The genotype carries `Genotype.isEstimated`, and each reconstruction is an
+  `AnalysisNote`.
+- **Rarefaction among strata is without replacement:** `StrataRarefactionAnalysis` ports `rarefaction.test()` draw
+  for draw. `distributionTable(for:locus:)` holds the per-stratum distributions; a per-stratum distribution
+  `PlotForm` is still to design.
+- Also added: Sh, Pex, Dm and Fis; `HardyWeinbergAnalysis` (`hwe.test`); `GravityCongruenceAnalysis` (it merges
+  near-ties in S before ranking, unlike gstudio); `CongruenceTopology` keeps both graphs' attributes; and
+  `TransitionProbability` (including `freqs =`). Each has an R fixture.
+- `population_graph(decorate = TRUE)` needs nothing new: individuals carry only coordinates, and nodes already sit
+  at their stratum's mean.
+- Pedigree tools and Bruvo distance are deferred.
+
+**Next steps (queued by the user, 2026-11-16):**
+1. Design a per-stratum distribution `PlotForm` (violin, box or ridgeline: the user's choice) for the rarefaction
+   distributions.
+2. Choose one PhiFT rule for both packages in each of the four situations in `SWIFT_PARITY.md` §6.
+3. Make the gstudio fixes in `SWIFT_PARITY.md` §1–5. The first is defaulting to `multilocus = "average"`.
+4. mmod's `Gst_Hedrick()` is G″st, not G′st. Correct any docs or tests that compare `Gst_prime()` with it.
+
 ## Current state and next steps (handoff, 2026-11-04)
 
 **Everything since commit `fb7b8b9` is uncommitted.** That covers four pieces of work:

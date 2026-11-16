@@ -27,8 +27,12 @@ import Foundation
 ///
 /// The result contains the nodes present in **both** graphs (in `graph1`'s
 /// order) and an unweighted, undirected edge for every pair connected in both.
-/// Node sizes, colours, coordinates, and attributes are carried over from
-/// `graph1`.
+///
+/// Node attributes of both parents are carried over as gstudio 1.15 does: an attribute found in only one graph is
+/// copied, one found in both with the same values on the shared nodes is copied once, and one whose values differ
+/// is kept from both as `<name>.1` and `<name>.2`. Continuous values agree within R's `all.equal()` tolerance
+/// (1.5 × 10⁻⁸, relative). Size, colour and coordinate come from `graph1` (the coordinate from `graph2` when
+/// `graph1` has none); sizes that differ are also kept as the continuous attributes `size.1` and `size.2`.
 ///
 /// Non-overlapping nodes are dropped silently (gstudio emits a warning); if the
 /// two node sets differ, interpret the result with care.
@@ -43,12 +47,25 @@ public func CongruenceTopology(_ graph1: Graph, _ graph2: Graph) -> Graph {
     let commonSet = Set(common)
     let adjacency2 = graph2.undirectedAdjacency()
 
-    let newNodes = common.map { original -> Node in
-        let source = graph1.node(name: original)
-        let copy = Node(name: original, size: source?.size ?? 1.0, color: source?.color ?? .red,
-                        categoricalAttributes: source?.categoricalAttributes ?? [:],
-                        continuousAttributes: source?.continuousAttributes ?? [:])
-        if let coordinate = source?.coordinate { copy.coordinate = coordinate }
+    let first = common.map { graph1.node(name: $0) }
+    let second = common.map { graph2.node(name: $0) }
+    var continuous = mergedAttributes(first.map { $0?.continuousAttributes }, second.map { $0?.continuousAttributes },
+                                      same: { a, b in abs(a - b) <= 1.5e-8 * max(abs(a), 1e-300) })
+    let sizes1 = first.map { $0?.size }, sizes2 = second.map { $0?.size }
+    if !zip(sizes1, sizes2).allSatisfy({ $0 == $1 }) {
+        for i in common.indices {
+            if let size = sizes1[i] { continuous[i]["size.1"] = size }
+            if let size = sizes2[i] { continuous[i]["size.2"] = size }
+        }
+    }
+    let categorical = mergedAttributes(first.map { $0?.categoricalAttributes },
+                                       second.map { $0?.categoricalAttributes }, same: ==)
+
+    let newNodes = common.indices.map { i -> Node in
+        let source = first[i]
+        let copy = Node(name: common[i], size: source?.size ?? 1.0, color: source?.color ?? .red,
+                        categoricalAttributes: categorical[i], continuousAttributes: continuous[i])
+        if let coordinate = source?.coordinate ?? second[i]?.coordinate { copy.coordinate = coordinate }
         return copy
     }
     let nodeByName = Dictionary(uniqueKeysWithValues: newNodes.map { ($0.name, $0) })
@@ -62,6 +79,41 @@ public func CongruenceTopology(_ graph1: Graph, _ graph2: Graph) -> Graph {
     }
 
     return Graph(nodes: newNodes, edges: edges)
+}
+
+/// Merges two graphs' attributes on their shared nodes (see ``CongruenceTopology(_:_:)``).
+///
+/// - Parameters:
+///   - first: Each shared node's attributes in the first graph.
+///   - second: The same nodes' attributes in the second graph.
+///   - same: Whether two values agree.
+/// - Returns: Each shared node's merged attributes.
+private func mergedAttributes<Value>(_ first: [[String: Value]?], _ second: [[String: Value]?],
+                                     same: (Value, Value) -> Bool) -> [[String: Value]] {
+    let keys1 = Set(first.flatMap { $0.map { Array($0.keys) } ?? [] })
+    let keys2 = Set(second.flatMap { $0.map { Array($0.keys) } ?? [] })
+    var merged = [[String: Value]](repeating: [:], count: first.count)
+    for key in keys1.union(keys2) {
+        let v1 = first.map { $0?[key] }, v2 = second.map { $0?[key] }
+        let agree = zip(v1, v2).allSatisfy { a, b in
+            switch (a, b) {
+            case (nil, nil): true
+            case let (a?, b?): same(a, b)
+            default: false
+            }
+        }
+        for i in merged.indices {
+            if !keys2.contains(key) || agree {
+                merged[i][key] = v1[i]
+            } else if !keys1.contains(key) {
+                merged[i][key] = v2[i]
+            } else {
+                merged[i]["\(key).1"] = v1[i]
+                merged[i]["\(key).2"] = v2[i]
+            }
+        }
+    }
+    return merged
 }
 
 /// The result of ``TestCongruence(_:_:)``.

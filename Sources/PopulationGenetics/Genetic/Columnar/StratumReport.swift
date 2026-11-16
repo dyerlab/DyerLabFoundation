@@ -13,7 +13,9 @@
 //  The stratum counterpart of `FamilyReport`: what a population, region or other stratum holds, read before any
 //  analysis. Diversity is computed over the adults only, since offspring repeat their mothers' alleles; offspring are
 //  counted but kept out of the numbers. The multilocus F is a ratio of sums, 1 − ΣHo / ΣHe, like every multilocus
-//  statistic in the package; the other multilocus values are means over the loci genotyped here.
+//  statistic in the package; Pex combines as 1 − Π(1 − Pex), the chance at least one locus excludes a random male;
+//  the other multilocus values are means over the loci genotyped here. Dm, the fraction of adults with distinct
+//  multilocus genotypes, is one value over all loci.
 //
 //  Created by Rodney Dyer on 2026.11.09.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -38,6 +40,10 @@ public struct StratumReport: Sendable {
         public let ho: Double?
         /// Expected heterozygosity, 1 − Σp².
         public let he: Double?
+        /// Shannon's information index, −Σ p ln p.
+        public let shannon: Double?
+        /// The paternity exclusion probability with one known parent (Jamieson & Taylor 1997).
+        public let exclusion: Double?
 
         /// The locus's name.
         public var id: String { locus }
@@ -67,6 +73,8 @@ public struct StratumReport: Sendable {
     public let longitude: Double?
     /// Each locus's diversity among the adults, in matrix order.
     public let loci: [LocusRow]
+    /// The fraction of adults with distinct multilocus genotypes (Dm), or `nil` with no adults.
+    public let multilocusDiversity: Double?
 
     // MARK: - Initialization
 
@@ -109,8 +117,11 @@ public struct StratumReport: Sendable {
                             alleles: DiversityType.A.value(of: frequencies),
                             effectiveAlleles: DiversityType.Ae.value(of: frequencies),
                             ho: DiversityType.Ho.value(of: frequencies),
-                            he: DiversityType.He.value(of: frequencies))
+                            he: DiversityType.He.value(of: frequencies),
+                            shannon: DiversityType.Sh.value(of: frequencies),
+                            exclusion: DiversityType.Pex.value(of: frequencies))
         }
+        multilocusDiversity = dataset.matrix.multilocusDiversity(over: adults)
     }
 
     // MARK: - Contents
@@ -120,8 +131,8 @@ public struct StratumReport: Sendable {
         ordinals.count - adults.count
     }
 
-    /// The multilocus row: means over the loci genotyped here, with F as 1 − ΣHo / ΣHe and the fewest adults
-    /// genotyped at any of them.
+    /// The multilocus row: means over the loci genotyped here, with F as 1 − ΣHo / ΣHe, Pex as 1 − Π(1 − Pex),
+    /// and the fewest adults genotyped at any of them.
     public var multilocus: LocusRow {
         let typed = loci.filter { $0.genotyped > 0 }
         /// The mean of a column over the typed loci.
@@ -131,9 +142,12 @@ public struct StratumReport: Sendable {
         }
         let ho = typed.compactMap(\.ho).reduce(0, +), he = typed.compactMap(\.he).reduce(0, +)
         let count = Double(typed.count)
+        let exclusions = typed.compactMap(\.exclusion)
         return LocusRow(locus: "Multilocus", genotyped: typed.map(\.genotyped).min() ?? 0,
                         alleles: mean(\.alleles), effectiveAlleles: mean(\.effectiveAlleles),
-                        ho: typed.isEmpty ? nil : ho / count, he: typed.isEmpty ? nil : he / count)
+                        ho: typed.isEmpty ? nil : ho / count, he: typed.isEmpty ? nil : he / count,
+                        shannon: mean(\.shannon),
+                        exclusion: exclusions.isEmpty ? nil : 1 - exclusions.reduce(1) { $0 * (1 - $1) })
     }
 
     /// The strata of a level, in the order first met in the data.

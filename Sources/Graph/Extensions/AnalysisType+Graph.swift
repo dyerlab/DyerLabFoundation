@@ -37,4 +37,13 @@ extension AnalysisType {
                      operands: [AnalysisOperand(role: "graph", kind: .graph),
                                 AnalysisOperand(role: "separation", kind: .pairwise)],
                      usesIterations: false)
+
+    /// Gravity congruence: whether two Population Graphs over the same populations agree on the direction of gene
+    /// flow, from their source-sink scores and edge asymmetries (gstudio's `gravity_congruence()`).
+    public static let gravityCongruence =
+        AnalysisType("gravityCongruence",
+                     displayName: "Gravity Congruence",
+                     operands: [AnalysisOperand(role: "graph1", kind: .graph),
+                                AnalysisOperand(role: "graph2", kind: .graph)],
+                     usesIterations: true)
 }

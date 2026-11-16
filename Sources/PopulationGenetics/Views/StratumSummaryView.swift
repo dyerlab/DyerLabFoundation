@@ -87,14 +87,21 @@ public struct StratumSummaryView: View {
                     .bold()
             }
             .font(.callout.monospacedDigit())
-            Text("A: alleles · Ae: effective alleles · F = 1 − Ho / He; Multilocus F = 1 − ΣHo / ΣHe.")
+            Text("A: alleles · Ae: effective alleles · F = 1 − Ho / He · Sh: Shannon index · Pex: exclusion "
+                 + "probability, one parent known; Multilocus F = 1 − ΣHo / ΣHe, Pex = 1 − Π(1 − Pex).")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            if let dm = report.multilocusDiversity {
+                Text("Dm = \(format(dm, digits: 3)): the share of \(report.adults.count) adults with distinct "
+                     + "multilocus genotypes.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
     /// The locus table's column headers.
-    private static let headers = ["Locus", "N", "A", "Ae", "Ho", "He", "F"]
+    private static let headers = ["Locus", "N", "A", "Ae", "Ho", "He", "F", "Sh", "Pex"]
 
     /// One locus's row.
     ///
@@ -109,6 +116,8 @@ public struct StratumSummaryView: View {
             Text(format(locus.ho, digits: 3))
             Text(format(locus.he, digits: 3))
             Text(format(locus.f, digits: 3))
+            Text(format(locus.shannon, digits: 3))
+            Text(format(locus.exclusion, digits: 3))
         }
     }
 

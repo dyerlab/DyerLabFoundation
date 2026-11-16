@@ -59,6 +59,19 @@ public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable, 
     /// Locus polymorphic index, `Σp(1-p)`.
     case Pe = "Pe"
 
+    /// Wright's inbreeding coefficient, `1 − Ho / He`.
+    case Fis = "Fis"
+
+    /// Shannon's information index, `−Σ p ln p`.
+    case Sh = "Sh"
+
+    /// Paternity exclusion probability with one known parent (Jamieson & Taylor 1997).
+    case Pex = "Pex"
+
+    /// Multilocus genotypic diversity: the fraction of individuals whose multilocus genotype is unique. It is one
+    /// value over all loci (``GenotypeMatrix/multilocusDiversity(over:loci:)``), not a per-locus statistic.
+    case Dm = "Dm"
+
     /// The metric itself.
     public var id: Self { self }
 
@@ -76,6 +89,10 @@ public enum DiversityType: String, Sendable, Equatable, Hashable, CaseIterable, 
         case .Hos: "Observed subpopulation heterozygosity"
         case .Hes: "Expected subpopulation heterozygosity"
         case .Pe: "Locus polymorphic index"
+        case .Fis: "Inbreeding coefficient"
+        case .Sh: "Shannon index"
+        case .Pex: "Paternity exclusion probability"
+        case .Dm: "Multilocus genotypic diversity"
         }
     }
 

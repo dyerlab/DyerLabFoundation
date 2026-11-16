@@ -106,7 +106,7 @@ A variance-components table has the columns `Source`, `df`, `SS`, `MS`, `sigma2`
 individuals, `df` and `MS` are missing. A by-locus table has `Locus`, `N`, `Alleles`, `Hs` and `Ht` (adults only), one
 column per statistic (`theta`, `F_IS`, `F_IT`, `Phi_ST`, `Phi_ST_genotypes`, `Gst`, `Gst_prime`, `Dest`), each tested
 statistic followed by its `P_` column, and a text column `Warning` if any locus's Gst or Dest is flagged; its last row,
-`Multilocus`, holds ratios of sums over loci. The `spec` is a ``StructureSpec``:
+`Multilocus`, holds ratios of sums over loci (Gst, G′st and Dest from the mean Hs and Ht over loci). The `spec` is a ``StructureSpec``:
 
 ```json
 {"columns":["theta","phiGeneCopies","gst","gstPrime","dest"],"level":"Population","locus":"LTRS",

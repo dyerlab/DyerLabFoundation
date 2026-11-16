@@ -20,10 +20,11 @@
 # parent/offspring data only the mothers (OffID 0) are used, as the Distance page does.
 #
 # Run from this directory:  Rscript generate_distance_fixtures.R
+# Needs gstudio (>= 1.15, which absorbed the discontinued popgraph package, including popgraph() and cGD), vegan and
+# jsonlite.
 
 suppressPackageStartupMessages({
   library(gstudio)
-  library(popgraph)
   library(vegan)
   library(jsonlite)
 })

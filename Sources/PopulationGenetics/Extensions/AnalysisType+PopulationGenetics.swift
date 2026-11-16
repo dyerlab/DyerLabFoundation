@@ -56,7 +56,7 @@ extension AnalysisType {
                                                    usesIterations: true)
 
     /// Genetic differentiation among strata locus by locus: θ, F_IS and F_IT, Φ_ST, Gst, G′st and Dest, with
-    /// multilocus values as ratios of sums over loci.
+    /// multilocus values as ratios of sums over loci (Gst, G′st and Dest from the mean Hs and Ht, as in mmod).
     public static let geneticDifferentiation = AnalysisType("geneticDifferentiation",
                                                             displayName: "Genetic Differentiation",
                                                             operands: [AnalysisOperand(role: "genotypes",
@@ -64,6 +64,13 @@ extension AnalysisType {
                                                                        AnalysisOperand(role: "strata",
                                                                                        kind: .partition)],
                                                             usesIterations: true)
+
+    /// A chi-square test of Hardy–Weinberg proportions at one locus, with a continuity correction when any
+    /// genotype is expected fewer than five times (gstudio's `hwe.test()`).
+    public static let hardyWeinberg = AnalysisType("hardyWeinberg",
+                                                   displayName: "Hardy–Weinberg Equilibrium",
+                                                   operands: [AnalysisOperand(role: "genotypes", kind: .genotypes)],
+                                                   usesIterations: false)
 
     /// Two-generation analysis of pollen pool structure (2Gener; Smouse et al.
     /// 2001): AMOVA of the paternal gametes recovered from mothers and their

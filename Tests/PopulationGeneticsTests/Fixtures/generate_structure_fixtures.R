@@ -25,8 +25,10 @@
 # - Nei (1973), uncorrected ("differentiationUncorrected"): Hs = mean_i(1 - sum_u p_iu^2), Ht = 1 - sum_u pbar_u^2.
 # Gst =
 # (Ht - Hs)/Ht, G'st = Gst (k - 1 + Hs)/((k - 1)(1 - Hs)) (Hedrick 2005) and Dest = (Ht - Hs)/(1 - Hs) k/(k - 1)
-# (Jost 2008). Multilocus, as ratios of sums: Gst = sum(Ht - Hs)/sum(Ht), G'st = sum((Ht - Hs)(k - 1 + Hs)) /
-# sum(Ht (k - 1)(1 - Hs)), Dest = sum((Ht - Hs) k/(k - 1))/sum(1 - Hs).
+# (Jost 2008). Multilocus, as mmod and hierfstat do it: each formula applied to the mean Hs and Ht over loci, with k
+# the number of strata (mmod's Gst_Nei()$global and D_Jost()$global.het, checked below). For Gst this is the ratio of
+# sums 1 - sum(Hs)/sum(Ht); G'st and Dest are not means or harmonic means of the per-locus values. (mmod's own
+# Gst_Hedrick() is Meirmans & Hedrick's (2011) G''st, k(Ht - Hs)/((k Ht - Hs)(1 - Hs)), so it isn't used here.)
 #
 # Run from this directory: Rscript generate_structure_fixtures.R
 # Needs gstudio, hierfstat, adegenet, mmod and jsonlite.
@@ -251,13 +253,16 @@ for (j in seq_along(loci)) {
 }
 
 multilocus <- function(rows) {
-  dsum <- function(f) sum(sapply(rows, f))
-  list(gst = dsum(function(r) r$ht - r$hs) / dsum(function(r) r$ht),
-       gstPrime = dsum(function(r) (r$ht - r$hs) * (r$strata - 1 + r$hs)) /
-         dsum(function(r) r$ht * (r$strata - 1) * (1 - r$hs)),
-       dest = dsum(function(r) (r$ht - r$hs) * r$strata / (r$strata - 1)) / dsum(function(r) 1 - r$hs))
+  hs <- mean(sapply(rows, function(r) r$hs))
+  ht <- mean(sapply(rows, function(r) r$ht))
+  k <- max(sapply(rows, function(r) r$strata))
+  list(gst = (ht - hs) / ht,
+       gstPrime = (ht - hs) * (k - 1 + hs) / (ht * (k - 1) * (1 - hs)),
+       dest = (ht - hs) / (1 - hs) * k / (k - 1))
 }
 differentiationMultilocus <- multilocus(differentiation)
+stopifnot(abs(Gst_Nei(gi)$global - differentiationMultilocus$gst) < 1e-10,
+          abs(D_Jost(gi)$global.het - differentiationMultilocus$dest) < 1e-10)
 
 write_json(list(weirCockerham = wc, amova = amova, weirCockerhamMultilocus = wcMultilocus,
                 amovaLocus = amova_locus, amovaMultilocus = amovaMultilocus,

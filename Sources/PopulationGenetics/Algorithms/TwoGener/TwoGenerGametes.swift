@@ -17,7 +17,10 @@
 //  - ambiguous (mother and offspring share heterozygote i/k): qᵢ/(qᵢ+qₖ) on i
 //    and qₖ/(qᵢ+qₖ) on k, with q the study-wide pollen-pool frequencies;
 //  - missing (mother or offspring not scored at the locus): imputed as q
-//    itself, each allele weighted by its pollen-pool frequency;
+//    itself, each allele weighted by its pollen-pool frequency. A mother
+//    missing at a locus is first reconstructed from her offspring
+//    (`MaternalInference`, as gstudio's PhiFT does) and only imputed when no
+//    genotype is at least 20 times as likely as the next best;
 //  - impossible (offspring shares no allele with its mother at some locus):
 //    the offspring is dropped from the analysis entirely.
 //
@@ -57,6 +60,9 @@ struct TwoGenerGametes: Sendable {
 
     /// The decisions made while recovering and scoring the gametes.
     let notes: [AnalysisNote]
+
+    /// The missing maternal genotypes reconstructed from offspring, used or not.
+    let maternalInferences: [MaternalInference]
 
     /// Offspring dropped as incompatible with their mother.
     let droppedCount: Int
@@ -103,6 +109,18 @@ struct TwoGenerGametes: Sendable {
         let L = matrix.locusCount
         let used = loci.map { Set($0) } ?? Set(0..<L)
 
+        // MARK: - Reconstruct missing mothers from their offspring.
+        let inferences = MaternalInference.infer(matrix: matrix, design: design, loci: used.sorted())
+        var inferredMother: [Int: [Int: (UInt8, UInt8)]] = [:]   // [mother][locus]
+        for inference in inferences {
+            if inference.isUsed, let alleles = inference.alleles {
+                inferredMother[inference.motherOrdinal, default: [:]][inference.locusOrdinal] = alleles
+                note(.assumption, inference.message)
+            } else {
+                note(.warning, inference.message)
+            }
+        }
+
         // MARK: - Recover gametes; drop impossible offspring.
         var partition: [Int] = []
         var offspring: [Int] = []
@@ -117,6 +135,10 @@ struct TwoGenerGametes: Sendable {
             for child in family.offspring {
                 let recovered = (0..<L).map { j -> PaternalContribution in
                     guard used.contains(j) else { return .missing }
+                    if let inferred = inferredMother[mother]?[j] {
+                        guard let alleles = matrix.columns[j].alleles(at: child) else { return .missing }
+                        return paternalGamete(offspring: alleles, mother: inferred)
+                    }
                     return paternalGamete(offspringOrdinal: child, motherOrdinal: mother, in: matrix.columns[j])
                 }
                 let impossible = (0..<L).filter { recovered[$0] == .impossible }
@@ -255,6 +277,7 @@ struct TwoGenerGametes: Sendable {
         self.locusScores = locusScores
         self.vectors = vectors
         self.notes = notes
+        self.maternalInferences = inferences
         self.droppedCount = droppedCount
         self.motherlessOffspringCount = motherlessOffspringCount
         self.locusCount = pollenPool.filter { !$0.isEmpty }.count
