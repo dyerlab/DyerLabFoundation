@@ -49,8 +49,11 @@ When a matrix is a distance matrix, a ``DistanceSpec`` as its `spec` says so:
   `strata_distance(mode = "Circle")` computes it; or a genetic distance, named as gstudio's `genetic_distance()` names
   its `mode`. Among individuals: `amova` (Smouse & Peakall's squared distance) and `bray` (Bray-Curtis, one minus the
   proportion of shared alleles). Among strata: `nei` (Nei 1978), `cavalli` (Cavalli-Sforza & Edwards' chord),
-  `dps` (1 − Ps), `euclidean`, `cgd` (conditional genetic distance through the population graph) and `phi_st`
-  (pairwise Φ_ST, which gstudio has no mode for). Each locus uses only the units genotyped there, where gstudio counts
+  `dps` (1 − Ps), `euclidean`, `cgd` (conditional genetic distance through the population graph), `dcgd`
+  (directional conditional genetic distance, gstudio's `mode = "dcGD"`: each population-graph edge's cGD split into
+  directed shares by the genetic-gravity neighbourhood weights at γ = 0.5, then the shortest directed path) and
+  `phi_st` (pairwise Φ_ST, which gstudio has no mode for). `dcgd` is the one directed measure: its matrix is
+  asymmetric and is read from row to column, so a stored one keeps all n × n values. Each locus uses only the units genotyped there, where gstudio counts
   a missing genotype as having no alleles; without missing data the two agree.
 - `level`: `Individuals`, among the adults (every individual, or the mothers of parent/offspring data, whose offspring
   share their location), or a stratum level, among that level's strata. A stratum sits at the mean of its distinct

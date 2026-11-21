@@ -14,8 +14,8 @@
 //  different kinds of result:
 //    - IsolationByGraphDistance            <- ibgd(mode = "cgd"): cGD vs
 //      separation, Mantel permutation test.
-//    - DirectionalIsolationByGraphDistance <- ibgd(mode = "pgd"): does a
-//      directed pGD model with forward/reverse slopes fit better than cGD?
+//    - DirectionalIsolationByGraphDistance <- ibgd(mode = "dcGD"): does a
+//      directed dcGD model with forward/reverse slopes fit better than cGD?
 //  See `~/Coding/gstudio/R/ibgd.R`.
 //
 //  Created by Rodney Dyer on 2026.10.07.
@@ -57,19 +57,19 @@ public struct IsolationByGraphDistanceResult: Sendable, Equatable {
 }
 
 /// The result of ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)``
-/// — the fields of gstudio's `ibgd(mode = "pgd")` `htest`. There is no p-value:
+/// — the fields of gstudio's `ibgd(mode = "dcGD")` `htest`. There is no p-value:
 /// the two fits use different responses, so they are not nested.
 public struct DirectionalIsolationByGraphDistanceResult: Sendable, Equatable {
-    /// `ΔR² = adjusted R²_pGD − R²_cGD`. Positive favours the directional
+    /// `ΔR² = adjusted R²_dcGD − R²_cGD`. Positive favours the directional
     /// description; `≤ 0` is an absence of evidence for asymmetry, not evidence
     /// of symmetry.
     public let deltaR2: Double
-    /// Number of ordered population pairs in the pGD fit.
+    /// Number of ordered population pairs in the dcGD fit.
     public let pairs: Int
     /// `R²` of cGD on separation.
     public let r2CGD: Double
-    /// Adjusted `R²` of `pGD ~ d + d:reverse`.
-    public let adjustedR2PGD: Double
+    /// Adjusted `R²` of `dcGD ~ d + d:reverse`.
+    public let adjustedR2DCGD: Double
     /// Slope for forward (downstream) pairs.
     public let forwardSlope: Double
     /// Slope for reverse (upstream) pairs.
@@ -77,7 +77,7 @@ public struct DirectionalIsolationByGraphDistanceResult: Sendable, Equatable {
     /// `forwardSlope / reverseSlope`; below one means genetic distance
     /// accumulates more slowly downstream.
     public let slopeRatio: Double
-    /// The pGD bandwidth multiplier used.
+    /// The dcGD bandwidth multiplier used.
     public let gamma: Double
 }
 
@@ -113,17 +113,17 @@ public func IsolationByGraphDistance(graph: Graph,
 }
 
 /// Directional isolation by graph distance — a port of gstudio's
-/// `ibgd(mode = "pgd")`.
+/// `ibgd(mode = "dcGD")`.
 ///
-/// All-pairs directed pGD (``PartitionedGeneticDistance(graph:gamma:)``) is
+/// All-pairs directed dcGD (``DirectionalConditionalGeneticDistance(graph:gamma:)``) is
 /// regressed on separation with separate forward and reverse slopes,
-/// `pGDᵢⱼ ~ dᵢⱼ + dᵢⱼ·rᵢⱼ` (`rᵢⱼ = 1` for reverse pairs), and its adjusted `R²`
+/// `dcGDᵢⱼ ~ dᵢⱼ + dᵢⱼ·rᵢⱼ` (`rᵢⱼ = 1` for reverse pairs), and its adjusted `R²`
 /// compared with the `R²` of cGD on separation. Deterministic.
 ///
 /// - Parameters:
 ///   - graph: An undirected, weighted graph.
 ///   - separation: Positions, or a distance matrix *with* `forward`.
-///   - gamma: Bandwidth multiplier for pGD (default `0.5`).
+///   - gamma: Bandwidth multiplier for dcGD (default `0.5`).
 /// - Returns: The comparison, or `nil` if the separation does not cover every
 ///   node, a distance matrix lacks `forward`, `gamma` is invalid, or the
 ///   regression is singular or has too few pairs.

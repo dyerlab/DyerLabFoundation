@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable+FigureColumns.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Created by Rodney Dyer on 2026.11.06.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -19,7 +19,7 @@ import TabularData
 
 public extension DataTable {
 
-    /// The table as columns a ``StoredFigure`` can hold, in order and with their roles.
+    /// The table as columns a `StoredFigure` can hold, in order and with their roles.
     ///
     /// A column that is not a number, date or string becomes text.
     var figureColumns: [FigureColumn] {

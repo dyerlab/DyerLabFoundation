@@ -122,10 +122,13 @@ existed, reads as a variance-components table of `phiGenotypes` for every adult 
 
 ### Isolation-by-distance analyses
 
-An isolation-by-distance analysis is one figure of form `scatter` with generator `ibd_analysis`, so its plot and its
-results travel together. Its columns are the pairs tested: text columns `From` and `To`, then the separation as `x`
-(`distance_km`, or `ln_distance_km` when log-transformed) and the genetic distance as `y` (`phi_st_linearized` for
-Rousset's Φ_ST / (1 − Φ_ST), otherwise the measure's name, such as `nei`). `x_label` and `y_label` are the axis titles,
+An isolation-by-distance analysis (gstudio's `genetic_isolation()`) is one figure of form `scatter` with generator
+`ibd_analysis`, so its plot and its results travel together. Its columns are the pairs tested: text columns `From`
+and `To`, then the separation as `x` (`distance_km`, or along an axis `latitude_difference`, `longitude_difference`
+or `axis_difference`, each prefixed `ln_` when log-transformed) and the genetic distance as `y` (`phi_st_linearized`
+for Rousset's Φ_ST / (1 − Φ_ST), otherwise the measure's name, such as `nei`). A directional analysis (dcGD, below)
+holds the ordered pairs of its directional fit, with `y` named `dcgd` and a text column `Direction`, `forward` or
+`reverse`, in the series role. `x_label` and `y_label` are the axis titles,
 `r_code` draws the points and the regression line (`geom_abline`), and the `figure` image is the plot with its line.
 The `spec` is an ``IBDSpec``, holding both the inputs and the results:
 
@@ -142,6 +145,35 @@ In `result`, `r` is the Mantel correlation, `p` its permutation P (absent when u
 least-squares line of `y` on `x`, `r2` that line's R², and `pairs` the pairs tested (pairs with a non-finite genetic
 distance are left out). The permutations are vegan's for the same `seed`, so `set.seed(seed); vegan::mantel(x, y)`
 reproduces `p`.
+
+Separation can also be the difference along a hypothesized axis, as `genetic_isolation(axis = )` takes it:
+
+```json
+{"alongAxis":true,"axis":{"name":"Deme","positions":{"Pop01":1,"Pop02":2,…,"Pop25":25},"source":"positions"},
+ "gamma":0.5,"genetic":{"level":"Population","measure":"dcgd"},"logSeparation":false,"method":"pearson",
+ "permutations":999,"result":{"adjustedR2":0.828,"deltaR2":0.156,"directedIntercept":0.825,"forwardSlope":0.0088,
+ "intercept":1.684,"orderedPairs":600,"p":0.001,"pairs":300,"r":0.820,"r2":0.673,"reverseSlope":0.509,
+ "slope":0.556,"slopeRatio":0.0173},"seed":42,"transform":"none"}
+```
+
+- `axis` (absent without one): `source` is `latitude` or `longitude`, each unit's mean over its adults with
+  coordinates (as `genetic_isolation()` averages an `axis` column within strata; every located adult counts, where a
+  great-circle centroid counts each distinct location once), or `positions`, given by unit name in `positions`, with
+  an optional `name`. A pair runs forward when its second unit's position is larger: northward, eastward, or toward
+  larger positions.
+- `alongAxis` (present with `axis`): `true` when separation is `|aⱼ − aᵢ|` along the axis, in which case
+  `separation` is absent; `false` when separation is the `separation` matrix and the axis only gives dcGD its
+  direction (`genetic_isolation(axis = , spatial = )`).
+- With `genetic.measure` `cgd` and geographic separation (great-circle or along an axis) the analysis is isolation by
+  graph distance, `genetic_isolation(mode = "IBGD")`: the Mantel test of cGD, through the population graph of the
+  strata with at least 3 genotyped individuals, in the graph's node order, as `ibgd(mode = "cGD")` permutes them.
+- With `genetic.measure` `dcgd` it is directional isolation by graph distance, `genetic_isolation(mode = "dcGD")`,
+  which needs an `axis`. `gamma` is the bandwidth multiplier (written only for dcGD; 0.5 when absent). `r`, `p`,
+  `slope`, `intercept`, `r2` and `pairs` are the Mantel test of cGD, as for `IBGD`; `r2` is R²_cGD. Then the ordered
+  pairs' dcGD is regressed on separation with separate forward and reverse slopes, `dcGD ~ d + d:reverse`:
+  `orderedPairs` pairs, `adjustedR2` its adjusted R², `deltaR2` = `adjustedR2` − `r2`, `forwardSlope`,
+  `reverseSlope`, their `slopeRatio` and the shared `directedIntercept`. ΔR² has no P: the fits use different
+  response matrices, so they aren't nested. `r_code` draws the forward line solid and the reverse line dashed.
 
 ### The `meta` table
 

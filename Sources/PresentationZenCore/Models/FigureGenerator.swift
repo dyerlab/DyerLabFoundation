@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  FigureGenerator.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Created by Rodney Dyer on 2026.11.06.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -16,7 +16,7 @@
 
 import Foundation
 
-/// The code that can recompute a ``StoredFigure`` from a project's current data.
+/// The code that can recompute a `StoredFigure` from a project's current data.
 ///
 /// This is an open tag, so a module can add its own with a `static let` in an extension. A figure whose generator
 /// a program doesn't know still draws from its stored values, and is kept when the file is saved.

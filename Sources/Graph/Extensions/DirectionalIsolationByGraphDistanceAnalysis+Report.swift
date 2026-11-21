@@ -12,7 +12,7 @@
 //
 //  Methods keys: `separation`, `gamma`, `unitCount`. Results keys (from
 //  `DirectionalIsolationByGraphDistanceOutcome`): `pairCount`, `deltaR2`, `moreOrLess`,
-//  `r2CGD`, `adjustedR2PGD`, `forwardSlope`, `reverseSlope`, `slopeRatio`,
+//  `r2CGD`, `adjustedR2DCGD`, `forwardSlope`, `reverseSlope`, `slopeRatio`,
 //  `intercept`.
 //
 //  Created by Rodney Dyer on 2026.11.02.
@@ -23,19 +23,20 @@ import Matrix
 
 extension DirectionalIsolationByGraphDistanceAnalysis {
 
-    /// Directional isolation by graph distance wording. pGD has no
-    /// published citation yet, so the text names its implementation.
+    /// Directional isolation by graph distance wording.
+    ///
+    /// "Dyer, in review" is Dyer RJ, Genetic Gravity: Extracting Directional Gene Flow from Population Graphs,
+    /// *Molecular Ecology* (in review), which defines dcGD.
     public static var reportTemplate: AnalysisReportTemplate {
         AnalysisReportTemplate(
             methods: "Directional isolation by graph distance among {unitCount} populations was assessed by "
-                + "regressing partitioned genetic distance (pGD, γ = {gamma}; as implemented in gstudio) on "
+                + "regressing directional conditional genetic distance (dcGD, γ = {gamma}; Dyer, in review) on "
                 + "{separation}, with separate slopes for pairs in the hypothesized forward and reverse "
                 + "directions ({pairCount} ordered pairs). Its adjusted R² was compared with the R² of conditional "
                 + "genetic distance (cGD; Dyer, Nason & Garrick 2010) on {separation}. No significance test was "
                 + "performed.",
-            results: "Partitioned genetic distance explained {moreOrLess} of the variation than cGD "
-                + "(ΔR² = {deltaR2}; adjusted R² = {adjustedR2PGD} vs. R² = {r2CGD}; {pairCount} ordered pairs). The forward slope "
-                + "was {forwardSlope} and the reverse slope {reverseSlope} (ratio {slopeRatio}).")
+            results: "dcGD explained {moreOrLess} of the variation than cGD (ΔR² = {deltaR2}; adjusted R² = "
+                + "{adjustedR2DCGD} vs. R² = {r2CGD}; {pairCount} ordered pairs). The forward slope was {forwardSlope} and the reverse slope {reverseSlope} (ratio {slopeRatio}).")
     }
 
     /// The separation, γ and the number of populations.
@@ -46,7 +47,7 @@ extension DirectionalIsolationByGraphDistanceAnalysis {
         [
             "separation": AnalysisReport.sentenceCase(separationLabel),
             "gamma": AnalysisReport.number(gamma),
-            "unitCount": AnalysisReport.count(names.count),
+            "unitCount": AnalysisReport.count(placedCount),
         ]
     }
 }

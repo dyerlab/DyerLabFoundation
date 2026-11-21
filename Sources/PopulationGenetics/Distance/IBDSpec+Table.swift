@@ -25,7 +25,8 @@ import TabularData
 public extension IBDSpec {
 
     /// The statistics: pairs, the Mantel r, P and permutations when tested, then the regression's slope,
-    /// intercept and R²; `nil` before the test has run.
+    /// intercept and R², and for dcGD the directional fit (for which the Mantel rows are cGD's); `nil` before the
+    /// test has run.
     var resultsTable: DataTable? {
         guard let result else { return nil }
         var rows: [(String, Double?)] = [("Pairs", Double(result.pairs)),
@@ -35,6 +36,12 @@ public extension IBDSpec {
             rows.append(("Permutations", Double(permutations)))
         }
         rows += [("Slope", result.slope), ("Intercept", result.intercept), ("R²", result.r2)]
+        if result.isDirectional {
+            rows += [("Ordered pairs", result.orderedPairs.map(Double.init)), ("Adjusted R² (dcGD)", result.adjustedR2),
+                     ("ΔR²", result.deltaR2), ("Forward slope", result.forwardSlope),
+                     ("Reverse slope", result.reverseSlope), ("Slope ratio", result.slopeRatio),
+                     ("Intercept (dcGD)", result.directedIntercept)]
+        }
         var frame = DataFrame()
         frame.append(column: TabularData.Column(name: "Statistic", contents: rows.map(\.0)))
         frame.append(column: TabularData.Column(name: "Value", contents: rows.map(\.1)))

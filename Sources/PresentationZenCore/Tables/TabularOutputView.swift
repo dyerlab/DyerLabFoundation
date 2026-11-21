@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  TabularOutputView.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A results table laid out the way a journal prints one: rules above and
 //  below the header and at the foot, text left-aligned, numbers right-aligned

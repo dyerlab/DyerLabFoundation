@@ -84,7 +84,7 @@ public struct StrataRarefactionAnalysis: Sendable {
     ///   - strata: The strata to rarefy, in draw order, or `nil` (the default) for every stratum of the level in
     ///     the order first met in the data.
     ///   - loci: The locus ordinals, or `nil` (the default) for every locus.
-    ///   - statistics: The statistics, from ``statistics`` (default Ae, as gstudio).
+    ///   - statistics: The statistics, from ``StrataRarefactionAnalysis/statistics-swift.type.property`` (default Ae, as gstudio).
     ///   - size: The subsample size, or `nil` (the default) for the smallest genotyped stratum at each locus.
     ///   - confidenceLevel: The intervals' coverage (default 0.95).
     ///   - dropsMissingLoci: Whether multilocus rows leave out loci with no value (default `false`).

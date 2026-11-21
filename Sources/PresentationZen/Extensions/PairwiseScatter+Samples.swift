@@ -42,7 +42,7 @@ extension PairwiseScatter {
             .scatter ?? PairwiseScatter(xLabel: "Distance (km)", yLabel: "cGD", series: [])
     }
 
-    /// Partitioned genetic distance against latitude difference for the
+    /// Directional conditional genetic distance against latitude difference for the
     /// Lophocereus populations, split into northward (forward) and southward
     /// (reverse) pairs, each with its own fitted slope.
     public static var sampleDirectionalGraphDistance: PairwiseScatter {
@@ -53,7 +53,7 @@ extension PairwiseScatter {
         return DirectionalIsolationByGraphDistanceAnalysis(graph: graph, separation: .positions(latitude),
                                                            separationLabel: "Latitude difference (°)")?
             .run(options: AnalysisOptions(iterations: 0))?
-            .scatter ?? PairwiseScatter(xLabel: "Latitude difference (°)", yLabel: "pGD", series: [])
+            .scatter ?? PairwiseScatter(xLabel: "Latitude difference (°)", yLabel: "dcGD", series: [])
     }
 
     /// The bundled Lophocereus graph; a missing resource is a packaging bug.

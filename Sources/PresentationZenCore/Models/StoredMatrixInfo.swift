@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  StoredMatrixInfo.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Metadata for a named `Matrix` attached to a project (a derived Fst
 //  distance matrix, PCA loadings, ...) — distinct from a genetic marker

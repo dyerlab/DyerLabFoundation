@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A typed, columnar container for plottable data built on Apple's
 //  `TabularData.DataFrame`, plus a mapping of plot roles to column names.

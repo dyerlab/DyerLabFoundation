@@ -20,6 +20,7 @@
 //
 
 import Foundation
+import Graph
 import Matrix
 import PresentationZen
 
@@ -28,8 +29,11 @@ public struct IBDResult: Sendable {
 
     /// What was tested, with ``IBDSpec/result`` filled in.
     public let spec: IBDSpec
-    /// The Mantel test: the pairs, the correlation, the regression line and any null distribution.
+    /// The Mantel test: the pairs, the correlation, the regression line and any null distribution. For dcGD, the
+    /// test of cGD, isolation by graph distance.
     public let outcome: MantelOutcome
+    /// For dcGD, the directional fit: forward and reverse pairs with their slopes; `nil` otherwise.
+    public let directional: DirectionalIsolationByGraphDistanceOutcome?
     /// The Methods, Results and notes for the log.
     public let report: AnalysisReport
     /// Whether the adults are the mothers of parent/offspring data.
@@ -42,13 +46,15 @@ public struct IBDResult: Sendable {
     /// - Parameters:
     ///   - spec: What was tested, with its results.
     ///   - outcome: The Mantel outcome.
+    ///   - directional: For dcGD, the directional fit.
     ///   - report: The report for the log.
     ///   - isParentOffspring: Whether the adults are the mothers of parent/offspring data.
     ///   - unlocated: The units left out for want of coordinates.
-    public init(spec: IBDSpec, outcome: MantelOutcome, report: AnalysisReport, isParentOffspring: Bool,
-                unlocated: [String] = []) {
+    public init(spec: IBDSpec, outcome: MantelOutcome, directional: DirectionalIsolationByGraphDistanceOutcome? = nil,
+                report: AnalysisReport, isParentOffspring: Bool, unlocated: [String] = []) {
         self.spec = spec
         self.outcome = outcome
+        self.directional = directional
         self.report = report
         self.isParentOffspring = isParentOffspring
         self.unlocated = unlocated
@@ -61,9 +67,14 @@ public struct IBDResult: Sendable {
         spec.title(isParentOffspring: isParentOffspring)
     }
 
-    /// The scatter of pairs, with the regression line.
+    /// The scatter of pairs, with the regression line; for dcGD the ordered pairs, forward and reverse, each with its
+    /// line.
     public var scatter: PairwiseScatter {
-        outcome.scatter(xLabel: spec.separationLabel, yLabel: spec.geneticLabel)
+        if let directional {
+            return PairwiseScatter(xLabel: spec.separationLabel, yLabel: spec.geneticLabel,
+                                   series: directional.scatter.series)
+        }
+        return outcome.scatter(xLabel: spec.separationLabel, yLabel: spec.geneticLabel)
     }
 
     /// The Mantel and regression statistics as a table.

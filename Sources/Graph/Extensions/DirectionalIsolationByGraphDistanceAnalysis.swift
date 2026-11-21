@@ -11,7 +11,7 @@
 //  Graph
 //
 //  The `Analysis` form of `DirectionalIsolationByGraphDistance(graph:...)`,
-//  which now delegates here. The graph's cGD and pGD matrices are copied into
+//  which now delegates here. The graph's cGD and dcGD matrices are copied into
 //  value types when the analysis is built, so it is `Sendable` although
 //  `Graph` is not. There is no permutation test (the two fits use different
 //  responses, so they are not nested), so `AnalysisOptions` is unused.
@@ -24,10 +24,10 @@ import Matrix
 
 /// Directional isolation by graph distance
 /// (`AnalysisType.directionalIsolationByGraphDistance`), a port of gstudio's
-/// `ibgd(mode = "pgd")`.
+/// `ibgd(mode = "dcGD")`.
 ///
-/// Directed pGD is regressed on separation with separate forward and reverse
-/// slopes, `pGDᵢⱼ ~ dᵢⱼ + dᵢⱼ·rᵢⱼ` (`rᵢⱼ = 1` for reverse pairs), and its
+/// Directed dcGD is regressed on separation with separate forward and reverse
+/// slopes, `dcGDᵢⱼ ~ dᵢⱼ + dᵢⱼ·rᵢⱼ` (`rᵢⱼ = 1` for reverse pairs), and its
 /// adjusted `R²` compared with the `R²` of cGD on separation.
 public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
 
@@ -37,7 +37,10 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
     /// The node names, in matrix order.
     public let names: [String]
 
-    /// The pGD bandwidth multiplier.
+    /// The number of nodes with a finite separation to some other node: those whose pairs are fitted.
+    public let placedCount: Int
+
+    /// The dcGD bandwidth multiplier.
     public let gamma: Double
 
     /// The separation's name.
@@ -55,15 +58,16 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
     /// Conditional genetic distance; `Inf` between disconnected nodes.
     private let cgd: [[Double]]
 
-    /// Directed partitioned genetic distance from `i` to `j`.
-    private let pgd: [[Double]]
+    /// Directed directional conditional genetic distance from `i` to `j`.
+    private let dcgd: [[Double]]
 
     /// Creates the analysis.
     ///
     /// - Parameters:
     ///   - graph: An undirected graph whose edge weights are genetic distances.
-    ///   - separation: Positions, or a distance matrix *with* `forward`.
-    ///   - gamma: Bandwidth multiplier for pGD (default `0.5`).
+    ///   - separation: Positions, or a distance matrix *with* `forward`. Pairs whose separation isn't finite (a
+    ///     node with no known position, say) are left out of both fits; their paths still pass through the graph.
+    ///   - gamma: Bandwidth multiplier for dcGD (default `0.5`).
     ///   - separationLabel: The separation's name (default `"Separation"`).
     ///   - tag: The outcome's label (default
     ///     `AnalysisType.directionalIsolationByGraphDistance.tag`).
@@ -76,17 +80,18 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
                  tag: AnalysisTag = AnalysisType.directionalIsolationByGraphDistance.tag) {
         guard let geometry = separationGeometry(graph, separation, needsForward: true),
               let forward = geometry.forward,
-              let P = PartitionedGeneticDistance(graph: graph, gamma: gamma) else { return nil }
+              let P = DirectionalConditionalGeneticDistance(graph: graph, gamma: gamma) else { return nil }
         let n = geometry.X.count
         let C = graph.weightedDistanceMatrix()
         self.names = graph.nodes.map(\.name)
+        self.placedCount = (0..<n).filter { i in (0..<n).contains { j in j != i && geometry.X[i][j].isFinite } }.count
         self.gamma = gamma
         self.separationLabel = separationLabel
         self.tag = tag
         self.separation = geometry.X
         self.forward = forward
         self.cgd = (0..<n).map { i in (0..<n).map { j in C[i, j] } }
-        self.pgd = (0..<n).map { i in (0..<n).map { j in P[i, j] } }
+        self.dcgd = (0..<n).map { i in (0..<n).map { j in P[i, j] } }
     }
 
     /// Fits both models.
@@ -102,7 +107,7 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
         var cgdValues: [Double] = []
         var cgdSeparation: [Double] = []
         for j in 0..<n {
-            for i in 0..<j where cgd[i][j].isFinite {
+            for i in 0..<j where cgd[i][j].isFinite && separation[i][j].isFinite {
                 cgdValues.append(cgd[i][j])
                 cgdSeparation.append(separation[i][j])
             }
@@ -110,17 +115,18 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
         guard cgdValues.count >= 3 else { return nil }
         let rCGD = pearsonCorrelation(cgdValues, cgdSeparation)
 
-        // pGD fit over ordered pairs with a hypothesized direction (column-major, as R).
+        // dcGD fit over ordered pairs with a hypothesized direction (column-major, as R).
         var response: [Double] = []
         var design: [Double] = []
         var forwardPoints: [PairwisePoint] = []
         var reversePoints: [PairwisePoint] = []
         for j in 0..<n {
-            for i in 0..<n where i != j && pgd[i][j].isFinite && (forward[i][j] || forward[j][i]) {
+            for i in 0..<n where i != j && dcgd[i][j].isFinite && separation[i][j].isFinite
+                && (forward[i][j] || forward[j][i]) {
                 let d = separation[i][j]
-                let point = PairwisePoint(from: names[i], to: names[j], x: d, y: pgd[i][j])
+                let point = PairwisePoint(from: names[i], to: names[j], x: d, y: dcgd[i][j])
                 if forward[i][j] { forwardPoints.append(point) } else { reversePoints.append(point) }
-                response.append(pgd[i][j])
+                response.append(dcgd[i][j])
                 design.append(contentsOf: [1.0, d, forward[i][j] ? 0.0 : d])
             }
         }
@@ -134,7 +140,7 @@ public struct DirectionalIsolationByGraphDistanceAnalysis: Analysis {
         let reverseSlope = fit.coefficients[1] + fit.coefficients[2]
         let r2CGD = rCGD * rCGD
         let result = DirectionalIsolationByGraphDistanceResult(deltaR2: adjusted - r2CGD, pairs: count,
-                                                               r2CGD: r2CGD, adjustedR2PGD: adjusted,
+                                                               r2CGD: r2CGD, adjustedR2DCGD: adjusted,
                                                                forwardSlope: forwardSlope,
                                                                reverseSlope: reverseSlope,
                                                                slopeRatio: forwardSlope / reverseSlope,

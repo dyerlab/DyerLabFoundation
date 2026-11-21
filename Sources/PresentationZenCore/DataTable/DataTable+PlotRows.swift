@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable+PlotRows.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Resolution of the role mapping into render-ready `[PlotRow]`.
 //

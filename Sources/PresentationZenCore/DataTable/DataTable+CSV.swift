@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable+CSV.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  CSV import/export, delegating to TabularData's type inference.
 //

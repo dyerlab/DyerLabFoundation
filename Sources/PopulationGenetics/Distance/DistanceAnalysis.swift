@@ -19,7 +19,8 @@
 //  whose individuals share one location sits exactly there however many were
 //  sampled. Strata keep the order they first appear in, as gstudio's do, and
 //  an individual matrix keeps the dataset's order, with each row's innermost
-//  stratum recorded so the heatmap can mark the strata.
+//  stratum recorded so the heatmap can mark the strata. cGD and dcGD are measured
+//  through one population graph of the strata; dcGD's matrix is directed.
 //
 //  Created by Rodney Dyer on 2026.11.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -44,10 +45,16 @@ public struct DistanceAnalysis: Sendable {
     /// The fewest individuals a stratum needs to be a node of the population graph that cGD is measured through.
     public static let minimumGraphStratumSize = PopulationGraphBuilder.minimumPopulationSize
 
+    /// The default bandwidth multiplier γ for dcGD: degree-neutral, as gstudio's `dcgd()` uses for inferring
+    /// direction.
+    public static let defaultGamma = 0.5
+
     /// What is computed.
     public let spec: DistanceSpec
     /// Whether the adults are the mothers of parent/offspring data.
     public let isParentOffspring: Bool
+    /// The bandwidth multiplier γ for dcGD; other measures ignore it.
+    public let gamma: Double
     private let genotypes: GenotypeMatrix
     private let units: [Unit]
     private let omitted: [String]
@@ -56,13 +63,15 @@ public struct DistanceAnalysis: Sendable {
     // MARK: - Initialization
 
     /// Prepares a matrix, or returns `nil` when the measure doesn't work at the spec's level or the dataset has too
-    /// few units there (two, or for cGD three strata).
+    /// few units there (two, or for cGD and dcGD three strata).
     ///
     /// - Parameters:
     ///   - spec: What to compute.
     ///   - dataset: The genotypes, with their coordinates and strata.
-    public init?(spec: DistanceSpec, dataset: ImportedDataset) {
-        guard spec.isValid else { return nil }
+    ///   - gamma: The bandwidth multiplier for dcGD (default ``defaultGamma``); it must be positive.
+    public init?(spec: DistanceSpec, dataset: ImportedDataset, gamma: Double = DistanceAnalysis.defaultGamma) {
+        guard spec.isValid, gamma > 0 else { return nil }
+        self.gamma = gamma
         let individuals = dataset.matrix.individuals
         let adults = dataset.adultOrdinals
         let measure = spec.measure
@@ -84,7 +93,7 @@ public struct DistanceAnalysis: Sendable {
                                   group: dataset.strata[individuals[ordinal].id]?.last?.name))
             }
         } else {
-            let minimum = measure == .cgd ? Self.minimumGraphStratumSize : 1
+            let minimum = measure.isGraphBased ? Self.minimumGraphStratumSize : 1
             for (name, members) in Self.strata(at: spec.level, of: adults, in: dataset) {
                 let eligible = members.filter(isEligible)
                 guard eligible.count >= minimum else {
@@ -97,12 +106,12 @@ public struct DistanceAnalysis: Sendable {
         }
         self.units = units
         self.omitted = omitted
-        if measure == .cgd {
+        if measure.isGraphBased {
             omissionReason = "fewer than \(Self.minimumGraphStratumSize) genotyped individuals"
         } else {
             omissionReason = measure.isGenetic ? "not genotyped" : "no coordinates"
         }
-        guard units.count >= (measure == .cgd ? 3 : 2) else { return nil }
+        guard units.count >= (measure.isGraphBased ? 3 : 2) else { return nil }
     }
 
     /// The strata at a level, in the order they first appear, each with its adults.
@@ -135,6 +144,30 @@ public struct DistanceAnalysis: Sendable {
                                       longitude: points.map(\.longitude).reduce(0, +) / count)
     }
 
+    /// Each unit's mean coordinate at a level, as gstudio's `genetic_isolation()` averages an `axis` column within
+    /// strata: every adult with coordinates counts, where a great-circle centroid counts each distinct location once.
+    ///
+    /// - Parameters:
+    ///   - level: ``DistanceSpec/individualsLevel`` or a stratum level.
+    ///   - dataset: The genotypes, with their coordinates and strata.
+    /// - Returns: The units with coordinates, by the names their matrices give them.
+    static func meanCoordinates(at level: String, in dataset: ImportedDataset) -> [String: CLLocationCoordinate2D] {
+        let adults = dataset.adultOrdinals
+        let individuals = dataset.matrix.individuals
+        let units: [(name: String, members: [Int])] = level == DistanceSpec.individualsLevel
+            ? zip(uniqueNames(adults.map { individuals[$0].name }), adults).map { ($0, [$1]) }
+            : strata(at: level, of: adults, in: dataset)
+        var coordinates: [String: CLLocationCoordinate2D] = [:]
+        for unit in units {
+            let points = unit.members.compactMap { individuals[$0].coordinate }
+            guard !points.isEmpty else { continue }
+            let count = Double(points.count)
+            coordinates[unit.name] = CLLocationCoordinate2D(latitude: points.map(\.latitude).reduce(0, +) / count,
+                                                            longitude: points.map(\.longitude).reduce(0, +) / count)
+        }
+        return coordinates
+    }
+
     /// Names that are unique: empty names become "Individual n", and repeats get " (2)", " (3)" and so on.
     private static func uniqueNames(_ names: [String]) -> [String] {
         var seen: [String: Int] = [:]
@@ -153,20 +186,43 @@ public struct DistanceAnalysis: Sendable {
         units.count
     }
 
+    /// The units' names, in the matrix's order.
+    public var names: [String] {
+        units.map(\.name)
+    }
+
     /// Computes the matrix.
     ///
-    /// - Returns: The distances, each row's group, and the units left out; `nil` only when cGD's population graph
-    ///   can't be estimated.
+    /// - Returns: The distances, each row's group, and the units left out; `nil` only when the population graph
+    ///   that cGD and dcGD are measured through can't be estimated.
     public func run() -> DistanceResult? {
         let names = units.map(\.name)
         guard let distance = distances() else { return nil }
+        let groups = spec.isAmongIndividuals && units.contains { $0.group != nil } ? units.map { $0.group ?? "" } : nil
+        if spec.measure.isDirected {
+            let values = units.indices.map { i in units.indices.map { j in i == j ? 0 : distance(i, j) } }
+            return DistanceResult(spec: spec, directed: values, names: names, omitted: omitted,
+                                  omissionReason: omissionReason, isParentOffspring: isParentOffspring)
+        }
         var matrix = UnitDistanceMatrix(groupNames: names)
         for i in units.indices {
             for j in (i + 1)..<units.count { matrix[i, j] = distance(i, j) }
         }
-        let groups = spec.isAmongIndividuals && units.contains { $0.group != nil } ? units.map { $0.group ?? "" } : nil
         return DistanceResult(spec: spec, matrix: matrix, groups: groups, omitted: omitted,
                               omissionReason: omissionReason, isParentOffspring: isParentOffspring)
+    }
+
+    /// The population graph among the strata, as cGD and dcGD are measured through it.
+    ///
+    /// - Returns: The graph, whose nodes are named for the strata, or `nil` when the spec isn't a graph-based measure
+    ///   among strata or the graph can't be estimated.
+    func populationGraph() -> Graph? {
+        guard spec.measure.isGraphBased, !spec.isAmongIndividuals else { return nil }
+        let ordinals = units.flatMap(\.ordinals)
+        let groups = units.flatMap { unit in unit.ordinals.map { _ in unit.name } }
+        let multivariate = genotypes.multivariateMatrix()
+        let x = multivariate.submatrix(ordinals, Array(0..<multivariate.cols))
+        return PopulationGraph(x: x, groups: groups)
     }
 
     /// The distance between units `i` and `j`, by the spec's measure.
@@ -198,13 +254,17 @@ public struct DistanceAnalysis: Sendable {
                                     strata: labels)
             let names = units.map(\.name)
             return { phi[names[$0], names[$1]] ?? .nan }
-        case .cgd:
-            let ordinals = units.flatMap(\.ordinals)
-            let groups = units.flatMap { unit in unit.ordinals.map { _ in unit.name } }
-            let multivariate = genotypes.multivariateMatrix()
-            let x = multivariate.submatrix(ordinals, Array(0..<multivariate.cols))
-            guard let graph = PopulationGraph(x: x, groups: groups) else { return nil }
-            let paths = graph.weightedDistanceMatrix()
+        case .cgd, .dcgd:
+            guard let graph = populationGraph() else { return nil }
+            let paths: Matrix
+            if spec.measure == .dcgd {
+                guard let directed = DirectionalConditionalGeneticDistance(graph: graph, gamma: gamma) else {
+                    return nil
+                }
+                paths = directed
+            } else {
+                paths = graph.weightedDistanceMatrix()
+            }
             let index = Dictionary(uniqueKeysWithValues: paths.rowNames.enumerated().map { ($1, $0) })
             let names = units.map(\.name)
             return { i, j in

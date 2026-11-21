@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataColumnRole.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  The role a column plays in a plot. A `DataTable` maps roles to column
 //  names; charts read columns by role rather than by position, so the same

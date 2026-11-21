@@ -25,7 +25,7 @@ extension DirectionalIsolationByGraphDistanceOutcome {
             "deltaR2": AnalysisReport.number(result.deltaR2),
             "moreOrLess": result.deltaR2 >= 0 ? "more" : "less",
             "r2CGD": AnalysisReport.number(result.r2CGD),
-            "adjustedR2PGD": AnalysisReport.number(result.adjustedR2PGD),
+            "adjustedR2DCGD": AnalysisReport.number(result.adjustedR2DCGD),
             "forwardSlope": AnalysisReport.number(result.forwardSlope),
             "reverseSlope": AnalysisReport.number(result.reverseSlope),
             "slopeRatio": AnalysisReport.number(result.slopeRatio),

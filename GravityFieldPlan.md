@@ -30,7 +30,7 @@ needed either way, so they can go ahead now.
 
 - **File:** new `Sources/Graph/Extensions/GravityField.swift`. Domain-neutral, no UI.
 - **Builds on** existing code in `GeneticGravity.swift`: `SourceSinkScores(graph:gamma:x:)`,
-  `GravityEdges(graph:gamma:x:)` and `PartitionedGeneticDistanceGraph(graph:gamma:)`.
+  `GravityEdges(graph:gamma:x:)` and `DirectionalConditionalGeneticDistanceGraph(graph:gamma:)`.
 
 Types:
 - **`GravityFieldNode`:** `panel`, `stratum`, `degree`, `size`, `s`, `gravity`.
@@ -76,9 +76,9 @@ Constructors and helpers:
   1. coordinates supplied explicitly, as `[String: CGPoint]` or a two-column Matrix;
   2. `Node.coordinate` (geographic);
   3. if neither exists, the force-directed engine (`LayoutOrchestrator`, run until settled or for a fixed number of
-     steps) applied to `PartitionedGeneticDistanceGraph`.
+     steps) applied to `DirectionalConditionalGeneticDistanceGraph`.
 
-  R falls back to Kamada–Kawai on the pGD graph, so step 3 is functional parity only.
+  R falls back to Kamada–Kawai on the dcGD graph, so step 3 is functional parity only.
   - Known bug: `bug_settle_detection_never_fires` (in the memory folder). Settle detection never fires on real
     weighted graphs, so step 3 needs an iteration cap.
   - When every panel has the same nodes, one layout (from panel 1) is used for all panels.

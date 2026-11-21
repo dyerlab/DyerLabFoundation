@@ -22,7 +22,7 @@ import Matrix
 
 /// Isolation by graph distance (`AnalysisType.isolationByGraphDistance`):
 /// cGD against separation with a Mantel test, a port of gstudio's
-/// `ibgd(mode = "cgd")`.
+/// `ibgd(mode = "cGD")`.
 public struct IsolationByGraphDistanceAnalysis: Analysis {
 
     /// `AnalysisType.isolationByGraphDistance`.
@@ -41,22 +41,28 @@ public struct IsolationByGraphDistanceAnalysis: Analysis {
     ///
     /// - Parameters:
     ///   - graph: An undirected graph whose edge weights are genetic distances.
-    ///   - separation: Positions or a distance matrix.
+    ///   - separation: Positions or a distance matrix. A node with no finite separation to any other (a stratum
+    ///     with no known position) is left out of the test, though paths between the others still pass through it.
     ///   - separationLabel: The separation's name (default `"Separation"`).
     ///   - tag: The outcome's label (default `AnalysisType.isolationByGraphDistance.tag`).
+    ///   - method: The Mantel correlation (default Pearson, as gstudio's `ibgd()` uses).
     /// - Returns: `nil` if the separation does not cover every node or fewer
     ///   than three pairs are connected.
     public init?(graph: Graph,
                  separation: GraphSeparation,
                  separationLabel: String = "Separation",
-                 tag: AnalysisTag = AnalysisType.isolationByGraphDistance.tag) {
+                 tag: AnalysisTag = AnalysisType.isolationByGraphDistance.tag,
+                 method: CorrelationMethod = .pearson) {
         guard let geometry = separationGeometry(graph, separation, needsForward: false) else { return nil }
         let n = geometry.X.count
+        let X = geometry.X
         let C = graph.weightedDistanceMatrix()
+        let placed = (0..<n).filter { i in (0..<n).contains { j in j != i && X[i][j].isFinite } }
         // Disconnected pairs have Inf cGD, which MantelAnalysis leaves out.
-        guard var mantel = MantelAnalysis(response: (0..<n).map { i in (0..<n).map { j in C[i, j] } },
-                                          predictor: geometry.X,
-                                          names: graph.nodes.map(\.name),
+        guard var mantel = MantelAnalysis(response: placed.map { i in placed.map { j in C[i, j] } },
+                                          predictor: placed.map { i in placed.map { j in X[i][j] } },
+                                          names: placed.map { graph.nodes[$0].name },
+                                          method: method,
                                           tag: tag) else { return nil }
         mantel.responseLabel = "conditional genetic distance"
         mantel.predictorLabel = AnalysisReport.sentenceCase(separationLabel)
@@ -71,7 +77,19 @@ public struct IsolationByGraphDistanceAnalysis: Analysis {
     /// - Parameter options: Permutation count and seed (R's `set.seed()` value).
     /// - Returns: The outcome; never `nil`.
     public func run(options: AnalysisOptions) -> IsolationByGraphDistanceOutcome? {
-        mantel.run(options: options).map {
+        run(options: options) { _, _ in true }
+    }
+
+    /// Runs the Mantel test, reporting each permuted correlation.
+    ///
+    /// - Parameters:
+    ///   - options: The permutations and seed.
+    ///   - observing: Called after each permutation with the number done and the permuted correlation; return
+    ///     `false` to stop, which finishes the test with the permutations drawn.
+    /// - Returns: The test, or `nil` if it can't be run.
+    public func run(options: AnalysisOptions,
+                    observing: (_ done: Int, _ value: Double) -> Bool) -> IsolationByGraphDistanceOutcome? {
+        mantel.run(options: options, observing: observing).map {
             IsolationByGraphDistanceOutcome(mantel: $0, separationLabel: separationLabel)
         }
     }

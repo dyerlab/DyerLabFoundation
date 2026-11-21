@@ -106,7 +106,7 @@ public struct DistanceOptions: Sendable, Equatable {
         guard DistanceSpec(measure: measure, level: level).isValid else { return false }
         switch measure {
         case .greatCircle: return (located[level] ?? 0) >= 2
-        case .cgd: return (graphable[level] ?? 0) >= 3
+        case .cgd, .dcgd: return (graphable[level] ?? 0) >= 3
         default: return (genotyped[level] ?? 0) >= 2
         }
     }
@@ -154,11 +154,11 @@ public struct DistanceOptions: Sendable, Equatable {
     /// - Parameters:
     ///   - level: A level from ``levels``.
     ///   - measure: The measure.
-    /// - Returns: The located, genotyped or (cGD) graphable units.
+    /// - Returns: The located, genotyped or (cGD and dcGD) graphable units.
     public func unitCount(at level: String, for measure: DistanceSpec.Measure) -> Int {
         switch measure {
         case .greatCircle: located[level] ?? 0
-        case .cgd: graphable[level] ?? 0
+        case .cgd, .dcgd: graphable[level] ?? 0
         default: genotyped[level] ?? 0
         }
     }

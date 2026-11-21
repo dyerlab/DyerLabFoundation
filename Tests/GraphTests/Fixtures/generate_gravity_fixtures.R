@@ -1,23 +1,23 @@
 #!/usr/bin/env Rscript
 # Generates R-reference fixtures for the genetic-gravity ports in
 # Sources/Graph/Extensions/GeneticGravity.swift (neighbourhood_weights(),
-# gravity_edges(), source_sink_scores(), pgd()) and, for the genotype-driven
-# genetic_distance(mode = "pgd"), the `gravity` genotypes in
-# Tests/PopulationGeneticsTests/Fixtures/. Run with gstudio >= 1.15.0 + igraph +
+# gravity_edges(), source_sink_scores(), dcgd()) and, for the genotype-driven
+# genetic_distance(mode = "dcGD"), the `gravity` genotypes in
+# Tests/PopulationGeneticsTests/Fixtures/. Run with gstudio >= 1.15.7 + igraph +
 # jsonlite:
 #
 #   Rscript generate_gravity_fixtures.R Tests/GraphTests/Fixtures
 #
 # Graphs mirror gstudio's tests/testthat/test-gravity.R (make_chain()), plus the
 # Population Graph of the bundled `gravity` dataset. NA (diagonal of W, S0 of an
-# isolated node) and Inf (unreachable pGD) are written as JSON null.
+# isolated node) and Inf (unreachable dcGD) are written as JSON null.
 
 suppressPackageStartupMessages({
   library(igraph)
   library(jsonlite)
   library(gstudio)
 })
-stopifnot(packageVersion("gstudio") >= "1.15.0")
+stopifnot(packageVersion("gstudio") >= "1.15.7")   # dcgd(), mode = "dcGD"
 
 fixture_dir <- commandArgs(trailingOnly = TRUE)[1]
 if (is.na(fixture_dir)) stop("pass the output Fixtures dir as arg 1")
@@ -64,9 +64,9 @@ gamma_record <- function(g, gamma, x = NULL) {
                        Delta = ed$Delta, Delta0 = ed$Delta0, stringsAsFactors = FALSE),
     scores = scores_record(source_sink_scores(g, gamma = gamma, x = x))
   )
-  # pGD is not defined for the flat kernel's purpose here; omit the key (a NULL
+  # dcGD is not defined for the flat kernel's purpose here; omit the key (a NULL
   # element would serialise as {}).
-  if (!is.infinite(gamma)) rec$pgd <- row_list(pgd(g, gamma = gamma, output = "matrix"))
+  if (!is.infinite(gamma)) rec$dcgd <- row_list(dcgd(g, gamma = gamma, output = "matrix"))
   rec
 }
 
@@ -99,7 +99,7 @@ write_json(fixtures, file.path(fixture_dir, "gravity_fixtures.json"),
            auto_unbox = TRUE, digits = 17, pretty = TRUE, na = "null")
 
 # Genotype-level: the gravity genotypes (unique IDs; the dataset's ID column
-# repeats) and genetic_distance(mode = "pgd") on them.
+# repeats) and genetic_distance(mode = "dcGD") on them.
 locus_cols <- column_class(gravity, "locus")
 geno <- data.frame(Population = as.character(gravity$Population),
                    ID = sprintf("I%04d", seq_len(nrow(gravity))),
@@ -107,11 +107,11 @@ geno <- data.frame(Population = as.character(gravity$Population),
 for (col in locus_cols) geno[[col]] <- as.character(gravity[[col]])
 write.csv(geno, file.path(pg_fixture_dir, "gravity_genotypes.csv"), row.names = FALSE, na = "", quote = FALSE)
 
-D <- genetic_distance(gravity, stratum = "Population", mode = "pgd")
+D <- genetic_distance(gravity, stratum = "Population", mode = "dcGD")
 write_json(list(nodes = rownames(D),
                 popgraph_edges = edge_table(g_gravity),
-                pgd = row_list(D)),
-           file.path(pg_fixture_dir, "gravity_pgd_fixture.json"),
+                dcgd = row_list(D)),
+           file.path(pg_fixture_dir, "gravity_dcgd_fixture.json"),
            auto_unbox = TRUE, digits = 17, pretty = TRUE, na = "null")
 
 cat("wrote gravity_fixtures.json and gravity genotype fixtures\n")
@@ -144,21 +144,21 @@ sst_case <- function(g, x, seed, nperm, null = "graph", adjacency = NULL, interi
 ibgd_case <- function(g, x, seed, nperm) {
   set.seed(seed)
   rc <- ibgd(g, x = x, nperm = nperm)
-  rp <- ibgd(g, x = x, mode = "pgd")
+  rp <- ibgd(g, x = x, mode = "dcGD")
   D <- abs(outer(x, x, "-")); Fw <- outer(x, x, function(a, b) b > a) * 1
-  rpd <- ibgd(g, distance = D, forward = Fw, mode = "pgd")
+  rpd <- ibgd(g, distance = D, forward = Fw, mode = "dcGD")
   list(x = as.list(setNames(as.numeric(x), V(g)$name)), seed = seed, nperm = nperm,
        distance = row_list(D), forward = row_list(Fw),
        cgd = list(statistic = unname(rc$statistic), p_value = rc$p.value,
                   pairs = unname(rc$parameter["pairs"]),
                   R2 = unname(rc$estimate["R2"]), slope = unname(rc$estimate["slope"])),
-       pgd = list(delta_R2 = unname(rp$statistic), pairs = unname(rp$parameter["pairs"]),
+       dcgd = list(delta_R2 = unname(rp$statistic), pairs = unname(rp$parameter["pairs"]),
                   R2_cGD = unname(rp$estimate["R2 cGD"]),
-                  adj_R2_pGD = unname(rp$estimate["adj R2 pGD"]),
+                  adj_R2_dcGD = unname(rp$estimate["adj R2 dcGD"]),
                   forward_slope = unname(rp$estimate["forward slope"]),
                   reverse_slope = unname(rp$estimate["reverse slope"]),
                   slope_ratio = unname(rp$estimate["slope ratio"])),
-       pgd_distance_delta_R2 = unname(rpd$statistic))
+       dcgd_distance_delta_R2 = unname(rpd$statistic))
 }
 
 kernel_adjacency <- (as_adjacency_matrix(g_chain, sparse = FALSE) > 0) * 1

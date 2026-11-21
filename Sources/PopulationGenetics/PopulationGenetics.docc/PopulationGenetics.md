@@ -34,7 +34,7 @@ logic lives.
 - `GenotypicRarefaction` / `AllelicRarefaction` — individual-based resampling for diversity rarefaction.
 - ``ParentageDesign`` / ``MaternalFamily`` / `paternalGamete` — pollen-pool parentage analysis.
 - ``Outcrossing`` — Bayesian MCMC estimation of population mean outcrossing rate and inbreeding coefficient from maternal-family data, both multilocus (`t_m`, via `GenotypeMatrix.runOutcrossing(design:parameters:hasNullModel:)`) and single-locus (`t_s`, via `GenotypeMatrix.runSingleLocusOutcrossing(design:parameters:hasNullModel:)`).
-- ``PartitionedGeneticDistance(data:groups:gamma:)`` — directed partitioned conditional genetic distance among strata, built from genotypes via the Population Graph and Graph's genetic-gravity weights (`genetic_distance(mode = "pgd")`).
+- ``DirectionalConditionalGeneticDistance(data:groups:gamma:)`` — directional conditional genetic distance (dcGD) among strata, built from genotypes via the Population Graph and Graph's genetic-gravity weights (`genetic_distance(mode = "dcGD")`).
 - ``LocusSubsampleNull(genotypes:groups:lociPerSubset:subsets:gamma:seed:)`` — rebuilds the Population Graph from random subsets of polymorphic loci and records mean genetic-gravity `|Δ|` with the subset's polymorphism, an information-loss reference for the asymmetry index (`locus_subsample_null()`).
 - ``CorrelatedPaternity`` — Ritland's moment estimator for correlated paternity (`r_p`) and the effective number of pollen donors (`1/r_p`), via `GenotypeMatrix.correlatedPaternity(design:)` and `GenotypeMatrix.correlatedPaternityPerFamily(design:)`.
 - ``AMOVAAnalysis`` / ``DiversityRarefactionAnalysis`` / ``OutcrossingAnalysis`` / ``CorrelatedPaternityAnalysis`` — these techniques as `Matrix` `Analysis` conformers, adding `AnalysisType.outcrossing` and `.correlatedPaternity`. ``Outcrossing/Result`` and ``CorrelatedPaternity`` conform to `AnalysisOutcome`; diversity rarefaction returns `Matrix`'s `RarefactionOutcome`; ``WeirCockerhamAnalysis`` estimates Weir & Cockerham's θ (tag `.weirCockerhamTheta`), which is not a single-locus AMOVA.
@@ -70,13 +70,19 @@ logic lives.
 - ``DistanceAnalysis`` / ``DistanceResult`` / ``UnitDistanceMatrix`` / ``GreatCircle`` — distances among adults
   (mothers in parent/offspring data) or strata: haversine distances among centroids, matching gstudio's
   `strata_distance()`, or ``GeneticDistances`` (AMOVA and Bray-Curtis among individuals; Nei, Cavalli-Sforza, Dps,
-  Euclidean, pairwise Φ_ST and cGD among strata), matching gstudio's `genetic_distance()`. Computed when needed,
-  never stored.
-- ``IBDSpec`` / ``IBDAnalysis`` / ``IBDResult`` — isolation by distance: a genetic matrix against great-circle distance,
-  or against another genetic matrix, among the same units by a Mantel test (vegan's permutations), with Rousset's Φ_ST / (1 − Φ_ST) and ln distance as
-  options; saved as one `ibd_analysis` scatter figure holding its plot, table and spec (<doc:FigureStorage>).
-- ``IBDControls`` / ``IBDDisplay`` — the Isolation page's `Genetic ~ Against` options, and its scatter above the
-  Mantel table.
+  Euclidean, pairwise Φ_ST, cGD and dcGD among strata), matching gstudio's `genetic_distance()`. dcGD's matrix is
+  directed (``DistanceResult/directed``, read from row to column). Computed when needed, never stored.
+- ``IBDSpec`` / ``IBDAnalysis`` / ``IBDResult`` — gstudio's `genetic_isolation()`: a genetic matrix against
+  great-circle distance, another genetic matrix, or the difference along an ``IBDSpec/Axis`` (latitude, longitude or
+  given positions), among the same units by a Mantel test (vegan's permutations), with Rousset's Φ_ST / (1 − Φ_ST) and
+  ln distance as options. cGD against geographic separation is isolation by graph distance (`mode = "IBGD"`), and dcGD
+  is directional isolation by graph distance (`mode = "dcGD"`): the Mantel test of cGD, then dcGD regressed on
+  separation with forward and reverse slopes, whose ΔR² says whether direction improves the fit, the axis giving
+  the direction (Dyer, in review). Both run Graph's `IsolationByGraphDistanceAnalysis` and
+  `DirectionalIsolationByGraphDistanceAnalysis` on the population graph. Saved as one `ibd_analysis` scatter figure
+  holding its plot, table and spec (<doc:FigureStorage>).
+- ``IBDControls`` / ``IBDDisplay`` — the Isolation page's `Genetic ~ Against` options (with the axes, and dcGD's
+  forward direction), and its scatter above the Mantel table.
 - ``DistanceControls`` / ``DistanceDisplay`` / ``MatrixList`` — a matrix's controls, heatmap above its histogram,
   and the list of matrices other programs stored in the file.
 

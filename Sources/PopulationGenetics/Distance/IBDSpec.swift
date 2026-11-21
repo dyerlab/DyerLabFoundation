@@ -10,8 +10,14 @@
 //  IBDSpec.swift
 //  PopulationGenetics
 //
-//  An isolation-by-distance analysis: a genetic distance matrix tested
-//  against great-circle distance among the same units with a Mantel test.
+//  An isolation-by-distance analysis, gstudio's `genetic_isolation()`: a genetic
+//  distance matrix tested against separation among the same units with a Mantel
+//  test. Separation is great-circle distance, another matrix, or the difference
+//  along an `Axis`. With dcGD as the genetic distance it is directional isolation
+//  by graph distance: the Mantel test of cGD (isolation by graph distance), then
+//  dcGD regressed on separation with forward and reverse slopes, whose ΔR² says
+//  whether direction improves the fit (gstudio's `ibgd(mode = "cGD")` and
+//  `ibgd(mode = "dcGD")`).
 //  A saved analysis is one scatter figure (generator `ibd_analysis`) whose
 //  spec is this JSON, results included, so R reads the inputs and the
 //  numbers from one row; the matrices themselves are named by their
@@ -53,6 +59,21 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         public var r2: Double?
         /// The number of pairs tested.
         public var pairs: Int
+        /// For dcGD, `ΔR² = adjusted R²_dcGD − R²_cGD`, where ``r2`` is R²_cGD; positive favours the directional
+        /// description.
+        public var deltaR2: Double?
+        /// For dcGD, the adjusted R² of `dcGD ~ d + d:reverse`.
+        public var adjustedR2: Double?
+        /// For dcGD, the slope for pairs running forward.
+        public var forwardSlope: Double?
+        /// For dcGD, the slope for pairs running in reverse.
+        public var reverseSlope: Double?
+        /// For dcGD, `forwardSlope / reverseSlope`; below one, genetic distance accumulates more slowly forward.
+        public var slopeRatio: Double?
+        /// For dcGD, the fit's intercept, which both directions share.
+        public var directedIntercept: Double?
+        /// For dcGD, the ordered pairs in the fit.
+        public var orderedPairs: Int?
 
         /// Creates a summary.
         ///
@@ -71,16 +92,28 @@ public struct IBDSpec: Codable, Hashable, Sendable {
             self.r2 = r2
             self.pairs = pairs
         }
+
+        /// Whether the summary includes a directional fit.
+        public var isDirectional: Bool {
+            deltaR2 != nil
+        }
     }
 
     /// The default number of permutations.
     public static let defaultPermutations = 999
 
-    /// The genetic distances.
+    /// The genetic distances; dcGD makes the analysis directional.
     public var genetic: DistanceSpec
     /// What the genetic distances are tested against, at the same level: great-circle distance by default, or
-    /// another genetic distance for a Mantel test between two genetic matrices.
+    /// another genetic distance for a Mantel test between two genetic matrices. Not used when ``alongAxis``.
     public var against: DistanceSpec.Measure
+    /// A position for each unit along a hypothesized axis, or `nil`. dcGD needs one for its direction.
+    public var axis: Axis?
+    /// Whether separation is the difference along ``axis`` rather than ``against``; with `false`, the axis only
+    /// gives dcGD its direction.
+    public var alongAxis: Bool
+    /// The bandwidth multiplier γ for dcGD (default 0.5).
+    public var gamma: Double
     /// How the genetic distances are transformed.
     public var transform: Transform
     /// Whether separation is log-transformed, as Rousset expects for a two-dimensional habitat.
@@ -95,7 +128,7 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     public var result: Summary?
 
     private enum CodingKeys: String, CodingKey {
-        case genetic, separation, transform, logSeparation, method, permutations, seed, result
+        case genetic, separation, transform, logSeparation, method, permutations, seed, result, axis, alongAxis, gamma
     }
 
     // MARK: - Initialization
@@ -108,6 +141,9 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     ///   - transform: Their transform (default Rousset's for Φ_ST, otherwise none).
     ///   - logSeparation: Whether separation is log-transformed (default `false`).
     ///   - method: The correlation (default Pearson).
+    ///   - axis: A hypothesized axis (default none).
+    ///   - alongAxis: Whether separation is along `axis` (default `true` when there is one).
+    ///   - gamma: The bandwidth multiplier for dcGD (default 0.5).
     ///   - permutations: The number of permutations (default 0, untested).
     ///   - seed: The permutations' seed.
     ///   - result: What the test found.
@@ -116,6 +152,9 @@ public struct IBDSpec: Codable, Hashable, Sendable {
                 transform: Transform? = nil,
                 logSeparation: Bool = false,
                 method: CorrelationMethod = .pearson,
+                axis: Axis? = nil,
+                alongAxis: Bool? = nil,
+                gamma: Double = DistanceAnalysis.defaultGamma,
                 permutations: Int = 0,
                 seed: UInt64? = nil,
                 result: Summary? = nil) {
@@ -124,13 +163,17 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         self.transform = transform ?? (genetic.measure == .phiST ? .rousset : .none)
         self.logSeparation = logSeparation
         self.method = method
+        self.axis = axis
+        self.alongAxis = axis != nil && (alongAxis ?? true)
+        self.gamma = gamma
         self.permutations = permutations
         self.seed = seed
         self.result = result
     }
 
     /// Decodes a spec; `separation` names what the genetic distances were tested against, great-circle distance
-    /// for specs written before other matrices could be.
+    /// when absent (specs written before other matrices could be, or separated along their axis). `axis`,
+    /// `alongAxis` and `gamma` are absent from specs written before axes and dcGD.
     ///
     /// - Parameter decoder: The decoder to read from.
     /// - Throws: A `DecodingError` when a field is missing or unknown.
@@ -144,16 +187,26 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         permutations = try container.decodeIfPresent(Int.self, forKey: .permutations) ?? 0
         seed = try container.decodeIfPresent(UInt64.self, forKey: .seed)
         result = try container.decodeIfPresent(Summary.self, forKey: .result)
+        axis = try container.decodeIfPresent(Axis.self, forKey: .axis)
+        let alongAxis = try container.decodeIfPresent(Bool.self, forKey: .alongAxis)
+        self.alongAxis = axis != nil && (alongAxis ?? true)
+        gamma = try container.decodeIfPresent(Double.self, forKey: .gamma) ?? DistanceAnalysis.defaultGamma
     }
 
-    /// Encodes the spec, with the separation matrix it is tested against.
+    /// Encodes the spec, with the separation matrix it is tested against unless it is separated along its axis, and
+    /// γ only for dcGD.
     ///
     /// - Parameter encoder: The encoder to write to.
     /// - Throws: Whatever the encoder throws.
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(genetic, forKey: .genetic)
-        try container.encode(separation, forKey: .separation)
+        if !alongAxis { try container.encode(separation, forKey: .separation) }
+        if let axis {
+            try container.encode(axis, forKey: .axis)
+            try container.encode(alongAxis, forKey: .alongAxis)
+        }
+        if isDirectional { try container.encode(gamma, forKey: .gamma) }
         try container.encode(transform, forKey: .transform)
         try container.encode(logSeparation, forKey: .logSeparation)
         try container.encode(method, forKey: .method)
@@ -169,8 +222,12 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         DistanceSpec(measure: against, level: genetic.level)
     }
 
-    /// Whether the genetic distances are tested against geographic distance, which is isolation by distance.
-    public var isGeographic: Bool { against == .greatCircle }
+    /// Whether the genetic distances are tested against geographic distance, which is isolation by distance:
+    /// great-circle distance or the difference along an axis.
+    public var isGeographic: Bool { alongAxis || against == .greatCircle }
+
+    /// Whether the analysis is directional isolation by graph distance, with dcGD as the genetic distance.
+    public var isDirectional: Bool { genetic.measure == .dcgd }
 
     /// The spec's JSON, with sorted keys, as a figure's `spec` stores it.
     public var json: String {
@@ -198,9 +255,10 @@ public struct IBDSpec: Codable, Hashable, Sendable {
         genetic.measure == .phiST ? transform : .none
     }
 
-    /// The genetic axis's title, such as "Φ_ST / (1 − Φ_ST)".
+    /// The genetic axis's title, such as "Φ_ST / (1 − Φ_ST)" or, for a directional analysis, "dcGD".
     public var geneticLabel: String {
-        switch validTransform {
+        if isDirectional { return "dcGD" }
+        return switch validTransform {
         case .rousset: "Φ_ST / (1 − Φ_ST)"
         case .none: genetic.measure.title
         }
@@ -208,19 +266,22 @@ public struct IBDSpec: Codable, Hashable, Sendable {
 
     /// The separation axis's title, such as "ln great-circle distance (km)" or "Nei's distance".
     public var separationLabel: String {
+        if alongAxis, let axis { return (logSeparation ? "ln " : "") + axis.separationLabel }
         guard isGeographic else { return (logSeparation ? "ln " : "") + against.title }
         return (logSeparation ? "ln great-circle distance" : "Great-circle distance") + " (km)"
     }
 
     /// The separation as prose, such as "great-circle distance (km)", for Methods text.
     public var separationPhrase: String {
-        isGeographic ? "great-circle distance (km)" : against.title
+        if alongAxis, let axis { return axis.separationPhrase }
+        return isGeographic ? "great-circle distance (km)" : against.title
     }
 
     /// The analysis as a formula, such as `Φ_ST/(1−Φ_ST) ~ ln km | Population` or `Nei ~ cGD | Population`.
     public var formula: String {
         let response = validTransform == .rousset ? "Φ_ST/(1−Φ_ST)" : genetic.measure.symbol
-        let predictor = (logSeparation ? "ln " : "") + (isGeographic ? "km" : against.symbol)
+        let separation = alongAxis ? axis?.symbol ?? "Δaxis" : (isGeographic ? "km" : against.symbol)
+        let predictor = (logSeparation ? "ln " : "") + separation
         return "\(response) ~ \(predictor) | \(genetic.level)"
     }
 
@@ -230,6 +291,8 @@ public struct IBDSpec: Codable, Hashable, Sendable {
     /// - Returns: The title.
     public func title(isParentOffspring: Bool) -> String {
         let units = genetic.unitName(isParentOffspring: isParentOffspring)
+        if isDirectional { return "Directional isolation by graph distance among \(units)" }
+        if genetic.measure == .cgd, isGeographic { return "Isolation by graph distance among \(units)" }
         return isGeographic ? "Isolation by distance among \(units)"
                             : "\(genetic.measure.title) against \(against.title) among \(units)"
     }

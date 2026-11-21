@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  WrappingHStack.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Originally created for Reviews, moved to PresentationZen.
 //

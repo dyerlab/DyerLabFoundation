@@ -14,14 +14,17 @@
 //  individuals or strata. The genetic measures follow gstudio's
 //  genetic_distance(): AMOVA and Bray-Curtis among individuals (the inputs of
 //  Smouse & Peakall's spatial autocorrelation), and the allele-frequency
-//  distances, pairwise Φ_ST and cGD among strata. The raw values are gstudio's
-//  `mode` names where it has one, and are part of the file format.
+//  distances, pairwise Φ_ST, cGD and dcGD among strata. dcGD is the one directed
+//  measure: its matrix is asymmetric, from row to column. The raw values are
+//  gstudio's `mode` names (lowercased) where it has one, and are part of the file
+//  format.
 //
 //  Created by Rodney Dyer on 2026.11.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
 
 import Foundation
+import Matrix
 
 public extension DistanceSpec {
 
@@ -45,6 +48,9 @@ public extension DistanceSpec {
         case phiST = "phi_st"
         /// Conditional genetic distance: the shortest path through the population graph (Dyer & Nason 2004).
         case cgd
+        /// Directional conditional genetic distance: each population-graph edge's cGD split into directed shares by
+        /// the genetic-gravity neighbourhood weights, then the shortest directed path (Dyer, in review). Asymmetric.
+        case dcgd
 
         /// The measure itself.
         public var id: Self { self }
@@ -61,6 +67,7 @@ public extension DistanceSpec {
             case .euclidean: "Euclidean distance"
             case .phiST: "Pairwise Φ_ST"
             case .cgd: "Conditional genetic distance"
+            case .dcgd: "Directional conditional genetic distance"
             }
         }
 
@@ -76,6 +83,7 @@ public extension DistanceSpec {
             case .euclidean: "Euclidean"
             case .phiST: "Φ_ST"
             case .cgd: "cGD"
+            case .dcgd: "dcGD"
             }
         }
 
@@ -87,6 +95,18 @@ public extension DistanceSpec {
         /// Whether the measure compares genotypes rather than locations.
         public var isGenetic: Bool {
             self != .greatCircle
+        }
+
+        /// Whether the distance from one unit to another can differ from the distance back, so the matrix is read
+        /// from row to column.
+        public var isDirected: Bool {
+            self == .dcgd
+        }
+
+        /// Whether the measure is measured through the population graph, whose strata need at least
+        /// ``DistanceAnalysis/minimumGraphStratumSize`` genotyped individuals.
+        public var isGraphBased: Bool {
+            self == .cgd || self == .dcgd
         }
 
         /// Whether the measure works among the adults themselves.
@@ -133,6 +153,11 @@ public extension DistanceSpec {
             case .cgd:
                 "Conditional genetic distances (Dyer & Nason 2004): the shortest path between strata through the "
                     + "population graph, among strata of at least 3 individuals"
+            case .dcgd:
+                "Directional conditional genetic distances (dcGD; Dyer, in review): each population-graph edge's "
+                    + "conditional genetic distance split into two directed shares by the genetic-gravity "
+                    + "neighbourhood weights (γ = \(AnalysisReport.number(DistanceAnalysis.defaultGamma))), then the "
+                    + "shortest directed path from each stratum to each other, among strata of at least 3 individuals"
             }
         }
     }

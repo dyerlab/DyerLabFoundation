@@ -36,11 +36,11 @@ Ports of gstudio's genetic-gravity core (≥ 1.15), one sign convention througho
 - ``NeighbourhoodWeights(graph:gamma:)`` — the neighbourhood-weight matrix `W[i, j] = w_{j|i}` (`neighbourhood_weights()`).
 - ``GravityEdges(graph:gamma:x:)`` — per-edge weights, the gravity asymmetry `Δ_{i→j} = w_{i|j} − w_{j|i}` and its degree-only term `Δ⁰` (`gravity_edges()`).
 - ``SourceSinkScores(graph:gamma:x:)`` — each population's gravity, source-sink balance and least-squares source-sink score `S`, with the degree diagnostics to report alongside any directional analysis (`source_sink_scores()`).
-- ``PartitionedGeneticDistanceGraph(graph:gamma:)`` / ``PartitionedGeneticDistance(graph:gamma:)`` — each edge's conditional genetic distance split into directed shares, as a directed graph or all-pairs directed distance matrix (`pgd()`).
+- ``DirectionalConditionalGeneticDistanceGraph(graph:gamma:)`` / ``DirectionalConditionalGeneticDistance(graph:gamma:)`` — each edge's conditional genetic distance split into directed shares, as a directed graph or all-pairs directed distance matrix (`dcgd()`; directional conditional genetic distance, dcGD, from Dyer RJ, Genetic Gravity: Extracting Directional Gene Flow from Population Graphs, *Molecular Ecology*, in review).
 - ``SourceSinkTest(graph:x:gamma:permutations:null:interior:edgeMargin:returnNull:seed:)`` — Spearman `r(S, x)` between source-sink scores and a covariate, against a Moran spectral randomization null on the graph (default), a permutation of `S`, or a supplied adjacency (`source_sink_test()`).
-- ``IsolationByGraphDistance(graph:separation:permutations:seed:)`` — cGD against separation with a Mantel permutation test (`ibgd(mode = "cgd")`).
-- ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)`` — does directed pGD with forward/reverse slopes fit better than cGD? Reports `ΔR²` and the slope ratio; no p-value (`ibgd(mode = "pgd")`).
-- ``IsolationByGraphDistanceAnalysis`` / ``DirectionalIsolationByGraphDistanceAnalysis`` — the same two tests as `Matrix` `Analysis` conformers (the functions above delegate to them), whose outcomes also carry each pair's points and fitted lines (forward and reverse for pGD) for plotting.
+- ``IsolationByGraphDistance(graph:separation:permutations:seed:)`` — cGD against separation with a Mantel permutation test (`ibgd(mode = "cGD")`).
+- ``DirectionalIsolationByGraphDistance(graph:separation:gamma:)`` — does directed dcGD with forward/reverse slopes fit better than cGD? Reports `ΔR²` and the slope ratio; no p-value (`ibgd(mode = "dcGD")`).
+- ``IsolationByGraphDistanceAnalysis`` / ``DirectionalIsolationByGraphDistanceAnalysis`` — the same two tests as `Matrix` `Analysis` conformers (the functions above delegate to them), whose outcomes also carry each pair's points and fitted lines (forward and reverse for dcGD) for plotting. A node with no finite separation to any other is left out of the fits, though paths between the others still pass through it, so a stratum with no known position can stay in the graph.
 
 ### Layout
 

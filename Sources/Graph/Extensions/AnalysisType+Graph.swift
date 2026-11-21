@@ -28,9 +28,9 @@ extension AnalysisType {
                                 AnalysisOperand(role: "separation", kind: .pairwise)],
                      usesIterations: true)
 
-    /// Directional isolation by graph distance: directed partitioned genetic
-    /// distance (pGD) against separation with forward and reverse slopes,
-    /// compared with cGD (gstudio's `ibgd(mode = "pgd")`).
+    /// Directional isolation by graph distance: directional conditional
+    /// genetic distance (dcGD) against separation with forward and reverse slopes,
+    /// compared with cGD (gstudio's `ibgd(mode = "dcGD")`).
     public static let directionalIsolationByGraphDistance =
         AnalysisType("directionalIsolationByGraphDistance",
                      displayName: "Directional Isolation by Graph Distance",

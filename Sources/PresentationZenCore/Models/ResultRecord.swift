@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  ResultRecord.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A figure that records an analysis is a frozen result: it keeps the log text written when it was run, so its page
 //  reads the same however the project's log or data change later. The data version is an opaque id the app changes

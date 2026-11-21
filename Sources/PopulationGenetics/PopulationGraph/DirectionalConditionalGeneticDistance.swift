@@ -7,14 +7,14 @@
 //
 //         Making Population Genetic Software That Doesn't Suck
 //
-//  PartitionedGeneticDistance.swift
+//  DirectionalConditionalGeneticDistance.swift
 //  PopulationGenetics
 //
-//  A port of gstudio's `genetic_distance(mode = "pgd")` (internally
-//  `dist_pgd()`): partitioned conditional genetic distance among strata, built
+//  A port of gstudio's `genetic_distance(mode = "dcGD")` (internally
+//  `dist_dcgd()`): directional conditional genetic distance among strata, built
 //  from genotypes via the Population Graph. The graph-level computation is
-//  Graph's `PartitionedGeneticDistance(graph:gamma:)`. See
-//  `~/Coding/gstudio/R/dist_pgd.R`.
+//  Graph's `DirectionalConditionalGeneticDistance(graph:gamma:)`. See
+//  `~/Coding/gstudio/R/dist_dcgd.R`.
 //
 //  Created by Rodney Dyer on 2026.10.07.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -24,11 +24,11 @@ import Matrix
 import Graph
 import Foundation
 
-/// Partitioned conditional genetic distance among strata from genotypes — a
-/// port of gstudio's `genetic_distance(mode = "pgd")`.
+/// Directional conditional genetic distance among strata from genotypes — a
+/// port of gstudio's `genetic_distance(mode = "dcGD")`.
 ///
 /// Builds the Population Graph (``PopulationGraph(x:groups:alpha:tol:)`` at its
-/// defaults, as `dist_pgd()` calls `popgraph()`), splits each edge's
+/// defaults, as `dist_dcgd()` calls `popgraph()`), splits each edge's
 /// conditional genetic distance into directed shares by the genetic-gravity
 /// neighbourhood weights, and returns all-pairs directed shortest-path
 /// distances. The result is asymmetric: `[i, j]` is the distance from `i` to
@@ -42,7 +42,7 @@ import Foundation
 /// - Returns: A `K × K` matrix over the strata (row/column names = graph node
 ///   order), `.infinity` for strata in different graph components, or `nil` if
 ///   the Population Graph cannot be built or `gamma` is not positive.
-public func PartitionedGeneticDistance(data: Matrix, groups: [String], gamma: Double = 0.5) -> Matrix? {
+public func DirectionalConditionalGeneticDistance(data: Matrix, groups: [String], gamma: Double = 0.5) -> Matrix? {
     guard let graph = PopulationGraph(x: data, groups: groups) else { return nil }
-    return PartitionedGeneticDistance(graph: graph, gamma: gamma)
+    return DirectionalConditionalGeneticDistance(graph: graph, gamma: gamma)
 }

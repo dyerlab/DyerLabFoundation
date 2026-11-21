@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable+Samples.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Deterministic sample tables used by chart previews and tests. They replace
 //  the legacy `DataPoint.defaultDataPoints` fixtures.

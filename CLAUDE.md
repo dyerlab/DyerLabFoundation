@@ -54,12 +54,12 @@ travel between workstations, so they're repeated here.
   both matching gstudio's `strata_distance()`/`strata_coordinates()` (`Fixtures/generate_distance_fixtures.R`).
   Genetic measures (`DistanceSpec+Measure`, raw values = gstudio `genetic_distance()` modes, plus `phi_st`):
   `amova`, `bray` among individuals (for Smouse & Peakall spatial autocorrelation); `nei`, `cavalli`, `dps`,
-  `euclidean`, `phi_st`, `cgd` among strata (`GeneticDistances`). Unlike gstudio (zero-fills missing genotypes),
+  `euclidean`, `phi_st`, `cgd`, `dcgd` (directed; 2026-11-21, see below) among strata (`GeneticDistances`). Unlike gstudio (zero-fills missing genotypes),
   each locus uses only units genotyped there, so the R parity fixtures use arapat's complete-data individuals.
   Isolation by distance (`IBDSpec`/`IBDAnalysis`/`IBDResult`, 2026-11-08): genetic vs great-circle among the same
   units, `MantelAnalysis` (vegan port; `run(options:observing:)` streams permutations), Rousset via
   `IsolationByDistanceAnalysis`; saved as ONE figure (user's choice): form `scatter`, generator `ibd_analysis`, spec =
-  `IBDSpec` JSON with inputs *and* `result` (r, p, slope, intercept, r2, pairs); the page shows `IBDDisplay` (scatter
+  `IBDSpec` JSON with inputs *and* `result` (r, p, slope, intercept, r2, pairs; axes and dcGD added 2026-11-21); the page shows `IBDDisplay` (scatter
   + table from `resultsTable`). Format in `FigureStorage.md`. The `matrices`
   table holds only matrices that can't be rebuilt (e.g. from R); what gets saved is distance *analyses* (Mantel/IBD,
   plots, trees), which name their matrices by `DistanceSpec`. Format: `PopulationGenetics.docc/MatrixStorage.md`;
@@ -70,6 +70,37 @@ travel between workstations, so they're repeated here.
   through `graphLocusReferences()`, because `graph_loci` needs the `loci` table. Whatever replaces a file's graph must
   also update that key. Saves go through `GraphsFile.update`, which starts from the file on disk and replaces only the
   named node attributes. Text attributes are stored as single-level `node_strata`.
+
+## dcGD and `genetic_isolation()` parity (2026-11-21)
+
+Uncommitted. gstudio 1.15.7 (`af79c0c`) renamed partitioned conditional genetic distance (pGD) to **directional
+conditional genetic distance (dcGD)**, the Genetic Gravity manuscript's name; cite it as "Dyer, in review" (Dyer RJ,
+Genetic Gravity: Extracting Directional Gene Flow from Population Graphs, *Molecular Ecology*, in review). Decisions
+confirmed with the user:
+- **Names follow R, with no deprecated aliases:** `DirectionalConditionalGeneticDistance(graph:gamma:)` /
+  `...Graph(graph:gamma:)` (Graph), `DirectionalConditionalGeneticDistance(data:groups:gamma:)` (PopulationGenetics),
+  `adjustedR2DCGD`, report key `{adjustedR2DCGD}`, axis label `dcGD`. No `pgd` remains in source, tests or fixture
+  keys (`gravity_dcgd_fixture.json`; regenerated against 1.15.7, values unchanged).
+- **`DistanceSpec.Measure.dcgd`** (raw value `dcgd`, γ = `DistanceAnalysis.defaultGamma` 0.5) is the one directed
+  measure (`isDirected`; `isGraphBased` covers cGD and dcGD). `DistanceResult.directed` holds the n × n matrix, read
+  row → column, and `values` gives the full matrix for any measure; `matrix` is then the mean of the two directions,
+  for code that needs a symmetric matrix. dcGD can't be what genetics is tested *against*.
+- **`IBDSpec` is gstudio's `genetic_isolation()`** (one `ibd_analysis` figure format, extended, not a new generator):
+  `axis` (`IBDSpec.Axis`: `latitude`/`longitude` = each unit's mean over *all* located adults, as R averages an axis
+  column, unlike the distinct-coordinate great-circle centroid; or `positions` by unit name, API-only), `alongAxis`
+  (separation |Δa|, default with an axis; `false` = `against` matrix with the axis giving only direction, R's
+  `spatial =`), `gamma`. cGD against geographic separation runs Graph's `IsolationByGraphDistanceAnalysis` on the
+  population graph in its node order (= `mode = "IBGD"`, P exact); dcGD runs that Mantel test of cGD *and then*
+  `DirectionalIsolationByGraphDistanceAnalysis` (= `mode = "dcGD"`), the user's workflow: IBGD as the
+  non-directional test, ΔR² for direction. `IBDSpec.Summary`'s Mantel fields are cGD's; directional fields are
+  optional (`deltaR2`, `adjustedR2`, slopes, `slopeRatio`, `directedIntercept`, `orderedPairs`). Saved figures add a
+  `Direction` series column. Format in `FigureStorage.md`.
+- Strata without a separation stay in the population graph (paths pass through them) but leave the fits: both Graph
+  analyses now skip nodes/pairs whose separation isn't finite.
+- Fixtures: `Tests/PopulationGeneticsTests/Fixtures/generate_isolation_fixtures.R` (gravity on the deme axis plus a
+  scrambled axis whose P = 0.41 checks permutations draw for draw; arapat great-circle, latitude, longitude, and
+  dcGD with `spatial = km`; `genetic_distance(mode = "dcGD")`). `IBDControls` offers the axes and dcGD's Forward
+  direction.
 
 ## gstudio 1.15.5 parity pass (2026-11-16)
 
@@ -142,18 +173,31 @@ Other open items:
 
 ## Architecture
 
-DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes five library products plus an umbrella:
+DyerLabFoundation is a **foundation-tier Swift package** consolidating `MatrixStuff` and `PresentationZen` into a single repo. It exposes seven library products plus an umbrella:
 
 | Product | Depends on | Purpose |
 |---|---|---|
+| `DyerlabCore` | — | UI-free extensions that build everywhere: array statistics (`mean`, `sd`, `quantile`, ...), dates, CSV quoting, NaturalLanguage sentiment/readability, `NLPTags` |
 | `Matrix` | — | Linear algebra: matrices, vectors, operators, t-SNE, PCA, `rSourceConvertible` protocol |
 | `Graph` | `Matrix` | Generic graph theory: Graph, Node, Edge, Adjacency, Centrality, Path + full force-directed layout engine + its own SwiftUI views (GraphLayoutView, MapView) + file import (.pgraph, GeoJSON) |
-| `PresentationZen` | `Matrix`, `Graph` | Charts, analyses, data-communication helpers, SwiftUI views for Matrix/Vector and general data-communication (charts, tables) |
+| `PresentationZenCore` | `DyerlabCore` | Charts, `DataTable`, figure columns, exports and platform types on Swift Charts + TabularData only — no C++ `Matrix`, no `Graph`. Re-exports `DyerlabCore`. MyDeck's charts use it (2026-11-20) |
+| `PresentationZen` | `DyerlabCore`, `PresentationZenCore`, `Matrix`, `Graph` | What needs `Matrix`/`Graph`: `DataPlot`, `StoredFigure`, analysis charts (`Histogram`, `NullDensityPlot`, `PairwiseScatterPlot`, ...), `DataTable` ↔ `Matrix`/R conversions, Matrix/Vector views, `LogEntry`. Re-exports `PresentationZenCore` (and so `DyerlabCore`) |
 | `PopulationGenetics` | `Matrix`, `Graph`, `PresentationZen` | Diploid genetic-marker storage/import/analysis (see below — folded in wholesale as of 2026-07-14) |
 | `Documentation` | — | An app's help: a DocC-style browser (outline with disclosure triangles and search, `WKWebView` page) over a bundled JSON index of HTML pages, plus its window (`DocumentationScene`), Help menu item (`DocumentationCommands`) and (?) button (`DocumentationLink`). No dependencies, so any app can use it (2026-11-07) |
-| `DyerLabFoundation` | all five | Umbrella — re-exports everything via `@_exported import` |
+| `DyerLabFoundation` | `Matrix`, `Graph`, `PresentationZen`, `PopulationGenetics`, `Documentation` | Umbrella — re-exports everything via `@_exported import` (the two Core targets through `PresentationZen`) |
 
 ### PresentationZen is the UI layer — except Graph, which owns its own views
+
+**PresentationZenCore split (2026-11-20, `a7caeb0`).** Everything in PresentationZen that needs neither `Matrix` nor
+`Graph` moved to `PresentationZenCore`: `DataTable` and its roles/kinds/CSV/Markdown/plot-row readers, `PlotForm`,
+`PlotStyle` (`.figure` vs `.compact` chrome), `BarPlot`, `BarListPlot`, `GroupedBarPlot`, `PiePlot`, `ScatterPlot`,
+`TimeSeriesPlot`, `DistributionPlot`, `NumberLine`, `FigureColumn`/`FigureGenerator`/`ResultRecord`, the export
+types and menus, `DL*` platform types, map types, `Media`, `TabularOutputView`/`DataTableView`. The charting from
+MyDeck landed there in the same commit. PresentationZen keeps `DataPlot`, `StoredFigure`, the `Matrix`-backed charts
+and conversions, and the Matrix views, and `@_exported import`s Core, so `import PresentationZen` still sees
+everything. Core's package-internal helpers (`numericColumn`, `stringColumn`, `RLiteral`, ...) are `package` so
+PresentationZen can use them. New code that needs no `Matrix`/`Graph` belongs in Core; symbols move between the two
+without breaking `import PresentationZen` callers.
 
 All SwiftUI views for `Matrix`/`Vector` (plus general data-communication views: charts, tables, analyses) live in PresentationZen — import `PresentationZen` for those. `Graph` is a deliberate exception (as of 2026-08-08): its views (`GraphLayoutView`, `MapView`, `NodeInspectorForm`, under `Sources/Graph/Views/`) live alongside its model and force-directed layout engine rather than in PresentationZen, because a graph's rendering is inseparable from the layout-simulation state that drives it. `PresentationZen` still depends on both `Matrix` and `Graph` (for the layout engine and non-view types it re-uses), but no longer supplies Graph's SwiftUI views — code that imported `PresentationZen` only to reach `GraphLayoutView`/`MapView` must now `import Graph` instead.
 
@@ -182,8 +226,8 @@ Sources/
                                     tests/testthat/test-swift-parity.R asserts the R side.
                                     GeneticGravity.swift ← gstudio 1.15's genetic-gravity core:
                                     NeighbourhoodWeights / GravityEdges / SourceSinkScores /
-                                    PartitionedGeneticDistance(Graph) (neighbourhood_weights(),
-                                    gravity_edges(), source_sink_scores(), pgd()) — deterministic,
+                                    DirectionalConditionalGeneticDistance(Graph) (neighbourhood_weights(),
+                                    gravity_edges(), source_sink_scores(), dcgd()) — deterministic,
                                     matches R to 1e-10 (Fixtures/generate_gravity_fixtures.R).
                                     SourceSinkTest / IsolationByGraphDistance /
                                     DirectionalIsolationByGraphDistance ← source_sink_test(), ibgd()
@@ -208,7 +252,11 @@ Sources/
                                           realitykit_unification_decision)
                      IO/     ← file import: importPGraph, importGeoJSON, GraphExampleData
                      Data/   ← bundled example graph files (lopho.pgraph, lopho.geojson)
-  PresentationZen/ — Analyses/, Charts/, Extensions/, Models/, Protocols/, Tables/, Views/
+  DyerlabCore/     — Array+Double, Date, String+CSV, String+Language, Double+Sentiment, NLPTags
+  PresentationZenCore/ — Analyses/ (PointCluster, internal kMeansClustering), Charts/, DataTable/, Extensions/,
+                     Models/, Protocols/, Tables/, Views/
+  PresentationZen/ — Analyses/, Charts/, DataTable/ (Matrix/R/null-distribution/pairwise/transforms extensions),
+                     Extensions/, Models/, Tables/, Views/
                      MatrixViews/    ← Matrix + Vector SwiftUI views
   PopulationGenetics/ — Genetic/, DataStore/, Persistence/, Simulation/, PopulationGraph/,
                      Algorithms/, Models/, Protocols/, Types/, Extensions/, Views/, ExampleData/
@@ -221,8 +269,8 @@ Sources/
                                           (bit-exact R parity) + GraphAsymmetries (Graph). Synced to gstudio
                                           1.15.0 (null-centred location test, asymmetry_ci). Fixtures:
                                           Tests/PopulationGeneticsTests/Fixtures/generate_asymmetry_fixtures.R.
-                                          PartitionedGeneticDistance(data:groups:gamma:) ←
-                                          genetic_distance(mode = "pgd"), verified end to end on gstudio's
+                                          DirectionalConditionalGeneticDistance(data:groups:gamma:) ←
+                                          genetic_distance(mode = "dcGD"), verified end to end on gstudio's
                                           `gravity` genotypes (Fixtures/gravity_genotypes.csv).
                                           LocusSubsampleNull ← locus_subsample_null(), also exact.
                                           Earlier: permute_popgraph()'s per-stratum resampling was fixed
@@ -444,11 +492,12 @@ Swift 6 strict concurrency (`swiftLanguageModes: [.v6]`) with `.enableUpcomingFe
 
 ### SwiftData note
 
-`PresentationZen/Models/Media.swift` uses SwiftData's `@Model` macro. This macro plugin is only resolved by Xcode's build system — build `PresentationZen` from Xcode. `Matrix` and `Graph` build and test cleanly from the command line.
+`PresentationZenCore/Models/Media.swift` uses SwiftData's `@Model` macro. This macro plugin is only resolved by Xcode's build system — build `PresentationZenCore` from Xcode if the CLI toolchain lacks it (the Xcode toolchain in Commands, above, has it). `Matrix` and `Graph` build and test cleanly from the command line.
 
 ### DocC documentation
 
-Every target (`Matrix`, `Graph`, `PresentationZen`, `PopulationGenetics`, `DyerlabFoundation`) has a `.docc`
+Every target (`DyerlabCore`, `Matrix`, `Graph`, `PresentationZenCore`, `PresentationZen`, `PopulationGenetics`,
+`Documentation`, `DyerlabFoundation`) has a `.docc`
 catalog (`Sources/<Target>/<Target>.docc/`) with a hand-written landing page (`Info.json` + `<Target>.md`, titled
 `# ``<Target>`` `) giving a one-line abstract and an overview of the target's key public types. All are wired
 into `Package.swift` via `resources: [.process("<Target>.docc")]` — none are excluded/deferred anymore. When
@@ -460,8 +509,9 @@ and checking the diagnostics file was empty). There is no `swift-docc-plugin` de
 only needed for CLI-driven `swift package generate-documentation`/hosting; Xcode's own "Build Documentation" and
 the `xcrun docc convert` verification method above don't need it.
 
-All five catalogs convert with zero diagnostics as of 2026-10-23 (the six old `PresentationZen/Analyses` link
-warnings are gone). To re-verify: `swift package dump-symbol-graph --minimum-access-level public`, copy
+Seven of the eight catalogs convert with zero diagnostics as of 2026-11-21 (`DyerlabCore` and `PresentationZenCore`
+landing pages added for the split). `Documentation` reports one: "No symbol matched 'Documentation'" for its
+landing-page title, though its symbol graph names the module `Documentation`; not yet investigated. To re-verify: `swift package dump-symbol-graph --minimum-access-level public`, copy
 `.build/out/symbolgraph/<Target>.symbols.json` plus its `<Target>@*.symbols.json` extension graphs into a
 per-target directory, then `xcrun docc convert Sources/<Target>/<Target>.docc --additional-symbol-graph-dir <dir>
 --diagnostics-file <file>`.

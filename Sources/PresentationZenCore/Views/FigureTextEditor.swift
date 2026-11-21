@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  FigureTextEditor.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A sheet rather than editing in a list, so that one change to the text is one undo step in the
 //  document rather than one per keystroke.

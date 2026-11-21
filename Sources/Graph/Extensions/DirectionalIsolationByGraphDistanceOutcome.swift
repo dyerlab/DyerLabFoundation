@@ -26,7 +26,7 @@ public struct DirectionalIsolationByGraphDistanceOutcome: AnalysisOutcome, Pairw
     public let intercept: Double
 
     /// Ordered pairs `(i, j)` running in the hypothesized forward direction,
-    /// as separation (`x`) against pGD from `i` to `j` (`y`).
+    /// as separation (`x`) against dcGD from `i` to `j` (`y`).
     public let forwardPoints: [PairwisePoint]
 
     /// Ordered pairs running in the reverse direction.
@@ -41,12 +41,12 @@ public struct DirectionalIsolationByGraphDistanceOutcome: AnalysisOutcome, Pairw
     /// Always `AnalysisType.directionalIsolationByGraphDistance`.
     public var analysisType: AnalysisType { .directionalIsolationByGraphDistance }
 
-    /// `ΔR² = adjusted R²_pGD − R²_cGD`; positive favours the directional model.
+    /// `ΔR² = adjusted R²_dcGD − R²_cGD`; positive favours the directional model.
     public var statistic: Double { result.deltaR2 }
 
     /// Forward and reverse pairs, each with its own fitted line.
     public var scatter: PairwiseScatter {
-        PairwiseScatter(xLabel: separationLabel, yLabel: "pGD", series: [
+        PairwiseScatter(xLabel: separationLabel, yLabel: "dcGD", series: [
             PairwiseSeries(name: "Forward", points: forwardPoints,
                            line: RegressionLine(intercept: intercept, slope: result.forwardSlope)),
             PairwiseSeries(name: "Reverse", points: reversePoints,

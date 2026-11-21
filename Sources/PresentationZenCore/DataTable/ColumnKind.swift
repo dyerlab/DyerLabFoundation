@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  ColumnKind.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Created by Rodney Dyer on 2026.06.23.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.

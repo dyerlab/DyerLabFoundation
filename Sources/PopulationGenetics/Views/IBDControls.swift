@@ -128,18 +128,31 @@ public struct IBDControls: View {
         Text("~")
             .font(.title3)
             .foregroundStyle(.secondary)
-        Picker("Against", selection: $spec.against) {
+        Picker("Against", selection: separation) {
             let against = Self.againstMeasures(for: spec.genetic, in: options)
             if against.contains(.greatCircle) {
                 Section("Geographic") {
-                    Text(DistanceSpec.Measure.greatCircle.title).tag(DistanceSpec.Measure.greatCircle)
+                    Text(DistanceSpec.Measure.greatCircle.title).tag(Separation.measure(.greatCircle))
+                }
+            }
+            let axes = axes
+            if !axes.isEmpty {
+                Section("Along an axis") {
+                    ForEach(axes, id: \.self) { Text($0.separationLabel).tag(Separation.axis($0)) }
                 }
             }
             Section("Genetic") {
-                ForEach(against.filter(\.isGenetic)) { Text($0.title).tag($0) }
+                ForEach(against.filter(\.isGenetic)) { Text($0.title).tag(Separation.measure($0)) }
             }
         }
         .fixedSize()
+        if spec.isDirectional, !spec.alongAxis {
+            Picker("Forward", selection: forward) {
+                ForEach(axes, id: \.self) { Text($0.forwardPhrase.capitalized).tag($0) }
+            }
+            .help("The hypothesized direction of gene flow, which dcGD's forward pairs run in")
+            .fixedSize()
+        }
         Toggle("ln", isOn: $spec.logSeparation)
             .help("Use the natural log of the distances tested against, as Rousset expects for a two-dimensional "
                   + "habitat")
@@ -173,11 +186,63 @@ public struct IBDControls: View {
         }
     }
 
-    /// Moves `against` to great-circle distance, or else the first other measure, when the level no longer offers it.
+    /// What the genetic distances are tested against: a matrix, or the difference along an axis.
+    private enum Separation: Hashable {
+        /// A distance matrix among the same units.
+        case measure(DistanceSpec.Measure)
+        /// The difference along an axis.
+        case axis(IBDSpec.Axis)
+    }
+
+    /// The separation, keeping an axis that gives dcGD its direction when a matrix is chosen.
+    private var separation: Binding<Separation> {
+        Binding {
+            if spec.alongAxis, let axis = spec.axis { return .axis(axis) }
+            return .measure(spec.against)
+        } set: { separation in
+            switch separation {
+            case .measure(let measure):
+                spec.against = measure
+                spec.alongAxis = false
+                if !spec.isDirectional { spec.axis = nil }
+            case .axis(let axis):
+                spec.axis = axis
+                spec.alongAxis = true
+            }
+            keepAgainstValid()
+        }
+    }
+
+    /// The axis giving dcGD its direction, when it is tested against a matrix.
+    private var forward: Binding<IBDSpec.Axis> {
+        Binding { spec.axis ?? axes.first ?? IBDSpec.Axis(source: .latitude) } set: { spec.axis = $0 }
+    }
+
+    /// The axes the units can be placed along: latitude and longitude when they have coordinates, and any given
+    /// positions the spec already has.
+    private var axes: [IBDSpec.Axis] {
+        var axes = Self.coordinateAxes(at: spec.genetic.level, in: options)
+        if let axis = spec.axis, axis.source == .positions { axes.append(axis) }
+        return axes
+    }
+
+    /// Keeps what the genetic distances are tested against valid at their level: `against` moves to great-circle
+    /// distance, or else the first other measure, when the level no longer offers it; dcGD gets an axis for its
+    /// direction; and an axis the level can't place its units along is dropped.
     private func keepAgainstValid() {
         let offered = Self.againstMeasures(for: spec.genetic, in: options)
-        guard !offered.contains(spec.against) else { return }
-        spec.against = offered.contains(.greatCircle) ? .greatCircle : offered.first ?? .greatCircle
+        if !offered.contains(spec.against) {
+            spec.against = offered.contains(.greatCircle) ? .greatCircle : offered.first ?? .greatCircle
+        }
+        if let axis = spec.axis, axis.source != .positions,
+           !Self.coordinateAxes(at: spec.genetic.level, in: options).contains(axis) {
+            spec.axis = nil
+            spec.alongAxis = false
+        }
+        if spec.isDirectional, spec.axis == nil, let axis = Self.coordinateAxes(at: spec.genetic.level, in: options).first {
+            spec.axis = axis
+            spec.alongAxis = true
+        }
     }
 
     // MARK: - Running
@@ -247,7 +312,8 @@ public struct IBDControls: View {
     }
 
     /// What a genetic distance can be tested against at its level: great-circle distance, if the units have
-    /// coordinates, and every other genetic distance there.
+    /// coordinates, and every other genetic distance there, except dcGD, which is directed, and for dcGD, cGD, which
+    /// its analysis already tests.
     ///
     /// - Parameters:
     ///   - genetic: The genetic distances.
@@ -255,8 +321,21 @@ public struct IBDControls: View {
     /// - Returns: The measures, great-circle distance first.
     public static func againstMeasures(for genetic: DistanceSpec, in options: DistanceOptions)
         -> [DistanceSpec.Measure] {
-        options.measures(at: genetic.level).filter { $0 != genetic.measure && ($0 == .greatCircle || $0.isGenetic) }
-            .sorted { a, _ in a == .greatCircle }
+        options.measures(at: genetic.level).filter { measure in
+            measure != genetic.measure && !measure.isDirected && (measure == .greatCircle || measure.isGenetic)
+                && !(genetic.measure == .dcgd && measure == .cgd)
+        }
+        .sorted { a, _ in a == .greatCircle }
+    }
+
+    /// The coordinate axes a level's units can be placed along: latitude and longitude, when they have coordinates.
+    ///
+    /// - Parameters:
+    ///   - level: A level.
+    ///   - options: What the data offers.
+    /// - Returns: The axes.
+    public static func coordinateAxes(at level: String, in options: DistanceOptions) -> [IBDSpec.Axis] {
+        options.offers(.greatCircle, at: level) ? [IBDSpec.Axis(source: .latitude), IBDSpec.Axis(source: .longitude)] : []
     }
 
     /// Whether the data can test a spec.
@@ -264,10 +343,14 @@ public struct IBDControls: View {
     /// - Parameters:
     ///   - spec: The analysis.
     ///   - options: What the data offers.
-    /// - Returns: `true` when its level offers its genetic distance and what it is tested against.
+    /// - Returns: `true` when its level offers its genetic distance and what it is tested against, and dcGD has an
+    ///   axis for its direction.
     public static func offers(_ spec: IBDSpec, in options: DistanceOptions) -> Bool {
-        spec.genetic.measure.isGenetic && options.offers(spec.genetic)
-            && againstMeasures(for: spec.genetic, in: options).contains(spec.against)
+        guard spec.genetic.measure.isGenetic, options.offers(spec.genetic) else { return false }
+        if let axis = spec.axis, axis.source != .positions,
+           !coordinateAxes(at: spec.genetic.level, in: options).contains(axis) { return false }
+        if spec.isDirectional, spec.axis == nil { return false }
+        return spec.alongAxis || againstMeasures(for: spec.genetic, in: options).contains(spec.against)
     }
 
     /// The spec the page starts with: Rousset's Φ_ST against ln great-circle distance among the innermost stratum
@@ -290,6 +373,12 @@ public struct IBDControls: View {
 
     /// How the test is made.
     private var summary: String {
+        if spec.isDirectional {
+            let against = (spec.logSeparation ? "the natural log of " : "") + spec.separationPhrase
+            let forward = spec.axis?.forwardPhrase ?? "forward"
+            return "\(spec.formula): cGD against \(against) by a Mantel test, then dcGD with forward (\(forward)) and "
+                + "reverse slopes, compared by ΔR² (Dyer, in review)."
+        }
         let genetic = spec.validTransform == .rousset
             ? "Pairwise Φ_ST linearized as Φ_ST / (1 − Φ_ST) (Rousset 1997)" : spec.genetic.measure.title
         let against = (spec.logSeparation ? "the natural log of " : "") + spec.separationPhrase
@@ -308,6 +397,17 @@ public struct IBDControls: View {
         IBDControls(spec: $spec, options: DistanceOptions(dataset: dataset), permutations: $permutations,
                     isEstimating: false, isTesting: false, canTest: true, estimate: {}, test: {}, cancel: {},
                     canSave: true, save: {})
+            .frame(width: 1100)
+    }
+}
+
+#Preview("Directional") {
+    @Previewable @State var spec = IBDSpec(genetic: DistanceSpec(measure: .dcgd, level: "Population"),
+                                           axis: IBDSpec.Axis(source: .latitude))
+    @Previewable @State var permutations = IBDSpec.defaultPermutations
+    if let dataset = try? ExampleDataset.arapatPopulations.load() {
+        IBDControls(spec: $spec, options: DistanceOptions(dataset: dataset), permutations: $permutations,
+                    isEstimating: false, isTesting: false, canTest: true, estimate: {}, test: {}, cancel: {})
             .frame(width: 1100)
     }
 }

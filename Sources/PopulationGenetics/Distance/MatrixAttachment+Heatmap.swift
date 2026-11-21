@@ -42,10 +42,10 @@ public extension MatrixAttachment {
 
 public extension DistanceResult {
 
-    /// The matrix as a heatmap draws it, with each individual's group.
+    /// The matrix as a heatmap draws it, with each individual's group; a directed matrix from row to column.
     var heatmapData: MatrixHeatmapData {
         let names = matrix.groupNames
-        return MatrixHeatmapData(rowNames: names, columnNames: names, values: matrix.dense().flatMap { $0 },
+        return MatrixHeatmapData(rowNames: names, columnNames: names, values: values.flatMap { $0 },
                                  groups: groups, units: spec.measure.units)
     }
 }

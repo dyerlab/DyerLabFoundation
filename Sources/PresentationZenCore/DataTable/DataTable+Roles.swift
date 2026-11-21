@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  DataTable+Roles.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Fluent, immutable role assignment. Each call returns a copy of the table
 //  with one role rebound; the backing `DataFrame` is copy-on-write so the

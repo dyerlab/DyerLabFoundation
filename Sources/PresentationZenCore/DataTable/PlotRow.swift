@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PlotRow.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  The resolved, render-ready row a chart iterates. A `DataTable` projects
 //  its role mapping into `[PlotRow]`; the chart never touches the underlying

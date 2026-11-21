@@ -11,10 +11,10 @@
 //  Graph
 //
 //  Ports of gstudio's (>= 1.15) genetic-gravity core: `neighbourhood_weights()`,
-//  `gravity_edges()`, `source_sink_scores()`, and `pgd()` (partitioned
+//  `gravity_edges()`, `source_sink_scores()`, and `dcgd()` (directional
 //  conditional genetic distance). One sign convention throughout: higher = more
 //  of a source. See `~/Coding/gstudio/R/{neighbourhood_weights,gravity_edges,
-//  source_sink_scores,pgd}.R` and the framework help page in `R/gravity.R`.
+//  source_sink_scores,dcgd}.R` and the framework help page in `R/gravity.R`.
 //
 //  Node i's kernel bandwidth is b_i = gamma * s_i / k_i (strength over degree).
 //  gamma = 0.5 (default) is degree-neutral, for inferring direction; gamma = 1
@@ -311,10 +311,10 @@ public func SourceSinkScores(graph: Graph, gamma: Double = 0.5, x: [String: Doub
                             gamma: gamma, deltaBarDecomposition: decomposition)
 }
 
-// MARK: - pgd
+// MARK: - dcgd
 
-/// The directed graph of partitioned conditional genetic distance — a port of
-/// gstudio's `pgd(graph, output = "graph")`.
+/// The directed graph of directional conditional genetic distance — a port of
+/// gstudio's `dcgd(graph, output = "graph")`.
 ///
 /// Each undirected edge `(u, v)` with conditional genetic distance `e` is split
 /// into two arcs by the neighbourhood weights `w_{v|u}` and `w_{u|v}`:
@@ -329,8 +329,8 @@ public func SourceSinkScores(graph: Graph, gamma: Double = 0.5, x: [String: Doub
 /// - Returns: A directed graph with every original node (same order and
 ///   attributes) and two arcs per edge — all forward arcs, then all reverse
 ///   arcs — or `nil` if `gamma` is not positive.
-public func PartitionedGeneticDistanceGraph(graph: Graph, gamma: Double = 0.5) -> Graph? {
-    guard let arcs = partitionedArcs(graph, gamma: gamma) else { return nil }
+public func DirectionalConditionalGeneticDistanceGraph(graph: Graph, gamma: Double = 0.5) -> Graph? {
+    guard let arcs = directionalArcs(graph, gamma: gamma) else { return nil }
     let newNodes = graph.nodes.map { source -> Node in
         let copy = Node(name: source.name, size: source.size, color: source.color,
                         categoricalAttributes: source.categoricalAttributes,
@@ -342,10 +342,10 @@ public func PartitionedGeneticDistanceGraph(graph: Graph, gamma: Double = 0.5) -
     return Graph(nodes: newNodes, edges: edges)
 }
 
-/// All-pairs directed partitioned conditional genetic distance — a port of
-/// gstudio's `pgd(graph, output = "matrix")` / `genetic_distance(mode = "pgd")`.
+/// All-pairs directed directional conditional genetic distance — a port of
+/// gstudio's `dcgd(graph, output = "matrix")` / `genetic_distance(mode = "dcGD")`.
 ///
-/// Shortest-path distances over ``PartitionedGeneticDistanceGraph(graph:gamma:)``.
+/// Shortest-path distances over ``DirectionalConditionalGeneticDistanceGraph(graph:gamma:)``.
 /// The result is asymmetric: `[i, j]` is the distance from `i` to `j`, shorter
 /// in the direction of gene flow.
 ///
@@ -355,8 +355,8 @@ public func PartitionedGeneticDistanceGraph(graph: Graph, gamma: Double = 0.5) -
 /// - Returns: A `K × K` matrix in node order with node row/column names, `0` on
 ///   the diagonal and `.infinity` for unreachable pairs, or `nil` if `gamma` is
 ///   not positive.
-public func PartitionedGeneticDistance(graph: Graph, gamma: Double = 0.5) -> Matrix? {
-    guard let arcs = partitionedArcs(graph, gamma: gamma) else { return nil }
+public func DirectionalConditionalGeneticDistance(graph: Graph, gamma: Double = 0.5) -> Matrix? {
+    guard let arcs = directionalArcs(graph, gamma: gamma) else { return nil }
     let names = graph.nodes.map { $0.name }
     let K = names.count
 
@@ -385,9 +385,9 @@ public func PartitionedGeneticDistance(graph: Graph, gamma: Double = 0.5) -> Mat
 
 // MARK: - Internals
 
-/// The partitioned arcs (node indices) of `pgd()`: forward arcs for every edge
+/// The directional arcs (node indices) of `dcgd()`: forward arcs for every edge
 /// in ``Graph/undirectedEdgeList()`` order, then the reverse arcs.
-private func partitionedArcs(_ graph: Graph, gamma: Double) -> [(from: Int, to: Int, weight: Double)]? {
+private func directionalArcs(_ graph: Graph, gamma: Double) -> [(from: Int, to: Int, weight: Double)]? {
     guard let W = NeighbourhoodWeights(graph: graph, gamma: gamma) else { return nil }
     let indexOf = Dictionary(uniqueKeysWithValues: graph.nodes.enumerated().map { ($1.name, $0) })
     let edges = graph.undirectedEdgeList()

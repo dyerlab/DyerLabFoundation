@@ -14,7 +14,7 @@
 //    - MoranSpectralRandomization          <- msr_null()        (Matrix)
 //    - SourceSinkTest                      <- source_sink_test()
 //    - IsolationByGraphDistance            <- ibgd(mode = "cgd")
-//    - DirectionalIsolationByGraphDistance <- ibgd(mode = "pgd")
+//    - DirectionalIsolationByGraphDistance <- ibgd(mode = "dcGD")
 //
 //  Each Moran-spectral replicate is independent of eigenvector signs, so with
 //  distinct eigenvalues (true of every fixture here) the seeded nulls match R
@@ -54,14 +54,14 @@ private struct FCGD: Decodable {
     let R2: Double
     let slope: Double
 }
-private struct FPGDFit: Decodable {
-    let delta_R2: Double; let pairs: Int; let R2_cGD: Double; let adj_R2_pGD: Double
+private struct FDCGDFit: Decodable {
+    let delta_R2: Double; let pairs: Int; let R2_cGD: Double; let adj_R2_dcGD: Double
     let forward_slope: Double; let reverse_slope: Double; let slope_ratio: Double
 }
 private struct FIBGD: Decodable {
     let graph: String; let x: [String: Double]; let seed: Int; let nperm: Int
     let distance: [[Double]]; let forward: [[Double]]
-    let cgd: FCGD; let pgd: FPGDFit; let pgd_distance_delta_R2: Double
+    let cgd: FCGD; let dcgd: FDCGDFit; let dcgd_distance_delta_R2: Double
 }
 private struct FTests: Decodable {
     let msr: [String: FMSR]
@@ -200,12 +200,12 @@ func isolationByGraphDistanceMatchesR(_ name: String) throws {
 func directionalIsolationByGraphDistanceMatchesR(_ name: String) throws {
     let fixture = try #require(loadTests().ibgd[name])
     let graph = try loadGraph(fixture.graph)
-    let expected = fixture.pgd
+    let expected = fixture.dcgd
     let result = try #require(DirectionalIsolationByGraphDistance(graph: graph, separation: .positions(fixture.x)))
     #expect(abs(result.deltaR2 - expected.delta_R2) < 1e-9, "\(name) ΔR²: \(result.deltaR2) vs \(expected.delta_R2)")
     #expect(result.pairs == expected.pairs)
     #expect(abs(result.r2CGD - expected.R2_cGD) < 1e-12)
-    #expect(abs(result.adjustedR2PGD - expected.adj_R2_pGD) < 1e-9)
+    #expect(abs(result.adjustedR2DCGD - expected.adj_R2_dcGD) < 1e-9)
     #expect(abs(result.forwardSlope - expected.forward_slope) < 1e-9)
     #expect(abs(result.reverseSlope - expected.reverse_slope) < 1e-9)
     #expect(abs(result.slopeRatio - expected.slope_ratio) < 1e-9)
@@ -213,7 +213,7 @@ func directionalIsolationByGraphDistanceMatchesR(_ name: String) throws {
     // A distance matrix + forward matrix gives the same answer as positions.
     let viaDistance = try #require(DirectionalIsolationByGraphDistance(
         graph: graph, separation: .distances(matrix(fixture.distance), forward: matrix(fixture.forward))))
-    #expect(abs(viaDistance.deltaR2 - fixture.pgd_distance_delta_R2) < 1e-9)
+    #expect(abs(viaDistance.deltaR2 - fixture.dcgd_distance_delta_R2) < 1e-9)
     // ...and the directional test needs `forward` with a distance matrix.
     #expect(DirectionalIsolationByGraphDistance(graph: graph,
                                                 separation: .distances(matrix(fixture.distance), forward: nil)) == nil)

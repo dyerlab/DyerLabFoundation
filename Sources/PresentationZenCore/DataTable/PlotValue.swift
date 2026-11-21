@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  PlotValue.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  The typed value of a positional (x) encoding. A plottable position is
 //  always exactly one of three kinds — quantitative, temporal, or

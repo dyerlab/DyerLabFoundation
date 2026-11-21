@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  AnalysisResult.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A human-readable analysis record (a statistical test writeup, a
 //  permutation-test summary, construction notes, ...) stored as Markdown

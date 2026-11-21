@@ -13,7 +13,9 @@
 //  A pairwise distance matrix and what goes with it on the page: the group
 //  each row belongs to (for an individual matrix, its innermost stratum, so
 //  the heatmap can mark the strata), and the units left out for want of
-//  coordinates. It is computed when needed, never stored.
+//  coordinates. It is computed when needed, never stored. A directed measure
+//  (dcGD) keeps its full matrix, read from row to column; `matrix` then holds
+//  the mean of the two directions, for code that needs a symmetric matrix.
 //
 //  Created by Rodney Dyer on 2026.11.08.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
@@ -28,8 +30,11 @@ public struct DistanceResult: Sendable, Equatable {
 
     /// What the matrix holds.
     public let spec: DistanceSpec
-    /// The distances, with one name per unit.
+    /// The distances, with one name per unit. For a directed measure, the mean of the two directions; read
+    /// ``values`` for the distances themselves.
     public let matrix: UnitDistanceMatrix
+    /// For a directed measure, the distance from each row's unit to each column's; `nil` for a symmetric one.
+    public let directed: [[Double]]?
     /// Each row's group, such as its population, or `nil` when the rows are strata or have no strata.
     public let groups: [String]?
     /// The units left out, for the reason ``omissionReason`` gives.
@@ -54,7 +59,33 @@ public struct DistanceResult: Sendable, Equatable {
                 omissionReason: String = "no coordinates", isParentOffspring: Bool = false) {
         self.spec = spec
         self.matrix = matrix
+        self.directed = nil
         self.groups = groups
+        self.omitted = omitted
+        self.omissionReason = omissionReason
+        self.name = spec.name(isParentOffspring: isParentOffspring)
+        self.unitName = spec.unitName(isParentOffspring: isParentOffspring)
+    }
+
+    /// Creates the result of a directed measure.
+    ///
+    /// - Parameters:
+    ///   - spec: What the matrix holds.
+    ///   - directed: The distance from each row's unit to each column's, `n × n` in `names` order.
+    ///   - names: The units' names.
+    ///   - omitted: The units left out.
+    ///   - omissionReason: Why they were left out.
+    ///   - isParentOffspring: Whether the adults are the mothers of parent/offspring data.
+    public init(spec: DistanceSpec, directed: [[Double]], names: [String], omitted: [String] = [],
+                omissionReason: String, isParentOffspring: Bool = false) {
+        var mean = UnitDistanceMatrix(groupNames: names)
+        for i in names.indices {
+            for j in (i + 1)..<names.count { mean[i, j] = (directed[i][j] + directed[j][i]) / 2 }
+        }
+        self.spec = spec
+        self.matrix = mean
+        self.directed = directed
+        self.groups = nil
         self.omitted = omitted
         self.omissionReason = omissionReason
         self.name = spec.name(isParentOffspring: isParentOffspring)
@@ -63,13 +94,27 @@ public struct DistanceResult: Sendable, Equatable {
 
     // MARK: - Contents
 
+    /// Whether the matrix is read from row to column, the distance from one unit to another differing from the
+    /// distance back.
+    public var isDirected: Bool {
+        directed != nil
+    }
+
+    /// The full matrix, `n × n`: from each row's unit to each column's.
+    public var values: [[Double]] {
+        directed ?? matrix.dense()
+    }
+
     /// The number of units.
     public var count: Int {
         matrix.groupNames.count
     }
 
-    /// Each distance once: the upper triangle, row by row.
+    /// Each distance once: the upper triangle, row by row, or for a directed measure every ordered pair, row by row.
     public var pairwiseValues: [Double] {
+        if let directed {
+            return directed.indices.flatMap { i in directed[i].indices.filter { $0 != i }.map { directed[i][$0] } }
+        }
         var values: [Double] = []
         values.reserveCapacity(count * (count - 1) / 2)
         for i in 0..<count {
@@ -88,6 +133,7 @@ public struct DistanceResult: Sendable, Equatable {
         } else {
             units = "\(count) \(spec.level) strata"
         }
-        return "\(spec.measure.methods), among \(units)."
+        let direction = isDirected ? " The matrix is read from row to column." : ""
+        return "\(spec.measure.methods), among \(units).\(direction)"
     }
 }

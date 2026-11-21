@@ -38,6 +38,7 @@ let package = Package(
         // build on every platform, including watchOS.
         .target(
             name: "DyerlabCore",
+            resources: [ .process("DyerlabCore.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]
@@ -72,6 +73,7 @@ let package = Package(
         .target(
             name: "PresentationZenCore",
             dependencies: ["DyerlabCore"],
+            resources: [ .process("PresentationZenCore.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

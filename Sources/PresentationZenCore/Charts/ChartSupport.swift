@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  ChartSupport.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  Shared helpers for the chart layer. The `seriesStyle` modifier keeps
 //  color/legend branching at the View level so the `Chart { }` content

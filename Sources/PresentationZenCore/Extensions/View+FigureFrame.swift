@@ -8,7 +8,7 @@
 //         Making Population Genetic Software That Doesn't Suck
 //
 //  View+FigureFrame.swift
-//  PresentationZen
+//  PresentationZenCore
 //
 //  A chart stretched to fill a window is distorted by the window's shape: a scatter in a wide window flattens its
 //  slope, and a density in a tall one exaggerates its peak. Pages give their charts this frame instead, so a chart
