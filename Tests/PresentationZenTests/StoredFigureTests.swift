@@ -17,6 +17,7 @@
 import Foundation
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 @MainActor
 struct StoredFigureTests {

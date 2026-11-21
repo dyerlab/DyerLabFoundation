@@ -17,7 +17,7 @@
 import Foundation
 
 /// Formats values as R source, in the spaced style of the rest of the generated code.
-enum RLiteral {
+package enum RLiteral {
 
     /// The longest generated line, unless one quoted string is longer on its own.
     static let lineWidth = 80
@@ -34,7 +34,7 @@ enum RLiteral {
     ///   - value: The value, or `nil` for a missing one.
     ///   - digits: The number of significant digits to keep.
     /// - Returns: An R numeric literal, `NA`, `NaN`, `Inf` or `-Inf`.
-    static func number(_ value: Double?, digits: Int) -> String {
+    package static func number(_ value: Double?, digits: Int) -> String {
         guard let value else { return "NA" }
         if value.isNaN { return "NaN" }
         if value.isInfinite { return value < 0 ? "-Inf" : "Inf" }
@@ -45,7 +45,7 @@ enum RLiteral {
     ///
     /// - Parameter text: The text, which is collapsed onto one line.
     /// - Returns: The double-quoted, escaped string.
-    static func quoted(_ text: String) -> String {
+    package static func quoted(_ text: String) -> String {
         let escaped = singleLine(text)
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
@@ -56,7 +56,7 @@ enum RLiteral {
     ///
     /// - Parameter text: The text.
     /// - Returns: The text on one line.
-    static func singleLine(_ text: String) -> String {
+    package static func singleLine(_ text: String) -> String {
         text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
@@ -64,7 +64,7 @@ enum RLiteral {
     ///
     /// - Parameter name: The column's name.
     /// - Returns: The name as R source.
-    static func name(_ name: String) -> String {
+    package static func name(_ name: String) -> String {
         let isLetter = { (character: Character) in character.isASCII && character.isLetter }
         let isDigit = { (character: Character) in character.isASCII && character.isNumber }
         let body = name.allSatisfy { isLetter($0) || isDigit($0) || $0 == "." || $0 == "_" }
@@ -81,7 +81,7 @@ enum RLiteral {
     ///   - prefix: The text before the call on its first line.
     ///   - suffix: The text after the call's closing parenthesis.
     /// - Returns: The R code.
-    static func vector(_ items: [String], prefix: String, suffix: String = "") -> String {
+    package static func vector(_ items: [String], prefix: String, suffix: String = "") -> String {
         guard !items.isEmpty else { return "\(prefix)c()\(suffix)" }
         let line = "\(prefix)c( \(items.joined(separator: ", ")) )\(suffix)"
         guard line.count > lineWidth else { return line }

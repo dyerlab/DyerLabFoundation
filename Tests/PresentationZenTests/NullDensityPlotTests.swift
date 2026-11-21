@@ -18,6 +18,7 @@ import Foundation
 import Matrix
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 @MainActor
 struct NullDensityPlotTests {

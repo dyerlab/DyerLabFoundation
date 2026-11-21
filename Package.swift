@@ -24,6 +24,7 @@ let package = Package(
         .library(name: "DyerlabCore",        targets: ["DyerlabCore"]),
         .library(name: "Matrix",             targets: ["Matrix"]),
         .library(name: "Graph",              targets: ["Graph"]),
+        .library(name: "PresentationZenCore", targets: ["PresentationZenCore"]),
         .library(name: "PresentationZen",    targets: ["PresentationZen"]),
         .library(name: "PopulationGenetics", targets: ["PopulationGenetics"]),
         .library(name: "Documentation",      targets: ["Documentation"]),
@@ -65,9 +66,20 @@ let package = Package(
             ]
         ),
 
+        // Charts, data tables and exports built only on Swift Charts and
+        // TabularData: what an app needs to show its data, without the C++
+        // Matrix library or Graph. PresentationZen re-exports it.
+        .target(
+            name: "PresentationZenCore",
+            dependencies: ["DyerlabCore"],
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ]
+        ),
+
         .target(
             name: "PresentationZen",
-            dependencies: ["DyerlabCore", "Matrix", "Graph"],
+            dependencies: ["DyerlabCore", "PresentationZenCore", "Matrix", "Graph"],
             resources: [ .process("PresentationZen.docc") ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
@@ -141,7 +153,7 @@ let package = Package(
 
         .testTarget(
             name: "PresentationZenTests",
-            dependencies: ["PresentationZen"],
+            dependencies: ["PresentationZen", "PresentationZenCore"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ]

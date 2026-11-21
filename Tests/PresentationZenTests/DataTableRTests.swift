@@ -18,6 +18,7 @@ import Foundation
 import TabularData
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 struct DataTableRTests {
 

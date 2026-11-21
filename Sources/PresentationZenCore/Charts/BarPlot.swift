@@ -37,6 +37,12 @@ public struct BarPlot: View {
     public var rotateLabels: Bool
     /// The bar fill color when no `series` role is bound.
     public var barColor: Color
+    /// Figure or compact chrome.
+    public var style: PlotStyle
+    /// The bars' corner radius.
+    public var cornerRadius: CGFloat
+    /// Whether `showValues` skips bars whose value is zero.
+    public var hidesZeroValues: Bool
 
     /// Creates a bar plot.
     ///
@@ -51,6 +57,9 @@ public struct BarPlot: View {
     ///   - valueFormat: The `String(format:)` pattern used for `showValues` annotations.
     ///   - rotateLabels: Whether to rotate x-axis category labels vertically, for long names.
     ///   - barColor: The bar fill color when no `series` role is bound.
+    ///   - style: Figure or compact chrome; compact charts show only the axis titles given.
+    ///   - cornerRadius: The bars' corner radius.
+    ///   - hidesZeroValues: Whether `showValues` skips bars whose value is zero.
     public init(_ table: DataTable,
                 xLabel: String = "Categories",
                 yLabel: String = "Value",
@@ -58,7 +67,10 @@ public struct BarPlot: View {
                 showValues: Bool = false,
                 valueFormat: String = "%.0f",
                 rotateLabels: Bool = false,
-                barColor: Color = .blue) {
+                barColor: Color = .blue,
+                style: PlotStyle = .figure,
+                cornerRadius: CGFloat = 0,
+                hidesZeroValues: Bool = false) {
         self.table = table
         self.xLabel = xLabel
         self.yLabel = yLabel
@@ -67,6 +79,9 @@ public struct BarPlot: View {
         self.valueFormat = valueFormat
         self.rotateLabels = rotateLabels
         self.barColor = barColor
+        self.style = style
+        self.cornerRadius = cornerRadius
+        self.hidesZeroValues = hidesZeroValues
     }
 
     /// Renders the x value as a category string regardless of column kind.
@@ -75,25 +90,23 @@ public struct BarPlot: View {
     }
 
     public var body: some View {
-        Chart(table.plotRows) { row in
+        let chart = Chart(table.plotRows) { row in
             BarMark(x: .value("Category", category(for: row)),
                     y: .value("Value", row.y))
             .foregroundStyle(by: .value("Group", row.series ?? ""))
+            .cornerRadius(cornerRadius)
             .annotation(position: .top) {
                 if showLabel, let label = row.label, !label.isEmpty {
                     Text(label).font(.footnote)
-                } else if showValues {
-                    Text(String(format: valueFormat, row.y)).font(.caption2)
+                } else if showValues, !(hidesZeroValues && row.y == 0) {
+                    Text(String(format: valueFormat, row.y))
+                        .font(.caption2)
+                        .monospacedDigit()
+                        .foregroundStyle(style == .compact ? .secondary : .primary)
                 }
             }
         }
         .seriesStyle(hasSeries: table.column(for: .series) != nil, soloColor: barColor)
-        .chartXAxisLabel(position: .bottom, alignment: .center) {
-            Text(xLabel).font(.title3)
-        }
-        .chartYAxisLabel(position: .trailing, alignment: .center) {
-            Text(yLabel).font(.title3)
-        }
         .chartXAxis {
             if rotateLabels {
                 AxisMarks { _ in
@@ -101,9 +114,24 @@ public struct BarPlot: View {
                     AxisGridLine()
                     AxisTick()
                 }
+            } else if style == .compact {
+                AxisMarks { _ in AxisValueLabel() }
             } else {
                 AxisMarks()
             }
+        }
+
+        switch style {
+        case .figure:
+            chart
+                .chartXAxisLabel(position: .bottom, alignment: .center) {
+                    Text(xLabel).font(.title3)
+                }
+                .chartYAxisLabel(position: .trailing, alignment: .center) {
+                    Text(yLabel).font(.title3)
+                }
+        case .compact:
+            chart.compactAxisTitles(x: xLabel, y: yLabel)
         }
     }
 }
@@ -115,6 +143,10 @@ public struct BarPlot: View {
         BarPlot(.sampleBars, xLabel: "Categories", yLabel: "Value", showValues: true)
 
         BarPlot(.sampleBars.series("group"), xLabel: "Categories", yLabel: "Value")
+
+        BarPlot(.sampleBars, xLabel: "Category", yLabel: "", showValues: true, barColor: .accentColor,
+                style: .compact, cornerRadius: 3)
+            .frame(height: 180)
     }
     .frame(minHeight: 600)
     .padding()

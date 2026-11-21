@@ -109,7 +109,7 @@ extension DataTable {
     ///
     /// - Parameter name: The column to read.
     /// - Returns: The values, or an empty array if the column is absent or not numeric.
-    func numericColumn(_ name: String) -> [Double?] {
+    package func numericColumn(_ name: String) -> [Double?] {
         guard let column = frame.columns.first(where: { $0.name == name }) else { return [] }
         let type = column.wrappedElementType
         if type == Double.self { return Array(frame[name, Double.self]) }
@@ -123,7 +123,7 @@ extension DataTable {
     ///
     /// - Parameter name: The column to read.
     /// - Returns: The values as strings, or an empty array if the column is absent or of an unsupported type.
-    func stringColumn(_ name: String) -> [String?] {
+    package func stringColumn(_ name: String) -> [String?] {
         guard let column = frame.columns.first(where: { $0.name == name }) else { return [] }
         let type = column.wrappedElementType
         if type == String.self { return Array(frame[name, String.self]) }

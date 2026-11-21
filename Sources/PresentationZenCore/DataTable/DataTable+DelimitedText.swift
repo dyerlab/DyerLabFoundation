@@ -77,7 +77,7 @@ extension DataTable {
     ///
     /// - Parameter name: The column.
     /// - Returns: One string per row, `nil` where the date is missing.
-    func isoDateColumn(_ name: String) -> [String?] {
+    package func isoDateColumn(_ name: String) -> [String?] {
         frame[name, Date.self].map { $0?.ISO8601Format() }
     }
 }

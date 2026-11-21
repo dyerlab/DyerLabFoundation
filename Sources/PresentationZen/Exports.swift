@@ -13,8 +13,10 @@
 //  Created by Rodney Dyer on 2026.10.28.
 //  Copyright (c) 2021-2026 Administravia LLC.  All Rights Reserved.
 //
-//  Re-exports DyerlabCore so code that imports PresentationZen keeps seeing
-//  the array statistics, date, and natural-language extensions that moved there.
+//  Re-exports DyerlabCore and PresentationZenCore, so code that imports
+//  PresentationZen keeps seeing everything that moved there: the charts, tables
+//  and exports with no Matrix or Graph dependency now live in PresentationZenCore.
 //
 
 @_exported import DyerlabCore
+@_exported import PresentationZenCore

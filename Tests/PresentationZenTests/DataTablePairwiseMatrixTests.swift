@@ -25,6 +25,7 @@ import Foundation
 import Testing
 @testable import Matrix
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 private enum TestKindOne: PairwiseMeasure {
     static let columnName = "KindOne"

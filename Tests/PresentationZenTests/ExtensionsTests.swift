@@ -18,6 +18,7 @@ import Foundation
 import SwiftUI
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 @Suite("Date.mdy")
 struct DateMdyTests {

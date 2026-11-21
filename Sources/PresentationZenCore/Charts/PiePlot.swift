@@ -20,7 +20,7 @@ import Charts
 /// A pie/donut chart. The `y` role is each slice's magnitude; the `label` role
 /// names the slice (and drives the color scale).
 public struct PiePlot: View {
-    /// The table to plot; bind slice magnitude to `y` and slice name to `label`.
+    /// The table to plot; bind slice magnitude to `y` and slice name to both `x` and `label` (rows need an `x`).
     public var table: DataTable
     /// An optional title drawn at the chart's center.
     public var title: String
@@ -35,11 +35,14 @@ public struct PiePlot: View {
     /// An optional explicit slice-name-to-color mapping; slices without an entry fall back to the chart's default
     /// color scale.
     public var colors: [String: Color]?
+    /// Whether to write each slice's name or value on it; turn off when a table beside the chart names them.
+    public var showsSliceLabels: Bool
 
     /// Creates a pie/donut chart.
     ///
     /// - Parameters:
-    ///   - table: The table to plot; bind slice magnitude to `y` and slice name to `label`.
+    ///   - table: The table to plot; bind slice magnitude to `y` and slice name to both `x` and
+    ///     `label` (rows need an `x`).
     ///   - title: An optional title drawn at the chart's center.
     ///   - innerRadius: The donut hole's radius, as a fraction of the outer radius (`0` for a
     ///     full pie).
@@ -48,13 +51,15 @@ public struct PiePlot: View {
     ///   - valueFormat: The `String(format:)` pattern used for `showValues` annotations.
     ///   - colors: An optional explicit slice-name-to-color mapping; slices without an entry
     ///     fall back to the chart's default color scale.
+    ///   - showsSliceLabels: Whether to write each slice's name or value on it.
     public init(_ table: DataTable,
                 title: String = "",
                 innerRadius: Double = 0.25,
                 showLegend: Bool = false,
                 showValues: Bool = false,
                 valueFormat: String = "%.1f",
-                colors: [String: Color]? = nil) {
+                colors: [String: Color]? = nil,
+                showsSliceLabels: Bool = true) {
         self.table = table
         self.title = title
         self.innerRadius = innerRadius
@@ -62,13 +67,16 @@ public struct PiePlot: View {
         self.showValues = showValues
         self.valueFormat = valueFormat
         self.colors = colors
+        self.showsSliceLabels = showsSliceLabels
     }
 
     public var body: some View {
         ZStack {
             chartView
-            Text("\(title)")
-                .font(.title2)
+            if !title.isEmpty {
+                Text(title)
+                    .font(.title2)
+            }
         }
     }
 
@@ -81,7 +89,7 @@ public struct PiePlot: View {
             .cornerRadius(3)
             .foregroundStyle(by: .value(Text(verbatim: row.label ?? ""), row.label ?? ""))
             .annotation(position: .overlay) {
-                if row.y != 0.0 {
+                if showsSliceLabels, row.y != 0.0 {
                     if showValues {
                         Text(String(format: valueFormat, row.y))
                             .foregroundStyle(.secondary)
@@ -108,7 +116,7 @@ public struct PiePlot: View {
 #Preview {
     PiePlot(DataTable(numbers: ["count": [30, 20, 15, 35]],
                       strings: ["name": ["Alpha", "Beta", "Gamma", "Delta"]],
-                      roles: [.y: "count", .label: "name"]),
+                      roles: [.x: "name", .y: "count", .label: "name"]),
             title: "Shares",
             showLegend: true,
             showValues: true,

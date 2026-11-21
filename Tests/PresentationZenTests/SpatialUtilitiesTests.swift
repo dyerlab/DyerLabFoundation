@@ -25,6 +25,7 @@ import Testing
 import CoreLocation
 import MapKit
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 struct SpatialUtilitiesTests {
 

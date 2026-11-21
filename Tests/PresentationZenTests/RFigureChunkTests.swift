@@ -19,6 +19,7 @@ import Matrix
 import TabularData
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 struct RFigureChunkTests {
 

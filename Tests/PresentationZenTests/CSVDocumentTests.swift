@@ -16,6 +16,7 @@
 
 import Testing
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 @Suite("CSVDocument")
 struct CSVDocumentTests {

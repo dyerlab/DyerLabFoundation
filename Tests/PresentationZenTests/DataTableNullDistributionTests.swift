@@ -21,6 +21,7 @@ import Foundation
 import Testing
 @testable import Matrix
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 struct DataTableNullDistributionTests {
 

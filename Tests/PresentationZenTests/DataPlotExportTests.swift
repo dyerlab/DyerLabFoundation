@@ -19,6 +19,7 @@ import ImageIO
 import Testing
 import UniformTypeIdentifiers
 @testable import PresentationZen
+@testable import PresentationZenCore
 
 @MainActor
 struct DataPlotExportTests {
