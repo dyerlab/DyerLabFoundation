@@ -31,6 +31,13 @@ model. Code that imports `PresentationZen` sees everything here without a second
 - ``PlotStyle`` — `figure` (large axis titles, a minimum height) or `compact` (sized by its container, for a chart
   inside an app screen).
 
+### Calendars
+
+- ``ActivityGrid`` — a contribution-style grid of recent days, filled on days with activity.
+- ``DailyPresencePlot`` and ``DailyPresenceSeries`` — a month of days against a set of series, marking the days each
+  has data.
+- ``MonthSelectorView`` — a month title with previous and next buttons that step a bound date.
+
 ### Figures and exports
 
 - ``FigureColumn`` / ``FigureGenerator`` — the columns of a figure stored in a project file and the program that can

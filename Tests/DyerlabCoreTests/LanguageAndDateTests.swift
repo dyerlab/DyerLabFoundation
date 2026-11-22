@@ -127,6 +127,15 @@ struct DateBoundaryTests {
         #expect(comps.month == 2 && comps.day == 29)
     }
 
+    @Test("daysOfMonth lists every midnight of the month in order")
+    func daysOfMonth() {
+        let days = Date.daysOfMonth(containing: noon)
+        #expect(days.count == 29)
+        #expect(days.first == Date.startOfMonth(currentDate: noon))
+        #expect(days.last == Date.endOfMonth(currentDate: noon))
+        #expect(days == days.sorted() && days.allSatisfy { $0 == $0.startOfDay })
+    }
+
     @Test("randomDates are sorted and within range")
     func randomDates() {
         let dates = Date.randomDates(count: 50, days: 10)

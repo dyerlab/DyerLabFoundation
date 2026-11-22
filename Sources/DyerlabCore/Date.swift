@@ -96,6 +96,16 @@ public extension Date {
         Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth(currentDate: currentDate))!
     }
 
+    /// Midnight on each day of the month containing `currentDate`, first day to last.
+    /// - Parameter currentDate: Any date in the month.
+    /// - Returns: One date per day, such as 30 for November.
+    static func daysOfMonth(containing currentDate: Date) -> [Date] {
+        let calendar = Calendar.current
+        let first = startOfMonth(currentDate: currentDate)
+        guard let count = calendar.range(of: .day, in: .month, for: first)?.count else { return [] }
+        return (0 ..< count).compactMap { calendar.date(byAdding: .day, value: $0, to: first) }
+    }
+
     // MARK: - Sample Data
 
     /// Generates random dates within the past `days` days, for previews and sample data.

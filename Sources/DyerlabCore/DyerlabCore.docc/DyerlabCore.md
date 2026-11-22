@@ -15,8 +15,8 @@ UI-free extensions for statistics, dates and natural language, which build on ev
 ### Dates
 
 - `Date.get(_:calendar:)` for calendar components, `startOfDay`/`endOfDay`, `onThisDay(day:)`,
-  `daysInMonth(_:_:)`, `startOfMonth(currentDate:)`/`endOfMonth(currentDate:)`, `mdy(_:)` to parse
-  month/day/year text, and `randomDates(count:days:)` for examples.
+  `daysInMonth(_:_:)`, `startOfMonth(currentDate:)`/`endOfMonth(currentDate:)`, `daysOfMonth(containing:)`,
+  `mdy(_:)` to parse month/day/year text, and `randomDates(count:days:)` for examples.
 
 ### Text and natural language
 
