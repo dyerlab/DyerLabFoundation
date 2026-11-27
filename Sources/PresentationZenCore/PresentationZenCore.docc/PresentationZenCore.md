@@ -26,6 +26,8 @@ model. Code that imports `PresentationZen` sees everything here without a second
   labelled horizontal bars, side-by-side bars per series, and a pie.
 - ``ScatterPlot``, ``TimeSeriesPlot``, ``DistributionPlot``, ``NumberLine`` — values against each other, over time,
   as a distribution, and along a line.
+- ``SequencePlot`` — values in order (game 1, 2, 3, ...) with a trend line, ``SequenceBand`` shading for the stretches
+  that belong together, and ``SequenceMarker`` rules for what happened between two positions.
 - ``PlotForm`` — the standard ways a table is drawn (`histogram`, `density`, `bars`, `scatter`, ...), with their
   stored names.
 - ``PlotStyle`` — `figure` (large axis titles, a minimum height) or `compact` (sized by its container, for a chart
