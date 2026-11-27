@@ -98,7 +98,7 @@ public struct BarPlot: View {
             .annotation(position: .top) {
                 if showLabel, let label = row.label, !label.isEmpty {
                     Text(label).font(.footnote)
-                } else if showValues, !(hidesZeroValues && row.y == 0) {
+                } else if showValues, style != .sparkline, !(hidesZeroValues && row.y == 0) {
                     Text(String(format: valueFormat, row.y))
                         .font(.caption2)
                         .monospacedDigit()
@@ -132,6 +132,10 @@ public struct BarPlot: View {
                 }
         case .compact:
             chart.compactAxisTitles(x: xLabel, y: yLabel)
+        case .sparkline:
+            chart
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
         }
     }
 }

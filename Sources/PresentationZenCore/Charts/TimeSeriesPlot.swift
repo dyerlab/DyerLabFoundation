@@ -228,6 +228,10 @@ public struct TimeSeriesPlot: View {
                 }
         case .compact:
             chart.compactAxisTitles(x: xLabel, y: yLabel)
+        case .sparkline:
+            chart
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
         }
     }
 }

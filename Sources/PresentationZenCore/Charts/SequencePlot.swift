@@ -47,7 +47,7 @@ public struct SequencePlot: View {
     public var bandColor: Color
     /// Dot colors by series value, replacing the automatic scale.
     public var seriesColors: [String: Color]?
-    /// Figure or compact chrome.
+    /// Figure, compact or sparkline chrome.
     public var style: PlotStyle
     /// The y axis's range; `nil` lets Swift Charts decide.
     public var yDomain: ClosedRange<Double>?
@@ -69,7 +69,8 @@ public struct SequencePlot: View {
     ///   - trendColor: The trend line's color.
     ///   - bandColor: The fill of shaded bands.
     ///   - seriesColors: Dot colors by series value; every series value needs one.
-    ///   - style: Figure or compact chrome; compact charts show only the axis titles given.
+    ///   - style: Figure, compact or sparkline chrome; compact charts show only the axis titles given, and
+    ///     sparklines leave out axes and labels.
     ///   - yDomain: The y axis's range; `nil` lets Swift Charts decide.
     ///   - yAxisValues: Explicit y-axis tick values; `nil` lets Swift Charts choose.
     ///   - formatYAxis: Formats y-axis labels; `nil` uses the default labels.
@@ -137,7 +138,7 @@ public struct SequencePlot: View {
             RectangleMark(xStart: .value("Start", band.start), xEnd: .value("End", band.end))
                 .foregroundStyle(bandColor.opacity(band.isShaded ? 0.12 : 0))
                 .annotation(position: .overlay, alignment: .topLeading, spacing: 2) {
-                    Text(band.label ?? "")
+                    Text(style == .sparkline ? "" : band.label ?? "")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.leading, 3)
@@ -148,7 +149,7 @@ public struct SequencePlot: View {
                 .foregroundStyle(Color.secondary.opacity(0.7))
                 .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
                 .annotation(position: .trailing, alignment: .top, spacing: 2) {
-                    Text(marker.label ?? "")
+                    Text(style == .sparkline ? "" : marker.label ?? "")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -162,7 +163,7 @@ public struct SequencePlot: View {
         ForEach(table.plotRows) { row in
             PointMark(x: .value("Position", row.xDouble), y: .value(yLabel, row.y))
                 .foregroundStyle(by: .value("Category", row.series ?? ""))
-                .symbolSize(style == .compact ? 30 : 50)
+                .symbolSize(style == .figure ? 50 : style == .compact ? 30 : 24)
         }
     }
 
@@ -236,6 +237,10 @@ public struct SequencePlot: View {
                 }
         case .compact:
             chart.compactAxisTitles(x: xLabel, y: yLabel)
+        case .sparkline:
+            chart
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
         }
     }
 }
@@ -261,6 +266,18 @@ public struct SequencePlot: View {
                  yDomain: 0 ... 1, yAxisValues: [0, 0.5, 1], formatYAxis: { $0.formatted(.percent) })
         .frame(height: 220)
         .padding()
+}
+
+#Preview("Sparkline") {
+    let scores: [Double] = [0.33, 0, 0.67, 0.33, 0.67, 0, 0.67, 1, 0.67, 1, 1, 0.33]
+    let positions = (1 ... scores.count).map(Double.init)
+    let line = DataTable(numbers: ["game": positions, "score": scores], roles: [.x: "game", .y: "score"])
+    let wins = DataTable(numbers: ["game": [8, 10, 11], "score": [1, 1, 1]], roles: [.x: "game", .y: "score"])
+    SequencePlot(wins, trend: line, markers: [.after(7)], pointColor: .yellow, trendColor: .white,
+                 style: .sparkline, yDomain: 0 ... 1)
+        .frame(height: 70)
+        .padding()
+        .background(.indigo)
 }
 
 #Preview("Figure, no trend") {

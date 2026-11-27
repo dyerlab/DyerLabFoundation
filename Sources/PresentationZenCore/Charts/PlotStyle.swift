@@ -26,4 +26,6 @@ public enum PlotStyle: Hashable, Sendable {
     /// A chart inside an app screen: small axis titles only when given, grid lines, and no minimum height,
     /// so the caller sets the frame.
     case compact
+    /// A sparkline: the marks alone, with no axes, grid lines, titles or labels; the caller sets the frame.
+    case sparkline
 }
